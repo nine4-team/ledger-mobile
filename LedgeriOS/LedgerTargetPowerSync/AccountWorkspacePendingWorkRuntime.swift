@@ -183,6 +183,7 @@ enum AccountWorkspaceRuntimeFiniteOperation: Equatable, Sendable {
     case readCollectedInvoices
     case readLiveInvoices
     case createInvoice
+    case createFeeInstallment
     case createClient
     case createProject
     case archiveProject
@@ -1557,6 +1558,16 @@ actor AccountWorkspacePendingWorkRuntime {
         }
     }
 
+    func createFeeInstallment(_ draft: FeeInstallmentDraft, operationUUID: UUID, capturedAt: Date) async throws -> OperationReceipt {
+        try await withFiniteLease(.createFeeInstallment) { resources in
+            guard draft.accountId == resources.accountId else { throw LedgerOfflineClientRuntimeFailure.accountScopeMismatch }
+            let command = try CreateFeeInstallmentCommand(operationId: FeeCreationOperationIdentity.make(accountId: resources.accountId, uuid: operationUUID),
+                actorPrincipalId: resources.principalId, capturedAt: capturedAt, draft: draft)
+            return try await FeeCreationPowerSyncStore(database: resources.structuredDatabase, accountId: resources.accountId,
+                principalId: resources.principalId, accessFence: resources.accessFence, now: resources.now).submit(command)
+        }
+    }
+
     func createInvoice(_ payload: CreateInvoiceCommand.Payload, operationUUID: UUID, capturedAt: Date) async throws -> OperationReceipt {
         try await withFiniteLease(.createInvoice) { resources in
             guard payload.selection.scope.accountId == resources.accountId else { throw LedgerOfflineClientRuntimeFailure.accountScopeMismatch }
@@ -2603,6 +2614,7 @@ actor AccountWorkspacePendingWorkRuntime {
             inventorySaleApplier: appliers.inventorySale,
             expenseCreationApplier: appliers.expenseCreation,
             invoiceCreationApplier: appliers.invoiceCreation,
+            feeCreationApplier: appliers.feeCreation,
             expenseEditApplier: appliers.expenseEdit,
             verifiedExpenseReceipts: { try await resources.attachmentStore.verifiedExpenseReceipts(for: $0) },
             verifiedExpenseEditReceipts: { try await resources.attachmentStore.verifiedExpenseReceipts(for: $0) },
@@ -2666,6 +2678,7 @@ actor AccountWorkspacePendingWorkRuntime {
             inventorySaleApplier: appliers.inventorySale,
             expenseCreationApplier: appliers.expenseCreation,
             invoiceCreationApplier: appliers.invoiceCreation,
+            feeCreationApplier: appliers.feeCreation,
             expenseEditApplier: appliers.expenseEdit,
             verifiedExpenseReceipts: { try await resources.attachmentStore.verifiedExpenseReceipts(for: $0) },
             verifiedExpenseEditReceipts: { try await resources.attachmentStore.verifiedExpenseReceipts(for: $0) },

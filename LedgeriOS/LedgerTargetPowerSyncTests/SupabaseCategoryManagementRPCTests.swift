@@ -9,6 +9,41 @@ import Security
 
 @Suite("Category management HTTP contract", .serialized)
 struct SupabaseCategoryManagementRPCTests {
+    @Test func feeCreationUsesBoundAuthenticatedTransport() async throws {
+        let user = UUID(), auth = authClient(storage: CategoryAuthTestStorage(), userId: UUID())
+        let signedIn = try await auth.signIn(email: "fixture@example.invalid", password: "fixture-password")
+        let http = session()
+        defer { http.invalidateAndCancel(); CategoryHTTPProtocol.handler = nil }
+        let access = try WorkspaceMembershipAuthorization(environment: .targetLocal, authUserId: signedIn.user.id,
+            principalId: .init(validating: "principal"), accountId: .init(validating: "account"),
+            role: .employee, financialAccess: .full)
+        let rpc = try SupabaseWorkspaceCommandRPC(url: URL(string: "https://target.invalid")!,
+            key: "sb_publishable_fixture", authorization: access,
+            identity: .init(client: auth, userId: signedIn.user.id), http: http)
+        func command(account: String) throws -> CreateFeeInstallmentCommand {
+            try .init(operationId: .init(validating: user.uuidString), actorPrincipalId: access.principalId,
+                capturedAt: Date(timeIntervalSince1970: 123), draft: .init(accountId: .init(validating: account),
+                    projectId: .init(validating: "project"), installmentId: .init(validating: "fee"),
+                    categoryId: .init(validating: "category"), label: "Design fee",
+                    amount: .init(minorUnits: 123, currency: .init(validating: "USD"))))
+        }
+        let value = try command(account: "account"), wire = try CreateFeeInstallmentUploadRequest(value)
+        CategoryHTTPProtocol.handler = { request in
+            #expect(request.url?.path == "/rest/v1/rpc/spike_create_fee_installment")
+            #expect(request.value(forHTTPHeaderField: "Authorization") == "Bearer signed-in-token")
+            #expect(try requestBody(request) == wire.rpcBody)
+            return try response(request, result: ["operation_id": value.envelope.operationId.rawValue,
+                "account_id":"account", "actor_principal_id":"principal", "command_type":"create_fee_installment",
+                "contract_version":"fee-installment-create-v1", "command_fingerprint":wire.fingerprint,
+                "envelope_sha256":wire.fingerprint, "subject_id":"fee", "phase":"applied",
+                "result_code":"fee_installment_created", "client_created_at_ms":123000,
+                "server_received_at_ms":124000, "completed_at_ms":124000])
+        }
+        #expect(try await rpc.apply(value).phase == "applied")
+        CategoryHTTPProtocol.handler = { _ in throw URLError(.badURL) }
+        await #expect(throws: SupabaseWorkspaceCommandRPC.Failure.scopeMismatch) { try await rpc.apply(command(account: "foreign")) }
+    }
+
     @Test func expenseEditUsesExistingAuthenticatedTransportAndValidatesResult() async throws {
         let user = UUID(), auth = authClient(storage: CategoryAuthTestStorage(), userId: UUID())
         // Use the authenticated identity returned by the fixture, not an invented scope.

@@ -281,6 +281,24 @@ try {
   await race('fee-paid-rollback', collectFee('fee-paid-rollback'), editFee('fee-paid-rollback'), 'rollback');
   assert.equal(sql("select revision from ledger_private.fee_installments where id='race-fee-paid-rollback'"), '2');
   console.log('PASS 3 observed Fee edit/collection races; no user-facing Fee writer claimed.');
+  sql(`insert into public.spike_projects(id,account_id,client_id,display_name,created_at,updated_at,created_at_ms,updated_at_ms,created_by_principal_id)
+    values('fee-cap-race','account-primary','client-existing','Fee cap race',now(),now(),1,1,'principal-owner');
+    insert into public.spike_project_category_allocations(id,account_id,project_id,category_id,allocation_minor_units,allocation_currency,
+      created_at,updated_at,created_at_ms,updated_at_ms,created_by_principal_id)
+    values('fee-cap-race','account-primary','fee-cap-race','category-design-fee',100,'USD',now(),now(),1,1,'principal-owner');`);
+  const createFee = id => {
+    const command = JSON.stringify({ operationId: id, accountId: 'account-primary', actorPrincipalId: 'principal-owner',
+      projectId: 'fee-cap-race', installmentId: id, categoryId: 'category-design-fee',
+      contractVersion: 'fee-installment-create-v1', createdAtMs: '1000', label: 'Design fee',
+      amountMinorUnits: '60', currency: 'USD', sortOrder: '' });
+    return `select set_config('request.jwt.claims','{"sub":"10000000-0000-0000-0000-000000000001","role":"authenticated"}',true);
+      select (ledger_private.create_fee_installment('${command}')).phase;`;
+  };
+  await race('fee-cap-creators', createFee('fee-cap-first'), createFee('fee-cap-second'), 'commit');
+  assert.equal(sql("select phase || ':' || error_code from public.spike_operation_results where operation_id='fee-cap-second'"),
+    'rejected:fee_total_exceeded');
+  assert.equal(sql("select sum(amount_minor_units) from ledger_private.fee_installments where project_id='fee-cap-race'"), '60');
+  console.log('PASS competing Fee creators cannot jointly exceed configured total');
 } finally {
   for (const child of sessions) if (!child.stdin.destroyed && !child.stdin.writableEnded) child.stdin.end('rollback;\n');
   if (created) {

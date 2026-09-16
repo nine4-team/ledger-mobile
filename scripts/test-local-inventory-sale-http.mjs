@@ -22,7 +22,12 @@ if (process.argv.includes('--native-invoice-create')) {
 }
 assert.ok(!process.argv.includes('--expense-edit-conflict') || process.argv.includes('--native-expense-edit'),
     '--expense-edit-conflict requires --native-expense-edit');
-if (process.argv.includes('--native-expense') || process.argv.includes('--native-expense-edit') || process.argv.includes('--native-live-invoice')) {
+if (process.argv.includes('--native-fee-create')) {
+    assert.ok(process.argv.includes('--expense') && process.argv.includes('--financial') &&
+        !['--native-live-invoice','--native-invoice-create','--expense-paid','--expense-edit','--native-expense','--native-expense-edit'].some(flag => process.argv.includes(flag)),
+        'Fee replication uses the separate uncollected financial fixture');
+}
+if (process.argv.includes('--native-expense') || process.argv.includes('--native-expense-edit') || process.argv.includes('--native-live-invoice') || process.argv.includes('--native-fee-create')) {
     const ready = await fetch('http://127.0.0.1:5590/probes/readiness', {
         redirect:'error', signal:AbortSignal.timeout(3000),
     }).catch(() => null);
@@ -83,6 +88,7 @@ try {
                 LEDGER_SALE_LOCAL_DESTINATION_PROJECT:project,
                 LEDGER_SALE_LOCAL_CLIENT:client,
                 ...(process.argv.includes('--native-invoice-create')?{LEDGER_INVOICE_LOCAL_CREATE:'1'}:{}),
+                ...(process.argv.includes('--native-fee-create')?{LEDGER_FEE_LOCAL_CREATE:'1',LEDGER_FEE_LOCAL_CATEGORY:key+'-fee-category'}:{}),
                 ...(process.argv.includes('--expense-paid')?{LEDGER_EXPENSE_LOCAL_PAID:'1'}:{}),
                 ...(process.argv.includes('--native-live-invoice')?{LEDGER_LIVE_INVOICE_LOCAL:'1'}:{}),
                 ...(process.argv.includes('--native-expense-edit')?{LEDGER_EXPENSE_LOCAL_EDIT:'1'}:{}),
@@ -265,7 +271,14 @@ try {
             assert.equal(response.status,200);
             assert.equal((await response.json()).totalMinorUnits,intent.amountMinorUnits);
         }
-        if(process.argv.includes('--native-expense') || process.argv.includes('--native-expense-edit') || process.argv.includes('--native-live-invoice')) {
+        if(process.argv.includes('--native-fee-create')) {
+            sql(`insert into public.spike_budget_categories(id,account_id,display_name,kind,presentation_order,created_at_ms,updated_at_ms)
+              values(${q(key+'-fee-category')},${q(account)},'Design Fee','fee',2,1,1);
+              insert into public.spike_project_category_allocations(id,account_id,project_id,category_id,allocation_minor_units,allocation_currency,
+                created_at,updated_at,created_at_ms,updated_at_ms,created_by_principal_id)
+              values(${q(key+'-fee-cap')},${q(account)},${q(project)},${q(key+'-fee-category')},12345,'USD',now(),now(),1,1,${q(principal)});`);
+        }
+        if(process.argv.includes('--native-expense') || process.argv.includes('--native-expense-edit') || process.argv.includes('--native-live-invoice') || process.argv.includes('--native-fee-create')) {
             assert.ok(!(process.argv.includes('--native-expense-edit') && (process.argv.includes('--expense-edit') || process.argv.includes('--expense-paid') || process.argv.includes('--native-expense'))),
                 'Native edit uses its own uncollected revision1 fixture');
             runNative('expenseLiveReplication',project,expense);
@@ -273,6 +286,10 @@ try {
         if(process.argv.includes('--native-invoice-create')) {
             assert.equal(sql(`select count(*) from ledger_private.live_invoices where account_id=${q(account)}`),'1');
             assert.equal(sql(`select count(*) from public.spike_operation_results where account_id=${q(account)} and command_type='create_invoice' and phase='applied'`),'1');
+        }
+        if(process.argv.includes('--native-fee-create')) {
+            assert.equal(sql(`select count(*) from ledger_private.fee_installments where account_id=${q(account)} and amount_minor_units=12345`),'1');
+            assert.equal(sql(`select count(*) from public.spike_operation_results where account_id=${q(account)} and command_type='create_fee_installment' and phase='applied'`),'1');
         }
         assert.equal(sql(`select count(*) from public.spike_transactions where account_id=${q(account)}`),process.argv.includes('--expense-paid')?'1':'0');
         assert.equal(sql(`select count(*) from ledger_private.expenses where account_id=${q(account)}`),process.argv.includes('--native-expense')?'2':'1');
@@ -298,7 +315,7 @@ try {
             const removed=await call('/functions/v1/verify-expense-attachment',{attachmentId:receiptAttachmentIds[0]},token);
             assert.equal(removed.status,404,'removed member cannot reuse verifier admission');
         }
-        console.log(JSON.stringify({authenticatedExpense:true,invoiceCreationMCP:!!invoiceCreationMCP,exactInt64:true,replay:true,changedReplayDenied:true,
+        console.log(JSON.stringify({authenticatedExpense:true,nativeFeeCreation:process.argv.includes('--native-fee-create'),invoiceCreationMCP:!!invoiceCreationMCP,exactInt64:true,replay:true,changedReplayDenied:true,
             noPayment:!process.argv.includes('--expense-paid'),anonymousDenied:true,removedMemberDenied:true,verifiedReceiptBytes:receiptAttachmentIds.length>0,
             nativeScheduledReceipt:process.argv.includes('--native-expense'),nativeOfflineEdit:process.argv.includes('--native-expense-edit'),mcpCommand:!!expenseRequest,
             seededPaidInvoice:process.argv.includes('--expense-paid'),directInvoiceMCP:!!invoiceReader,

@@ -28,6 +28,7 @@ public enum LedgerPowerSyncTable {
     public static let collectedInvoices = "collected_invoices"
     public static let liveInvoices = "live_invoices"
     public static let invoiceCommands = "spike_invoice_commands"
+    public static let feeCommands = "spike_fee_commands"
     public static let liveInvoiceMemberships = "live_invoice_memberships"
     public static let feeInstallments = "fee_installments"
     public static let itemProjectCategories = "spike_item_project_categories"
@@ -597,6 +598,9 @@ public enum LedgerPowerSyncSchema {
         ),
         Table(name: LedgerPowerSyncTable.invoiceCommands,
             columns: [.text("account_id"), .text("actor_principal_id"), .text("invoice_id"),
+                      .text("contract_version"), .text("fingerprint"), .text("envelope_json")], insertOnly: true),
+        Table(name: LedgerPowerSyncTable.feeCommands,
+            columns: [.text("account_id"), .text("actor_principal_id"), .text("installment_id"),
                       .text("contract_version"), .text("fingerprint"), .text("envelope_json")], insertOnly: true),
         Table(
             name: LedgerPowerSyncTable.pendingWorkObservations,

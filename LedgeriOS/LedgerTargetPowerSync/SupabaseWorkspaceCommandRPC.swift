@@ -4,7 +4,7 @@ import LedgerTargetCore
 /// Transport mappings for the existing Client/Project/category command ports.
 /// Business validation and terminal-result checks stay in their existing owners.
 struct SupabaseWorkspaceCommandRPC: ClientCreationCommandApplying, ProjectCreationCommandApplying,
-    CategoryManagementCommandApplying, InventorySaleCommandApplying, CreateExpenseCommandApplying, EditExpenseCommandApplying, CreateInvoiceCommandApplying, InventorySaleReviewReading, TransactionReceiptReading, Sendable {
+    CategoryManagementCommandApplying, InventorySaleCommandApplying, CreateExpenseCommandApplying, EditExpenseCommandApplying, CreateInvoiceCommandApplying, CreateFeeInstallmentCommandApplying, InventorySaleReviewReading, TransactionReceiptReading, Sendable {
     enum Failure: Error, Equatable { case scopeMismatch, invalidResponse, rejected(Int) }
     let url: URL
     let key: String
@@ -73,6 +73,14 @@ struct SupabaseWorkspaceCommandRPC: ClientCreationCommandApplying, ProjectCreati
         try requireScope(account: command.envelope.accountId.rawValue, principal: command.envelope.actorPrincipalId.rawValue)
         let request = try CreateInvoiceUploadRequest(command)
         let result: CreateInvoiceServerResult = try await call("spike_create_invoice", body: request.rpcBody)
+        try result.validate(for: command)
+        return result
+    }
+
+    func apply(_ command: CreateFeeInstallmentCommand) async throws -> CreateFeeInstallmentServerResult {
+        try requireScope(account: command.envelope.accountId.rawValue, principal: command.envelope.actorPrincipalId.rawValue)
+        let request = try CreateFeeInstallmentUploadRequest(command)
+        let result: CreateFeeInstallmentServerResult = try await call("spike_create_fee_installment", body: request.rpcBody)
         try result.validate(for: command)
         return result
     }

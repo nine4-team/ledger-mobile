@@ -1375,6 +1375,40 @@ struct AccountWorkspacePendingWorkRuntimeTests {
         liveStage("Expense downloaded")
         #expect(source.finalAmount.minorUnits == (hostedQA ? 12_345 : Int64.max))
         #expect(source.receiptLines.count == 1)
+        if env["LEDGER_FEE_LOCAL_CREATE"] == "1" {
+            guard !hostedQA, let category = env["LEDGER_FEE_LOCAL_CATEGORY"] else { throw RuntimeInjectedFailure() }
+            for try await invoices in first.watchLiveInvoices(accountId: context.accountId, projectId: projectId) {
+                if invoices != nil { break }
+            }
+            let draft = try FeeInstallmentDraft(accountId: context.accountId, projectId: projectId,
+                installmentId: .init(validating: expense + "-fee"), categoryId: .init(validating: category),
+                label: "Design fee", amount: .init(minorUnits: 12345, currency: .init(validating: "USD")))
+            let operationUUID = UUID(), capturedAt = Date()
+            try await first.close()
+            let disconnected = try await context.openRuntime()
+            let receipt = try await disconnected.createFeeInstallment(draft, operationUUID: operationUUID, capturedAt: capturedAt)
+            #expect(receipt.localState == .queued)
+            try await disconnected.close()
+            let online = try await context.openRuntime()
+            #expect(try await online.createFeeInstallment(draft, operationUUID: operationUUID, capturedAt: capturedAt) == receipt)
+            try await entry.startWorkspaceSync(online, authorization: authorization, powerSyncURL: sync)
+            var found = false
+            for try await invoices in online.watchLiveInvoices(accountId: context.accountId, projectId: projectId) {
+                guard invoices != nil else { continue }
+                let review = try await online.readInvoiceCreationReview(accountId: context.accountId, projectId: projectId)
+                if let fee = review.candidates.first(where: { $0.selection.source == .feeInstallment(draft.installmentId) }) {
+                    #expect(fee.selection.reviewedAmount == draft.amount)
+                    found = true; break
+                }
+            }
+            #expect(found)
+            try await online.close()
+            let offline = try await context.openRuntime()
+            let review = try await offline.readInvoiceCreationReview(accountId: context.accountId, projectId: projectId)
+            #expect(review.candidates.contains { $0.selection.source == .feeInstallment(draft.installmentId) && $0.selection.reviewedAmount == draft.amount })
+            try await offline.close()
+            return
+        }
         if env["LEDGER_LIVE_INVOICE_LOCAL"] == "1" {
             guard !hostedQA else { throw RuntimeInjectedFailure() }
             var invoiceRuntime = first

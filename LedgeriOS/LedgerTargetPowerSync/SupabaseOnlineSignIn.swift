@@ -273,7 +273,7 @@ public final class SupabaseOnlineSignIn {
             guard let powerSyncURL else { return nil }
             try await revalidate()
             return PowerSyncCredentials(endpoint: powerSyncURL.absoluteString, token: try await identity.accessToken())
-        }, appliers: .init(clientCreation: rpc, projectCreation: rpc, categoryManagement: rpc, inventorySale: rpc, expenseCreation: rpc, expenseEdit: rpc, invoiceCreation: rpc))
+        }, appliers: .init(clientCreation: rpc, projectCreation: rpc, categoryManagement: rpc, inventorySale: rpc, expenseCreation: rpc, expenseEdit: rpc, invoiceCreation: rpc, feeCreation: rpc))
         let attachments = try SupabaseTransactionAttachmentUpload(supabaseURL: url,
             publishableKey: publishableKey, accessToken: {
                 try await revalidate()

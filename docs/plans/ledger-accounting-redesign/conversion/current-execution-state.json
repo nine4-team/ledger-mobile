@@ -1,6 +1,6 @@
 {
   "schemaVersion": 2,
-  "stateVersion": 996,
+  "stateVersion": 1003,
   "userRequestedPause": {
     "date": "2026-09-15",
     "status": "resumed",
@@ -62,7 +62,7 @@
     "lastResult": "Local native1359/193 suites, MCP116 and SQL1645 passed before Expense edits. CI35039310979 on41b0f5e7 terminal failure: conversion/provider passed; Mac UI failed; iOS cancelled. Transaction owner retains triage. Not whole-batch acceptance.",
     "activeProcesses": {"localEdgeService":14316},
     "databaseReview": "Database source review complete. Local SQL54files/1645assertions and fresh provider job CI35039310979 passed. Do not repeat passing checks for context recovery.",
-    "immediateFollowup": "4c794c29 saved original-form adaptation. MCP create now implemented/registered; typecheck+focused7 tests12616/full consumers passed; real local provider create/exact replay/read/no-payment58295 passed. Evidence invoice-build-edit. Next coherent integration review, MCP eligible-source discovery and Fee creation/cap/live PDF dependencies; no passing-context reruns. Form search/retry13016 and changed-source/withdrawal10768 already pass. Unsubmitted form memory-only; accepted queue durable. Editing/manual adjustments/credit selection unfinished. No hosted Invoice deploy. Local20260916054042 direct/no history;37-table service current. Hosted88/QA restored. Collection equality/O-023/sent/zero unresolved; no resend gate. Prior CI/readiness warnings remain.",
-    "nextVerification": "CI35039310979 terminal failed; MacUI14failures/57tests/3skips, iOS cancelled. Transaction owner has screenshots/triage. Monitor/two scroll fixes compile, not UI-verified; Invoice retry fixture read2→3 remains UI-unverified. Other Sale/badge/gallery/reentry failures open. No duplicate dispatch."
+    "immediateFollowup": "Fee backend/app runtime now passed real local offline-create/reopen/upload/PowerSync/readback8596 /tmp/ledger-fee-live-sync.log (1.058s test). SQL one Fee, one operation, zero payments. Existing form located FinancesTabView.swift:684; replace Firebase save glue, retain controls. NEXT Fee browse/pending + existing form + MCP. Not user-ready. Evidence fee-demand-lifecycle. SQL1763 passed32828; advisors clean14570; full guard18 passed3845. Endpoint20260916071547 LOCAL direct/no history; no hosted Invoice/Fee deploy. Preserve absent-total vs zero, collected/pending cap and completed stream readiness. No context reruns. Invoice watch passed73068; MCP discovery/live PDF/integration/editing/manual/credit remain.37-table service current. Hosted88/QA restored. Collection equality/O-023/sent/zero unresolved; no resend gate. Prior CI/readiness warnings remain.",
+    "nextVerification": "CI35039310979 failed: Mac14/57/3skips, iOS cancelled. Existing workflow owners retain failures and unverified UI fixes. No duplicate dispatch."
   }
 }

@@ -35,7 +35,8 @@ struct LocalOperationIdentityGuardTests {
             LedgerPowerSyncTable.categoryCommands,
             LedgerPowerSyncTable.inventorySaleCommands,
             LedgerPowerSyncTable.expenseCommands,
-            LedgerPowerSyncTable.invoiceCommands
+            LedgerPowerSyncTable.invoiceCommands,
+            LedgerPowerSyncTable.feeCommands
         ])
         #expect(LocalOperationIdentityGuard.forbiddenMutationTables == [
             LedgerPowerSyncTable.operationResults
@@ -473,7 +474,7 @@ struct LocalOperationIdentityGuardTests {
                 // Account-bound command families intentionally cannot share an
                 // operation ID. Their cross-family rejection is covered by each
                 // family's identity-contract tests rather than the shared-ID race.
-                if pair.filter({ [.reviseSpaceChecklists, .archiveProject, .archiveClient, .manageCategories, .sellInventoryItems, .createExpense, .editExpense, .createInvoice].contains($0) }).count > 1
+                if pair.filter({ [.reviseSpaceChecklists, .archiveProject, .archiveClient, .manageCategories, .sellInventoryItems, .createExpense, .editExpense, .createInvoice, .createFeeInstallment].contains($0) }).count > 1
                 {
                     pairIndex += 1
                     continue
@@ -959,6 +960,11 @@ struct LocalOperationIdentityGuardTests {
         database: any PowerSyncDatabaseProtocol
     ) async throws {
         switch family {
+        case .createFeeInstallment:
+            _ = try await database.execute(sql: """
+                INSERT INTO spike_fee_commands(id,account_id,actor_principal_id,installment_id,contract_version,fingerprint,envelope_json)
+                VALUES (?, 'account', 'principal', 'fee', 'contract', ?, ?)
+                """, parameters: [id, fingerprint, envelope])
         case .createInvoice:
             _ = try await database.execute(sql: """
                 INSERT INTO spike_invoice_commands(id,account_id,actor_principal_id,invoice_id,contract_version,fingerprint,envelope_json)
@@ -1044,7 +1050,7 @@ struct LocalOperationIdentityGuardTests {
         database: any PowerSyncDatabaseProtocol
     ) async throws {
         switch family {
-        case .sellInventoryItems, .createExpense, .editExpense, .createInvoice: break
+        case .sellInventoryItems, .createExpense, .editExpense, .createInvoice, .createFeeInstallment: break
         case .manageCategories:
             _ = try await database.execute(sql: "UPDATE spike_local_operations SET category_projection_json = '[]' WHERE id = ?", parameters: [id])
         case .createClient:
@@ -1209,6 +1215,7 @@ struct LocalOperationIdentityGuardTests {
 
     private static func subject(_ family: LocalOperationCommandFamily) -> String {
         switch family {
+        case .createFeeInstallment: "fee"
         case .createInvoice: "invoice"
         case .createExpense, .editExpense: "expense"
         case .createClient, .archiveClient: "client"
@@ -1790,6 +1797,9 @@ struct LocalOperationIdentityGuardTests {
         for families: [LocalOperationCommandFamily],
         index: Int
     ) throws -> OperationID {
+        if families.contains(.createFeeInstallment) {
+            return try FeeCreationOperationIdentity.make(accountId: guardAccountId, uuid: checkpointUUID(index: index))
+        }
         if families.contains(.createInvoice) {
             return try InvoiceCreationOperationIdentity.make(accountId: guardAccountId, uuid: checkpointUUID(index: index))
         }
@@ -1830,7 +1840,7 @@ struct LocalOperationIdentityGuardTests {
         for families: [LocalOperationCommandFamily],
         database: any PowerSyncDatabaseProtocol
     ) async throws {
-        if families.contains(.manageCategories) || families.contains(.sellInventoryItems) || families.contains(.createExpense) || families.contains(.editExpense) || families.contains(.createInvoice) {
+        if families.contains(.manageCategories) || families.contains(.sellInventoryItems) || families.contains(.createExpense) || families.contains(.editExpense) || families.contains(.createInvoice) || families.contains(.createFeeInstallment) {
             _ = try await database.execute(sql: """
                 INSERT OR REPLACE INTO spike_account_memberships(id,account_id,principal_id,state,financial_access)
                 VALUES ('category-test-member', ?, ?, 'active', 'full')
@@ -1839,10 +1849,16 @@ struct LocalOperationIdentityGuardTests {
         if families.contains(.createExpense) || families.contains(.editExpense) {
             _ = try await database.execute(sql: "INSERT OR REPLACE INTO spike_budget_categories(id,account_id,kind,lifecycle) VALUES ('expense-category',?,'general','active')", parameters: [guardAccountId.rawValue])
         }
+        if families.contains(.createFeeInstallment) {
+            _ = try await database.execute(sql: "INSERT OR REPLACE INTO spike_budget_categories(id,account_id,kind,lifecycle) VALUES ('fee-category',?,'fee','active')", parameters: [guardAccountId.rawValue])
+            _ = try await database.execute(sql: "INSERT INTO ps_stream_subscriptions(stream_name,active,is_default,local_params,last_synced_at) VALUES('spike_projects',1,1,'null',1000000)", parameters: nil)
+            let parameters = String(decoding: try OperationContractCodec.encode(["account_id":guardAccountId.rawValue,"project_id":"project"]), as: UTF8.self)
+            _ = try await database.execute(sql: "INSERT INTO ps_stream_subscriptions(stream_name,active,is_default,local_params,last_synced_at) VALUES('project_live_invoices',1,0,?,1000000)", parameters: [parameters])
+        }
         if families.contains(.editExpense) || families.contains(.createInvoice) {
             _ = try await database.execute(sql: "INSERT OR REPLACE INTO expenses(id,account_id,project_id,revision,currency,final_amount_minor_units) VALUES ('expense',?,'project','1','USD','100')", parameters: [guardAccountId.rawValue])
         }
-        if families.contains(.sellInventoryItems) || families.contains(.createExpense) || families.contains(.editExpense) || families.contains(.createInvoice) {
+        if families.contains(.sellInventoryItems) || families.contains(.createExpense) || families.contains(.editExpense) || families.contains(.createInvoice) || families.contains(.createFeeInstallment) {
             _ = try await database.execute(sql: "INSERT OR REPLACE INTO spike_clients(id,account_id,display_name,lifecycle,revision,created_at_ms,updated_at_ms) VALUES ('sale-client',?,'Client','active',1,1,1)",
                 parameters: [guardAccountId.rawValue])
             _ = try await database.execute(sql: "INSERT OR REPLACE INTO spike_projects(id,account_id,client_id,display_name,lifecycle,revision) VALUES ('project',?,'sale-client','Project','active',1)",
@@ -1865,6 +1881,8 @@ struct LocalOperationIdentityGuardTests {
         database: any PowerSyncDatabaseProtocol
     ) async throws -> OperationReceipt {
         switch family {
+        case .createFeeInstallment:
+            return try await submitFee(operationId, changed: false, database: database)
         case .createInvoice:
             return try await submitInvoice(operationId, changed: false, database: database)
         case .editExpense:
@@ -2030,6 +2048,74 @@ struct LocalOperationIdentityGuardTests {
         }
     }
 
+    @Test("Fee creation does not treat incomplete downloads as an absent budget")
+    func feeCreationRequiresCompleteDownloads() async throws {
+        let fixture = try LocalOperationGuardDatabaseFixture()
+        defer { fixture.remove() }
+        let db = try fixture.open()
+        try await Self.seedAuthorityIfNeeded(for: [.createFeeInstallment], database: db)
+        let id = try Self.concurrentOperationId(for: [.createFeeInstallment], index: 916)
+        for stream in ["spike_projects", "project_live_invoices"] {
+            _ = try await db.execute(sql: "UPDATE ps_stream_subscriptions SET last_synced_at=NULL WHERE stream_name=?", parameters: [stream])
+            await #expect(throws: PropertyManagementReportFailure.incompleteReadiness) {
+                try await Self.submitFee(id, changed: false, database: db)
+            }
+            #expect(try await Self.count("spike_local_operations", db) == 0)
+            _ = try await db.execute(sql: "UPDATE ps_stream_subscriptions SET last_synced_at=1000000 WHERE stream_name=?", parameters: [stream])
+        }
+        #expect(try await Self.submitFee(id, changed: false, database: db).localState == .queued)
+        // Lost readiness must not prevent recovery of an already accepted intent.
+        _ = try await db.execute(sql: "UPDATE ps_stream_subscriptions SET last_synced_at=NULL", parameters: nil)
+        #expect(try await Self.submitFee(id, changed: false, database: db).localState == .queued)
+        try await db.close()
+    }
+
+    @Test("Fee acceptance is atomic, preserves pending budget, and survives encrypted restart")
+    func feeAcceptanceDurability() async throws {
+        let fixture = try LocalOperationGuardDatabaseFixture()
+        defer { fixture.remove() }
+        let first = try fixture.open()
+        try await Self.seedAuthorityIfNeeded(for: [.createFeeInstallment], database: first)
+        _ = try await first.execute(sql: "INSERT INTO spike_project_category_allocations(id,account_id,project_id,category_id,allocation_minor_units,allocation_currency) VALUES ('cap',?,'project','fee-category','150','USD')", parameters: [Self.guardAccountId.rawValue])
+        let id = try Self.concurrentOperationId(for: [.createFeeInstallment], index: 910)
+        let baseline = try await Self.count("ps_crud", first)
+        await #expect(throws: LocalOperationGuardInjectedFailure.self) {
+            try await Self.submitFee(id, changed: false, database: first,
+                checkpoint: { throw LocalOperationGuardInjectedFailure() })
+        }
+        #expect(try await Self.count("spike_local_operations", first) == 0)
+        #expect(try await Self.count("ps_crud", first) == baseline)
+        let receipt = try await Self.submitFee(id, changed: false, database: first)
+        #expect(receipt.localState == .queued)
+        #expect(try await Self.count("fee_installments", first) == 0)
+        try await first.close()
+        let reopened = try fixture.open()
+        #expect(try await Self.submitFee(id, changed: false, database: reopened) == receipt)
+        await #expect(throws: OperationContractFailure.payloadMismatch(id)) {
+            try await Self.submitFee(id, changed: true, database: reopened)
+        }
+        let nextId = try Self.concurrentOperationId(for: [.createFeeInstallment], index: 911)
+        await #expect(throws: FeeInstallmentDraft.Failure.exceedsFeeTotal) {
+            try await Self.submitFee(nextId, changed: false, database: reopened, installment: "second-fee")
+        }
+        #expect(try await Self.count("spike_local_operations", reopened) == 1)
+        _ = try await reopened.execute(sql: "UPDATE spike_account_memberships SET financial_access='none'", parameters: nil)
+        await #expect(throws: ProjectInvoicingItemLocalReader.Failure.self) {
+            try await Self.submitFee(id, changed: false, database: reopened)
+        }
+        try await reopened.close()
+    }
+
+    private static func submitFee(_ operationId: OperationID, changed: Bool, database: any PowerSyncDatabaseProtocol,
+                                  installment: String = "fee", checkpoint: @escaping @Sendable () throws -> Void = {}) async throws -> OperationReceipt {
+        let command = try CreateFeeInstallmentCommand(operationId: operationId, actorPrincipalId: guardPrincipalId,
+            capturedAt: guardAcceptedAt, draft: .init(accountId: guardAccountId, projectId: .init(validating: "project"),
+                installmentId: .init(validating: installment), categoryId: .init(validating: "fee-category"),
+                label: "Design fee", amount: .init(minorUnits: changed ? 200 : 100, currency: .init(validating: "USD"))))
+        return try await FeeCreationPowerSyncStore(database: database, accountId: guardAccountId,
+            principalId: guardPrincipalId, accessFence: .init(), now: { guardAcceptedAt }, afterOperationWrite: checkpoint).submit(command)
+    }
+
     @Test("Invoice acceptance is atomic and survives encrypted restart")
     func invoiceAcceptanceDurability() async throws {
         let fixture = try LocalOperationGuardDatabaseFixture()
@@ -2063,6 +2149,104 @@ struct LocalOperationIdentityGuardTests {
             try await Self.submitInvoice(id, changed: false, database: reopened)
         }
         try await reopened.close()
+    }
+
+    @Test("Fee upload retains retry and terminal evidence", arguments: [false, true])
+    func feeUploadTerminalEvidence(rejected: Bool) async throws {
+        let fixture = try LocalOperationGuardDatabaseFixture()
+        defer { fixture.remove() }
+        let db = try fixture.open()
+        try await Self.seedAuthorityIfNeeded(for: [.createFeeInstallment], database: db)
+        while let setup = try await db.getNextCrudTransaction() { try await setup.complete() }
+        let id = try Self.concurrentOperationId(for: [.createFeeInstallment], index: rejected ? 913 : 912)
+        _ = try await Self.submitFee(id, changed: false, database: db)
+        let transaction = try #require(try await db.getNextCrudTransaction())
+        let entry = try #require(transaction.crud.first)
+        #expect(transaction.crud.count == 1)
+        await #expect(throws: LocalOperationGuardInjectedFailure.self) {
+            try await FeeCreationUpload.apply(entry, database: db, accessFence: .init(),
+                applier: FeeReply(rejected: rejected, transportFailure: true))
+        }
+        #expect(try await Self.submitFee(id, changed: false, database: db).localState == .applying)
+        await #expect(throws: CreateFeeInstallmentServerResult.Failure.receiptMismatch) {
+            try await FeeCreationUpload.apply(entry, database: db, accessFence: .init(),
+                applier: FeeReply(rejected: rejected, wrongSubject: true))
+        }
+        try await FeeCreationUpload.apply(entry, database: db, accessFence: .init(), applier: FeeReply(rejected: rejected))
+        try await FeeCreationUpload.apply(entry, database: db, accessFence: .init(), applier: FeeReply(rejected: rejected))
+        try await transaction.complete()
+        #expect(try await db.getNextCrudTransaction() == nil)
+        #expect(try await Self.count("fee_installments", db) == 0)
+        try await db.close()
+        let reopened = try fixture.open()
+        #expect(try await Self.submitFee(id, changed: false, database: reopened).localState == (rejected ? .rejected : .applied))
+        try await reopened.close()
+    }
+
+    private struct FeeReply: CreateFeeInstallmentCommandApplying {
+        let rejected: Bool
+        var transportFailure = false
+        var wrongSubject = false
+        var beforeReply: @Sendable () async throws -> Void = {}
+        func apply(_ command: CreateFeeInstallmentCommand) async throws -> CreateFeeInstallmentServerResult {
+            if transportFailure { throw LocalOperationGuardInjectedFailure() }
+            try await beforeReply()
+            let e = command.envelope, fingerprint = try CreateFeeInstallmentUploadRequest(command).fingerprint
+            let time = Int64((e.clientCreatedAt.timeIntervalSince1970 * 1000).rounded())
+            return .init(operation_id: e.operationId.rawValue, account_id: e.accountId.rawValue,
+                actor_principal_id: e.actorPrincipalId.rawValue, command_type: "create_fee_installment", contract_version: "fee-installment-create-v1",
+                command_fingerprint: fingerprint, envelope_sha256: fingerprint,
+                subject_id: wrongSubject ? "wrong" : e.payload.installmentId.rawValue, phase: rejected ? "rejected" : "applied",
+                request_sha256: nil, result_code: rejected ? nil : "fee_installment_created",
+                error_code: rejected ? "fee_total_exceeded" : nil,
+                client_created_at_ms: time, server_received_at_ms: time, completed_at_ms: time)
+        }
+    }
+
+    @Test("Fee upload preserves work when access is withdrawn in flight")
+    func feeUploadAccessWithdrawal() async throws {
+        let fixture = try LocalOperationGuardDatabaseFixture()
+        defer { fixture.remove() }
+        let db = try fixture.open()
+        try await Self.seedAuthorityIfNeeded(for: [.createFeeInstallment], database: db)
+        while let setup = try await db.getNextCrudTransaction() { try await setup.complete() }
+        let id = try Self.concurrentOperationId(for: [.createFeeInstallment], index: 914)
+        _ = try await Self.submitFee(id, changed: false, database: db)
+        let transaction = try #require(try await db.getNextCrudTransaction())
+        let entry = try #require(transaction.crud.first)
+        await #expect(throws: ProjectInvoicingItemLocalReader.Failure.self) {
+            try await FeeCreationUpload.apply(entry, database: db, accessFence: .init(),
+                applier: FeeReply(rejected: false, beforeReply: {
+                    _ = try await db.execute(sql: "UPDATE spike_account_memberships SET financial_access='none'", parameters: nil)
+                }))
+        }
+        #expect(try await db.get(sql: "SELECT local_state FROM spike_local_operations WHERE id=?",
+            parameters: [id.rawValue]) { try $0.getString(index: 0) } == "applying")
+        #expect(try await db.getNextCrudTransaction() != nil)
+        #expect(try await Self.count("fee_installments", db) == 0)
+        try await db.close()
+    }
+
+    @Test("Sync connector dispatches and acknowledges Fee commands")
+    func feeConnectorDispatch() async throws {
+        let fixture = try LocalOperationGuardDatabaseFixture()
+        defer { fixture.remove() }
+        let db = try fixture.open()
+        try await Self.seedAuthorityIfNeeded(for: [.createFeeInstallment], database: db)
+        while let setup = try await db.getNextCrudTransaction() { try await setup.complete() }
+        let id = try Self.concurrentOperationId(for: [.createFeeInstallment], index: 915)
+        _ = try await Self.submitFee(id, changed: false, database: db)
+        let connector = LedgerPowerSyncUploadConnector(accessFence: .init(), credentialProvider: { nil },
+            clientCreationApplier: UnexpectedClientCreation(), feeCreationApplier: FeeReply(rejected: false))
+        try await connector.uploadData(database: db)
+        #expect(try await db.getNextCrudTransaction() == nil)
+        #expect(try await Self.submitFee(id, changed: false, database: db).localState == .applied)
+        try await db.close()
+    }
+    private struct UnexpectedClientCreation: ClientCreationCommandApplying {
+        func apply(_ request: ClientCreationUploadRequest) async throws -> ClientCreationServerResult {
+            throw LocalOperationGuardInjectedFailure()
+        }
     }
 
     @Test("Invoice upload retains retry and rejection evidence", arguments: [false, true])
@@ -2199,6 +2383,8 @@ struct LocalOperationIdentityGuardTests {
         database: any PowerSyncDatabaseProtocol
     ) async throws -> OperationReceipt {
         switch family {
+        case .createFeeInstallment:
+            return try await submitFee(operationId, changed: true, database: database)
         case .createInvoice:
             return try await submitInvoice(operationId, changed: true, database: database)
         case .editExpense:
