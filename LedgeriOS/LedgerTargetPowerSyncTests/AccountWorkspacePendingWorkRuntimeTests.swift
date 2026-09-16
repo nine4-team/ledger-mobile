@@ -1824,6 +1824,40 @@ struct AccountWorkspacePendingWorkRuntimeTests {
             let original = try #require(history.intervals.first(where: { $0.placementId == payload.items[0].placementId }))
             #expect(original.scope == .businessInventory && original.endedAt == soldPlacement.startedAt)
             #expect(history.currentClientPaidPurchases.isEmpty)
+            if env["LEDGER_RESALE_LOCAL"] == "1" {
+                let resaleReview = try await finalOffline.readInventorySaleReview(itemIds: [itemId])
+                let resalePayload = try resaleReview.makePayload(projectId: projectId,
+                    currency: .init(validating: "USD"), enteredPrices: [:])
+                #expect(resalePayload.items[0].placementId == returnedPlacement.placementId)
+                #expect(resalePayload.items[0].occurrenceId != payload.items[0].occurrenceId)
+                let resaleUUID = UUID(), resaleTime = Date()
+                let accepted = try await finalOffline.sellInventoryItems(resalePayload,
+                    operationUUID: resaleUUID, capturedAt: resaleTime)
+                try await finalOffline.close()
+                let resaleRuntime = try await context.openRuntime()
+                #expect(try await resaleRuntime.sellInventoryItems(resalePayload,
+                    operationUUID: resaleUUID, capturedAt: resaleTime).operationId == accepted.operationId)
+                try await entry.startWorkspaceSync(resaleRuntime, authorization: authorization, powerSyncURL: sync)
+                for try await value in resaleRuntime.watchInventorySale(accepted.operationId) {
+                    if value?.state.phase == .rejected { throw RuntimeInjectedFailure() }
+                    if value?.state.phase == .applied { break }
+                }
+                var resoldHistory = false
+                for try await value in resaleRuntime.watchDownloadedItemPlacementHistory(accountId: context.accountId, itemId: itemId) {
+                    if value.intervals.first?.placementId == resalePayload.items[0].newPlacementId {
+                        #expect(value.returnLinks == history.returnLinks)
+                        #expect(value.intervals.count == 4)
+                        resoldHistory = true; break
+                    }
+                }
+                #expect(resoldHistory)
+                try await resaleRuntime.close()
+                let reopened = try await context.openRuntime()
+                let finalHistory = try await reopened.readDownloadedItemPlacementHistory(accountId: context.accountId, itemId: itemId)
+                #expect(finalHistory.returnLinks == history.returnLinks)
+                #expect(finalHistory.intervals.first?.placementId == resalePayload.items[0].newPlacementId)
+                try await reopened.close()
+            }
             try await finalOffline.close()
         }
         try await resumed.close()

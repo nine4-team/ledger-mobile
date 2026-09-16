@@ -1,6 +1,6 @@
 {
   "schemaVersion": 2,
-  "stateVersion": 1076,
+  "stateVersion": 1081,
   "userRequestedPause": {
     "date": "2026-09-15",
     "status": "resumed",
@@ -21,15 +21,15 @@
     "meaning": "Historical attempt1 passed all five jobs including1086native tests/156suites and25Mac/30iPhoneUI tests. Attempt2 failed iOS UI. Not a currently clean full-UI baseline or broad Item/Purchase/hosted/migration/cutover proof."
   },
   "activeWorkflow": {
-    "id": "item-remove-before-invoice",
+    "id": "inventory-to-project-sale",
     "kind": "product_ui",
     "status": "implementation",
     "recordPath": "docs/plans/ledger-accounting-redesign/conversion/product-behavior-checklist.json",
-    "outcome": "Return the Item to Inventory, remove its uninvoiced positive charge and unpaid Furnishings progress, and link the return to the reversed sale occurrence. Retain audit history; create no Invoice, credit or project Transaction.",
-    "baseCommit": "0de51756df4422d835acf47d852bc0cf1290b182",
+    "outcome": "Sell selected Inventory Items to an eligible Project using reviewed destination prices, one atomic placement/charge operation and durable replay. Keep Sell independent of source-Return eligibility and preserve acquisition and paid history.",
+    "baseCommit": "726431917f3acdd3091e7ca369222c5225c00754",
     "nextActions": [
-      "Return review, RPC, offline queue, Item menu and MCP are implemented. Finish remaining UI interaction/history/Account-switch evidence and final review; do not reimplement completed wiring.",
-      "Four acceptance checks now passed with linked local evidence: idempotency, sync convergence, accounting and atomicity. Keep remaining checks and exact-commit CI open; then commit/push a coherent batch.",
+      "Verify existing Sell on returned Inventory Items: same/different Project, fresh charge/placement, original history unchanged. Use existing UI and commands.",
+      "Return batch72643191 remains pending CI35093201085; do not mix follow-up evidence into that immutable tested revision or waive its remaining checks.",
       "Earlier Invoice/Fee/PDF evidence and unfinished Mac/CI checks stay with their owners; this batch does not waive them."
     ]
   },
@@ -52,15 +52,17 @@
     "instruction": "Follow the active checklist record and nextActions. Preserve failures; no full-suite context recovery."
   },
   "currentTask": {
-    "id": "item-remove-before-invoice-implementation",
+    "id": "inventory-sale-resale-followup",
     "status": "implementation",
-    "acceptanceCheckIds": ["UNINVOICED-RETURN-INTENT","UNINVOICED-RETURN-ATOMIC"],
-    "meaning": "Story2 only: Inventory-originated Item with open charge and no Invoice. Exact source/return IDs and revision contract implemented; backend/queue/UI/MCP still required.",
+    "acceptanceCheckIds": ["SALE-GENERAL","SALE-ATOMIC"],
+    "meaning": "Story5 resale follow-up through existing Sell implementation; retain return batch and other workflows under their own acceptance records.",
     "verificationCommands": ["swift test --package-path LedgeriOS --no-parallel --filter ReturnUninvoicedItemsCommandTests"],
     "lastResult": "Historical CI35039310979 on41b0f5e7 failed Mac UI; iOS cancelled. Transaction owner retains triage. Not whole-batch acceptance.",
     "activeProcesses": {"localEdgeService":14316},
     "desktopPrerequisite": "Mac locked; unlock requested. No UI retry before unlock. ce42269c checkpoint plus dirty shared save validator: native37712 PASS5, Mac build49887 PASS; invoice-report-readback.liveExportContentGuardReview.",
-    "immediateFollowup": "Added bulk3Item/unavailable/exact retry UI tests using existing fixtures; Mac build-for-testing PASS63509 (returnAdditionalUIPreparation). No interactions run: desktop locked. NEXT finish Account-switch/history coverage and final diff/acceptance reconciliation, coherent commit/CI; existing three return UI methods ready when unlocked. Imported Inventory target sale/return PASS21621 and observed Project rejection PASS55 retained; not full source migration. Clean102migration/integrated proofs retained. Hosted unchanged; no active processes. Private .native-pdf files untouched.",
-    "nextVerification": "CI35078916886 attempt1 terminal: conversion/provider passed, Mac failed, iOS cancelled, aggregate failed (read76166). Boundary fix locally passed earlier. No running CI to wait for. Return history UI test added/build PASS79868; bulk/retry builds retained. NEXT coherent checkpoint review/commit and normal PR CI; UI interaction remains required, desktop locked. Historical failures not waived."
+    "immediateFollowup": "CI35093201085 terminal failed: provider physical-stream consumer still expected4 queries; native skipped. Corrected query classification and added return-history captures: local physical60/property149 PASS, returnCIConsumerCorrection. Resale MCP same/different Project and native offline proof retained. NEXT checkpoint consumer correction/resale tests then one fresh exact-commit verification, no unchanged rerun. UI not yet executed. Desktop last locked; private .native-pdf untouched.",
+    "nextVerification": "Commit/push corrected physical consumer with resale verification; PR1 conflicts suppress automatic CI, so one explicit next revision run needed. No run currently waiting. Return UI tests still unexecuted; native was skipped. Historical failures retained, no Firebase merge.",
+    "returnBatchCI": {"run":35093201085,"attempt":1,"commit":"726431917f3acdd3091e7ca369222c5225c00754","status":"failed","url":"https://github.com/nine4-team/ledger-mobile/actions/runs/35093201085","reason":"PR1 conflicts suppress automatic PR CI.","lastObserved":"Conversion passed; provider failed at outdated physical-query classification; native skipped, aggregate failed. Local consumer fix passed60captures; property consumer149captures. No unchanged rerun."},
+    "nextWorkflowDecision": "Collection remains gated by O-033; async user question asks whether entered payment must equal Invoice total, recommends yes per no-partial-payment direction. Live-Invoice return has O-010/O-034 blockers; do not silently resolve them. Approved resale is another candidate using existing sale/return commands. Avoid rereading whole outcome catalog; query selected story fields only."
   }
 }

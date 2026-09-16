@@ -111,6 +111,7 @@ try {
                 LEDGER_SALE_LOCAL_ITEM:selectedItem,LEDGER_SALE_LOCAL_PROJECT:selectedProject,LEDGER_SALE_LOCAL_KEY:local.PUBLISHABLE_KEY,
                 LEDGER_SALE_LOCAL_DESTINATION_PROJECT:project,
                 ...(process.argv.includes('--native-return')?{LEDGER_RETURN_LOCAL:'1'}:{}),
+                ...(process.argv.includes('--native-resale')?{LEDGER_RESALE_LOCAL:'1'}:{}),
                 LEDGER_RETURN_LOCAL_PROJECT_COUNT:String(returnScale),
                 LEDGER_SALE_LOCAL_CLIENT:client,
                 ...(process.argv.includes('--native-invoice-create')?{LEDGER_INVOICE_LOCAL_CREATE:'1'}:{}),
@@ -483,15 +484,16 @@ try {
         const ports=JSON.parse(docker(['inspect','--format','{{json .NetworkSettings.Ports}}','ledger_powersync_local']));
         assert.deepEqual(ports['8080/tcp'],[{HostIp:'127.0.0.1',HostPort:'5590'}]);
         runNative('inventorySaleLiveReplication');
-        assert.equal(sql(`select count(*) from ledger_private.item_charge_occurrences where account_id=${q(account)}`),String(returnScale));
-        assert.equal(sql(`select amount_minor_units::text from ledger_private.item_charge_occurrences where account_id=${q(account)} and item_id=${q(item)}`),'9223372036854775807');
+        const resold=process.argv.includes('--native-resale');
+        assert.equal(sql(`select count(*) from ledger_private.item_charge_occurrences where account_id=${q(account)}`),String(returnScale+(resold?1:0)));
+        assert.equal(sql(`select count(*) from ledger_private.item_charge_occurrences where account_id=${q(account)} and item_id=${q(item)} and amount_minor_units=9223372036854775807`),resold?'2':'1');
         assert.equal(sql(`select count(*) from public.spike_transactions where account_id=${q(account)}`),'0');
         if(process.argv.includes('--native-return')) {
             assert.equal(sql(`select count(*) from ledger_private.uninvoiced_item_returns where account_id=${q(account)}`),'1');
-            assert.equal(sql(`select count(*) from ledger_private.item_charge_occurrences where account_id=${q(account)} and withdrawn_at is null`),String(returnScale-1));
-            assert.equal(sql(`select count(*) from public.spike_item_placements where account_id=${q(account)} and ended_at is null and scope_kind='business_inventory'`),'1');
+            assert.equal(sql(`select count(*) from ledger_private.item_charge_occurrences where account_id=${q(account)} and withdrawn_at is null`),String(returnScale-1+(resold?1:0)));
+            assert.equal(sql(`select count(*) from public.spike_item_placements where account_id=${q(account)} and ended_at is null and scope_kind='business_inventory'`),resold?'0':'1');
         }
-        console.log(JSON.stringify({nativeLiveSale:true,nativeLiveReturn:process.argv.includes('--native-return'),charges:returnScale,salePayments:0,exactInt64:true}));
+        console.log(JSON.stringify({nativeLiveSale:true,nativeLiveReturn:process.argv.includes('--native-return'),nativeLiveResale:resold,charges:returnScale+(resold?1:0),salePayments:0,exactInt64:true}));
     } else {
     const reviewEndpoint='/rest/v1/rpc/spike_read_inventory_sale_review';
     const reviewBody={p_account_id:account,p_item_ids:[item]};
@@ -553,6 +555,41 @@ try {
         await assert.rejects(returnService.review(reviewInput,context),error=>error.statusCode===403);
         const changed=structuredClone(returnInput); changed.payload.items[0].returnOccurrenceId+='-changed';
         await assert.rejects(returnMCP.uninvoicedReturnTool(changed,context,returnService),error=>error.statusCode===409);
+        if(process.argv.includes('--resale')) {
+            const destination=process.argv.includes('--resale-other-project') ? key+'-destination' : project;
+            if(destination!==project) sql(`begin;
+                insert into public.spike_clients(id,account_id,display_name,created_at,updated_at,created_at_ms,updated_at_ms,created_by_principal_id)
+                  values(${q(key+'-other-client')},${q(account)},'Other synthetic Client',now(),now(),1,1,${q(principal)});
+                insert into public.spike_projects(id,account_id,client_id,display_name,created_at,updated_at,created_at_ms,updated_at_ms,created_by_principal_id)
+                  values(${q(destination)},${q(account)},${q(key+'-other-client')},'Other synthetic Project',now(),now(),1,1,${q(principal)});
+                commit;`);
+            const prior=sql(`select jsonb_build_object('charge',to_jsonb(c),'return',to_jsonb(r))
+                from ledger_private.item_charge_occurrences c join ledger_private.uninvoiced_item_returns r
+                  on r.account_id=c.account_id and r.charge_id=c.id where c.id=${q(key+'-charge')}`);
+            const resaleReview=await mcp.inventorySaleReviewTool({itemIds:[item]},context,service);
+            assert.equal(resaleReview.items[0].placementId,key+'-returned');
+            assert.equal(resaleReview.items[0].projectPrice.state,'known');
+            const resale={operationUUID:randomUUID(),clientCreatedAtMilliseconds:1788523200000,
+                payload:{projectId:destination,currency:'USD',items:[{itemId:item,placementId:key+'-returned',
+                    priceRevision:resaleReview.items[0].priceRevision,reviewedPriceMinorUnits:resaleReview.items[0].projectPrice.amountMinorUnits,
+                    newPlacementId:key+'-resold',occurrenceId:key+'-resale-charge'}]}};
+            const resold=await mcp.inventorySaleTool(resale,context,service);
+            assert.equal(resold.phase,'applied');
+            assert.deepEqual(await mcp.inventorySaleTool(resale,context,service),resold);
+            assert.equal(sql(`select jsonb_build_object('charge',to_jsonb(c),'return',to_jsonb(r))
+                from ledger_private.item_charge_occurrences c join ledger_private.uninvoiced_item_returns r
+                  on r.account_id=c.account_id and r.charge_id=c.id where c.id=${q(key+'-charge')}`),prior);
+            assert.equal(sql(`select count(*) from public.spike_items where account_id=${q(account)}`),'1');
+            assert.equal(sql(`select count(*) from ledger_private.item_charge_occurrences where account_id=${q(account)}
+                and id=${q(key+'-resale-charge')} and item_id=${q(item)} and project_id=${q(destination)}
+                and category_id=${q(category)} and amount_minor_units=9223372036854775807 and withdrawn_at is null`),'1');
+            assert.equal(sql(`select count(*) from public.spike_transactions where account_id=${q(account)}`),'0');
+            assert.equal(sql(`select count(*) from public.spike_item_placements where account_id=${q(account)}
+                and id=${q(key+'-resold')} and item_id=${q(item)} and project_id=${q(destination)} and ended_at is null`),'1');
+            if(destination!==project) assert.equal(sql(`select count(*) from ledger_private.item_charge_occurrences
+                where account_id=${q(account)} and project_id=${q(project)} and withdrawn_at is null`),'0');
+            console.log(`PASS same-Item resale (${destination===project ? 'same Project' : 'different Client/Project'}): fresh charge/placement, reviewed current price, exact replay, prior charge/return unchanged`);
+        }
         if(process.argv.includes('--return-withdrawal')) {
             const controller=new AbortController(), deadline=setTimeout(()=>controller.abort(),20000);
             let historyBucket, checkpointBuckets=new Set(), stage='download', purged=false, pending='';
