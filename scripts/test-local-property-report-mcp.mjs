@@ -64,6 +64,13 @@ const transport = new StdioClientTransport({ command: process.execPath,
     LEDGER_TARGET_ACCOUNT_ID: account }, stderr: 'pipe' });
 const client = new Client({ name: 'ledger-local-report-test', version: '1' });
 try {
+  // Exercise first-run insertion even when the reusable report fixture exists.
+  // No retained graph is created by this probe.
+  sql(`begin;
+    insert into public.spike_accounts(id,display_name) values ('${project}','Synthetic category insert probe');
+    insert into public.spike_budget_categories(id,account_id,display_name,kind,lifecycle,visibility_class,presentation_order,created_at_ms,updated_at_ms)
+      values ('${project}','${project}','Furnishings','itemized','archived','ordinary',10,1,1) on conflict (id) do nothing;
+    rollback;`);
   sql(`begin;
     insert into public.spike_accounts(id,display_name) values ('${account}','Synthetic MCP report fixture') on conflict do nothing;
     insert into public.spike_account_memberships(account_id,principal_id,role,state)
@@ -95,7 +102,7 @@ try {
         and placement.project_id='${populated}' and placement.ended_at is null
       on conflict do nothing;
     insert into public.spike_budget_categories(id,account_id,display_name,kind,lifecycle,visibility_class,presentation_order,created_at_ms,updated_at_ms)
-      values ('report-mcp-category','${account}','Furnishings','itemized','archived','ordinary',10,1,1) on conflict do nothing;
+      values ('report-mcp-category','${account}','Furnishings','itemized','archived','ordinary',10,1,1) on conflict (id) do nothing;
     insert into public.spike_item_project_categories(id,account_id,project_id,item_id,category_id)
       select placement.id,'${account}','${populated}',placement.item_id,'report-mcp-category'
       from public.spike_item_placements placement where placement.account_id='${account}'

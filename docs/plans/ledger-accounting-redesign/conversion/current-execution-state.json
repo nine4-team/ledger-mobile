@@ -1,6 +1,6 @@
 {
   "schemaVersion": 2,
-  "stateVersion": 923,
+  "stateVersion": 924,
   "userRequestedPause": {
     "date": "2026-09-15",
     "status": "resumed",
@@ -64,6 +64,6 @@
     "databaseReview": "Source review complete for commands/auth/categories, uploads, Expense storage/read/import, Transaction read/projections and Invoice/accounting sync. SQL PASS54 files/1645 assertions/4s: /tmp/ledger-database-integration-review.log session40737 exit0. Fresh migration replay remains pending; use existing CI fresh-stack job after checkpoint scope is resolved, not a destructive local reset.",
     "immediateFollowup": "Integration scope/risk gate passes: /tmp/ledger-integration-risk-check.log. CI controls19 pass; target contracts/TypeScript pass (integration-ci-controls/contract-check logs). No GitHub run started.",
     "uiAvailabilityWait": "Category UI failed11.423s before assertion; /tmp/ledger-expense-category-integration.log. Screenshot again shows Boards foreground. No retries until isolated execution. Direct pass retained.",
-    "nextVerification": "CI35037448272 failed race; local9races/6isolation checks now pass. Remaining physical52/image30/report149 SQL captures and real MCP/HTTP checks pass after display_metadata expectation correction; Transaction sharedConsumerVerification. Commit/push both test fixes; one integration dispatch needed. No live CI."
+    "nextVerification": "CI35037980093 FAILED fresh MCP fixture category insert: untargeted ON CONFLICT incompatible with deferrable ordering constraint. Prior race/SQL/streams pass. Script now targets(id), adds rolled-back fresh insert probe; full local MCP/HTTP PASS /tmp/ledger-report-fresh-category.log. Commit/push test repair then one CI dispatch. Watcher39159 terminal1; native/UI not run."
   }
 }
