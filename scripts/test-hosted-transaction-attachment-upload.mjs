@@ -12,9 +12,10 @@ const feeFlow=process.argv.includes('--fee-flow');
 const returnFlow=process.argv.includes('--return-flow');
 const historyFlow=process.argv.includes('--history-flow');
 const sessionFlow=process.argv.includes('--session-flow');
+const priceFlow=process.argv.includes('--price-flow');
 const expenseFlow=feeFlow||invoiceFlow||expenseEditFlow||process.argv.includes('--expense-flow');
 const expenseMode=expenseFlow||process.argv.includes('--expense');
-assert.deepEqual(process.argv.slice(2),sessionFlow?['--apply','--session-flow']:historyFlow?['--apply','--history-flow']:returnFlow?['--apply','--return-flow']:expenseMode?['--apply',feeFlow?'--fee-flow':invoiceFlow?'--invoice-flow':expenseEditFlow?'--expense-edit-flow':expenseFlow?'--expense-flow':'--expense']:['--apply']);
+assert.deepEqual(process.argv.slice(2),priceFlow?['--apply','--price-flow']:sessionFlow?['--apply','--session-flow']:historyFlow?['--apply','--history-flow']:returnFlow?['--apply','--return-flow']:expenseMode?['--apply',feeFlow?'--fee-flow':invoiceFlow?'--invoice-flow':expenseEditFlow?'--expense-edit-flow':expenseFlow?'--expense-flow':'--expense']:['--apply']);
 // Load the existing MCP implementations before opening a QA session.
 const expenseAPI=expenseFlow?await import('../LedgerTargetMCP/src/expenseCreation.ts'):null;
 const projectAPI=expenseFlow?await import('../LedgerTargetMCP/src/projectCreation.ts'):null;
@@ -43,7 +44,50 @@ try {
   const memberships=await read('/rest/v1/spike_account_memberships?account_id=eq.'+account+'&select=principal_id,role,state,financial_access,can_manage_projects,can_manage_project_budgets');
   assert.deepEqual(memberships.map(({principal_id,role,state})=>({principal_id,role,state})),
     [{principal_id:auth.principalId,role:'owner',state:'active'}]);
-  if(sessionFlow) {
+  if(priceFlow) {
+    if(memberships[0].financial_access==='none') {
+      restoreHistoryAccess=true;
+      const changed=historySQL(`update public.spike_account_memberships set financial_access='full'
+        where account_id='realcopy-b9d236394770-account'
+          and principal_id='upload-http-owner-4b1e9766-5791-48a9-a7b1-15a541807e64'
+          and state='active' and role='owner' and financial_access='none' returning financial_access;`);
+      assert.deepEqual(changed,[{financial_access:'full'}]);
+      memberships[0].financial_access='full';
+    }
+    assert.equal(memberships[0].financial_access,'full');
+    const clients=await read('/rest/v1/spike_clients?account_id=eq.'+account+'&lifecycle=eq.active&select=id&order=id&limit=1');
+    const accounts=await read('/rest/v1/spike_accounts?id=eq.'+account+'&select=furnishings_category_id');
+    assert.equal(clients.length,1);assert.equal(accounts.length,1);
+    assert.equal(typeof accounts[0].furnishings_category_id,'string');
+    const id='hosted-price-flow-'+crypto.randomUUID(),project=id+'-project',item=id+'-item';
+    const q=value=>"'"+value.replaceAll("'","''")+"'";
+    historySQL(`begin;
+      insert into public.spike_projects(id,account_id,client_id,display_name,created_at,updated_at,created_at_ms,updated_at_ms,created_by_principal_id)
+        values(${q(project)},${q(account)},${q(clients[0].id)},'QA — hosted Item price',now(),now(),1,1,${q(auth.principalId)});
+      insert into public.spike_items(id,account_id,description,created_by_principal_id)
+        values(${q(item)},${q(account)},'QA synthetic price Item',${q(auth.principalId)});
+      insert into public.spike_item_placements(id,account_id,item_id,scope_kind,project_id,started_at,started_by_principal_id,start_evidence)
+        values(${q(id+'-placement')},${q(account)},${q(item)},'project',${q(project)},now(),${q(auth.principalId)},'import_observation');
+      insert into ledger_private.item_project_prices(account_id,item_id,amount_minor_units,currency,updated_at,updated_by_principal_id)
+        values(${q(account)},${q(item)},12346,'USD',now(),${q(auth.principalId)});
+      insert into ledger_private.item_charge_occurrences(id,account_id,project_id,item_id,placement_id,category_id,amount_minor_units,currency,created_by_principal_id)
+        values(${q(id+'-charge')},${q(account)},${q(project)},${q(item)},${q(id+'-placement')},${q(accounts[0].furnishings_category_id)},12346,'USD',${q(auth.principalId)});
+      commit; select true as seeded;`);
+    const run=spawnSync('swift',['test','--package-path','LedgeriOS','--no-parallel','--filter',
+      'AccountWorkspacePendingWorkRuntimeTests/itemPriceLiveReplication'],{encoding:'utf8',timeout:180000,env:{...process.env,
+        LEDGER_PRICE_LOCAL:'1',LEDGER_PRICE_HOSTED_QA:'1',LEDGER_SALE_LOCAL_ACCOUNT:account,
+        LEDGER_SALE_LOCAL_PRINCIPAL:auth.principalId,LEDGER_SALE_LOCAL_ITEM:item,LEDGER_SALE_LOCAL_PROJECT:project,
+        LEDGER_SALE_LOCAL_KEY:apikey,LEDGER_SALE_LOCAL_EMAIL:auth.email,LEDGER_SALE_LOCAL_PASSWORD:auth.password}});
+    process.stdout.write(run.stdout??'');process.stderr.write(run.stderr??'');
+    assert.equal(run.status,0,'Hosted price edit failed');
+    assert.match(run.stdout+run.stderr,/Test run with 1 test.*passed/);
+    const [facts]=historySQL(`select
+      (select amount_minor_units::text from ledger_private.item_project_prices where account_id=${q(account)} and item_id=${q(item)}) as price,
+      (select amount_minor_units::text from ledger_private.item_charge_occurrences where id=${q(id+'-charge')}) as charge,
+      (select count(*) from public.spike_transactions where account_id=${q(account)} and project_id=${q(project)}) as payments;`);
+    assert.deepEqual(facts,{price:'12347',charge:'12347',payments:0});
+    console.log(JSON.stringify({hostedPricePassed:true,project,item,...facts}));
+  } else if(sessionFlow) {
     const run=spawnSync('swift',['test','--package-path','LedgeriOS','--no-parallel','--filter','AccountWorkspacePendingWorkRuntimeTests/hostedSessionSyncThenLogout'],{
       encoding:'utf8',timeout:180000,env:{...process.env,LEDGER_SESSION_HOSTED_QA:'1',
         LEDGER_SESSION_QA_EMAIL:auth.email,LEDGER_SESSION_QA_PASSWORD:auth.password}});

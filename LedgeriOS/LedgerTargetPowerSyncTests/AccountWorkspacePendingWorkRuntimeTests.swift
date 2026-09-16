@@ -2056,14 +2056,23 @@ struct AccountWorkspacePendingWorkRuntimeTests {
           .enabled(if: ProcessInfo.processInfo.environment["LEDGER_PRICE_LOCAL"] == "1"), .timeLimit(.minutes(1)))
     func itemPriceLiveReplication() async throws {
         let env = ProcessInfo.processInfo.environment
+        let hosted = env["LEDGER_PRICE_HOSTED_QA"] == "1"
         guard let account = env["LEDGER_SALE_LOCAL_ACCOUNT"], let principal = env["LEDGER_SALE_LOCAL_PRINCIPAL"],
               let item = env["LEDGER_SALE_LOCAL_ITEM"], let project = env["LEDGER_SALE_LOCAL_PROJECT"],
               let key = env["LEDGER_SALE_LOCAL_KEY"], let email = env["LEDGER_SALE_LOCAL_EMAIL"],
-              let password = env["LEDGER_SALE_LOCAL_PASSWORD"],
-              [account, principal, item, project].allSatisfy({ $0.hasPrefix("sale-http-") }) else { throw RuntimeInjectedFailure() }
+              let password = env["LEDGER_SALE_LOCAL_PASSWORD"] else { throw RuntimeInjectedFailure() }
+        if hosted {
+            guard account == "realcopy-b9d236394770-account",
+                  principal == "upload-http-owner-4b1e9766-5791-48a9-a7b1-15a541807e64",
+                  item.hasPrefix("hosted-price-flow-"), project.hasPrefix("hosted-price-flow-"),
+                  email.hasSuffix("@ledger-tests.invalid") else { throw RuntimeInjectedFailure() }
+        } else {
+            guard [account, principal, item, project].allSatisfy({ $0.hasPrefix("sale-http-") }) else { throw RuntimeInjectedFailure() }
+        }
         let context = try RuntimeTestContext(suffix: "price-live", accountId: .init(validating: account), principalId: .init(validating: principal))
         defer { context.remove() }
-        let url = URL(string: "http://127.0.0.1:54321")!, sync = URL(string: "http://127.0.0.1:5590")!
+        let url = URL(string: hosted ? "https://ybwviepljilrkrjoahbl.supabase.co" : "http://127.0.0.1:54321")!
+        let sync = URL(string: hosted ? "https://6aa8966802481fb31b96942c.powersync.journeyapps.com" : "http://127.0.0.1:5590")!
         let auth = AuthClient(configuration: .init(url: url.appendingPathComponent("auth/v1"), headers: ["apikey": key],
             storageKey: "price-live", localStorage: CategoryAuthTestStorage(), fetch: { try await URLSession.shared.data(for: $0) },
             autoRefreshToken: false, emitLocalSessionAsInitialSession: true))
