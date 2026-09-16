@@ -181,6 +181,7 @@ enum AccountWorkspaceRuntimeFiniteOperation: Equatable, Sendable {
     case readInvoicingCharges
     case readExpenses
     case readCollectedInvoices
+    case readLiveInvoices
     case createClient
     case createProject
     case archiveProject
@@ -1553,6 +1554,41 @@ actor AccountWorkspacePendingWorkRuntime {
                 .readCollectedInvoiceReport(accountId: accountId, principalId: resources.principalId,
                     projectId: projectId, invoiceId: invoiceId, asOf: asOf)
         }
+    }
+
+    func readLiveInvoices(accountId: AccountID, projectId: ProjectID) async throws -> [LiveInvoiceContents] {
+        try await withFiniteLease(.readLiveInvoices) { resources in
+            guard accountId == resources.accountId else { throw LedgerOfflineClientRuntimeFailure.accountScopeMismatch }
+            return try await LiveInvoicePowerSyncQuery(database: resources.structuredDatabase)
+                .read(accountId: accountId, principalId: resources.principalId, projectId: projectId)
+        }
+    }
+
+    func startLiveInvoiceWatch(id: UUID, accountId: AccountID, projectId: ProjectID,
+        continuation: AsyncThrowingStream<[LiveInvoiceContents]?, Error>.Continuation) {
+        guard !normalAccessLocked, case .open = state, let resources else {
+            continuation.finish(throwing: LedgerOfflineClientRuntimeFailure.runtimeClosed); return
+        }
+        guard !Task.isCancelled, cancelledBeforeStart.remove(id) == nil else {
+            continuation.finish(throwing: CancellationError()); return
+        }
+        guard accountId == resources.accountId else {
+            continuation.finish(throwing: LedgerOfflineClientRuntimeFailure.accountScopeMismatch); return
+        }
+        let task = Task.detached { [resources] in
+            do {
+                try await resources.streamOperationCheckpoint(.expenses)
+                try Task.checkCancellation()
+                try await LiveInvoicePowerSyncQuery(database: resources.structuredDatabase).run(
+                    accountId: accountId, principalId: resources.principalId, projectId: projectId) { value in
+                        await self.forwardStreamValue(value, to: continuation)
+                    }
+                continuation.finish()
+            } catch is CancellationError { continuation.finish(throwing: CancellationError()) }
+            catch { await self.finishStream(continuation, error: error) }
+            await self.streamFinished(id: id)
+        }
+        streamTasks[id] = task
     }
 
     func readCollectedInvoices(accountId: AccountID, projectId: ProjectID) async throws -> [FrozenInvoiceContents] {

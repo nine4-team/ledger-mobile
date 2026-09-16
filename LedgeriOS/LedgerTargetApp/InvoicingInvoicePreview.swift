@@ -13,6 +13,8 @@ struct InvoicingInvoicePreview: View {
     let projectName: String
     let clientName: String
     @State private var report: CollectedInvoiceReportSnapshot?
+    @State private var liveInvoice: LiveInvoiceContents?
+    @State private var liveLoading = true
     private var invoice: FrozenInvoiceContents? { report?.invoice }
     @State private var loading = true
     @State private var find = FindStateManager()
@@ -39,7 +41,15 @@ struct InvoicingInvoicePreview: View {
                                 .accessibilityIdentifier("target-invoice-branding-notice")
                         }
                     }
-            } else if loading {
+            } else if let liveInvoice {
+                InvoiceReportView(data: liveReportData(liveInvoice), projectName: projectName,
+                    clientName: clientName, businessName: profile?.name.rawValue,
+                    invoiceName: liveInvoice.name, invoiceStatusLabel: liveInvoice.status.rawValue.capitalized,
+                    invoiceDate: nil, notes: liveInvoice.notes, showsDownloadAction: false,
+                    currencyCode: liveInvoice.total.currency.rawValue, usesCurrentDateWhenMissing: false,
+                    suppliedLogo: logo, provenance: "Live Invoice: source edits update this total. Not collected.", totalLabel: "Invoice Total")
+                    .accessibilityIdentifier("target-live-invoice-preview")
+            } else if loading || liveLoading {
                 ProgressView("Downloading Invoice")
             } else {
                 ContentUnavailableView("Invoice unavailable", systemImage: "doc.text",
@@ -106,6 +116,17 @@ struct InvoicingInvoicePreview: View {
             } catch {
                 if !Task.isCancelled { report = nil; loading = false }
             }
+        }
+        .task {
+            guard let reader = runtime as? any ProjectLiveInvoiceReading else { liveLoading = false; return }
+            do {
+                for try await values in reader.watchLiveInvoices(accountId: accountId, projectId: projectId) {
+                    guard !Task.isCancelled else { return }
+                    liveInvoice = values?.first { $0.invoiceId == invoiceId }
+                    liveLoading = false
+                }
+                if !Task.isCancelled { liveInvoice = nil; liveLoading = false }
+            } catch { if !Task.isCancelled { liveInvoice = nil; liveLoading = false } }
         }
     }
 
@@ -228,5 +249,16 @@ struct InvoicingInvoicePreview: View {
         }
         return InvoiceReportData(chargeLines: sections.charges.map { entry($0, credit: false) },
             creditLines: sections.credits.map { entry($0, credit: true) })
+    }
+
+    private func liveReportData(_ invoice: LiveInvoiceContents) -> InvoiceReportData {
+        func entry(_ line: LiveInvoiceContents.Line) -> InvoiceLineEntry {
+            let cents = Decimal(line.selection.reviewedAmount.minorUnits)
+            return InvoiceLineEntry(name: line.description, exactPriceCents: cents < 0 ? -cents : cents,
+                isMissingPrice: false, categoryId: line.categoryId.rawValue,
+                categoryName: categoryNames[Array(line.categoryId.rawValue.utf8)])
+        }
+        return InvoiceReportData(chargeLines: invoice.lines.filter { $0.selection.reviewedAmount.minorUnits >= 0 }.map(entry),
+            creditLines: invoice.lines.filter { $0.selection.reviewedAmount.minorUnits < 0 }.map(entry))
     }
 }

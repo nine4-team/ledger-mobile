@@ -1318,6 +1318,11 @@ struct AccountWorkspacePendingWorkRuntimeTests {
           .enabled(if: ProcessInfo.processInfo.environment["LEDGER_SALE_LOCAL_ACCOUNT"] != nil), .timeLimit(.minutes(1)))
     func expenseLiveReplication() async throws {
         let env = ProcessInfo.processInfo.environment
+        func liveStage(_ value: String) {
+            if env["LEDGER_LIVE_INVOICE_LOCAL"] == "1" {
+                FileHandle.standardError.write(Data("Live Invoice integration: \(value)\n".utf8))
+            }
+        }
         let hostedQA = env["LEDGER_EXPENSE_HOSTED_QA"] == "1"
         guard let account = env["LEDGER_SALE_LOCAL_ACCOUNT"],
               let principal = env["LEDGER_SALE_LOCAL_PRINCIPAL"],
@@ -1349,7 +1354,9 @@ struct AccountWorkspacePendingWorkRuntimeTests {
             from: directory.snapshot, requestedAt: Date()))
         let first = try await context.openRuntime(), projectId = try ProjectID(validating: project)
         try await entry.startWorkspaceSync(first, authorization: authorization, powerSyncURL: sync)
+        liveStage("sync started")
         for try await value in first.watchProjects() { if value.local.rows.contains(where: { $0.id == projectId }) { break } }
+        liveStage("Project downloaded")
         var original: BusinessPaidExpenseDraft?
         for try await value in first.watchExpenses(accountId: context.accountId, projectId: projectId) {
             if let row = value?.expenses.first(where: { $0.id.rawValue == expense }) {
@@ -1365,8 +1372,30 @@ struct AccountWorkspacePendingWorkRuntimeTests {
             }
         }
         let source = try #require(original)
+        liveStage("Expense downloaded")
         #expect(source.finalAmount.minorUnits == (hostedQA ? 12_345 : Int64.max))
         #expect(source.receiptLines.count == 1)
+        if env["LEDGER_LIVE_INVOICE_LOCAL"] == "1" {
+            guard !hostedQA else { throw RuntimeInjectedFailure() }
+            var downloaded: [LiveInvoiceContents]?
+            for try await invoices in first.watchLiveInvoices(accountId: context.accountId, projectId: projectId) {
+                guard let invoices, !invoices.isEmpty else { continue }
+                downloaded = invoices; break
+            }
+            let expected = try #require(downloaded)
+            liveStage("live Invoice downloaded")
+            #expect(expected.count == 1)
+            #expect(expected[0].total == source.finalAmount)
+            #expect(expected[0].lines[0].selection.source == .expense(source.expenseId))
+            #expect(expected[0].name == "Live sync Invoice")
+            try await first.close()
+            liveStage("first runtime closed")
+            let offline = try await context.openRuntime()
+            #expect(try await offline.readLiveInvoices(accountId: context.accountId, projectId: projectId) == expected)
+            liveStage("offline reopened contents match")
+            try await offline.close()
+            return
+        }
         if env["LEDGER_EXPENSE_HOSTED_WITHDRAWAL"] == "1" {
             guard hostedQA, env["LEDGER_EXPENSE_LOCAL_PAID"] == "1" else { throw RuntimeInjectedFailure() }
             let invoice = try #require(try await first.readCollectedInvoices(accountId: context.accountId,
@@ -3892,6 +3921,33 @@ struct AccountWorkspacePendingWorkRuntimeTests {
         ] {
             #expect(observations.filter { $0 == operation }.count == 3)
         }
+        context.remove()
+    }
+
+    @Test("Live Invoice read lease drains before workspace close")
+    func liveInvoiceReadDrainsBeforeClose() async throws {
+        let context = try RuntimeTestContext(suffix: "live-invoice-read-close")
+        let events = LockedRecorder<AccountWorkspaceRuntimeLifecycleEvent>()
+        let gate = ManualGate()
+        var dependencies = context.dependencies(events: events)
+        dependencies.finiteOperationCheckpoint = { operation in
+            if operation == .readLiveInvoices { await gate.wait() }
+        }
+        let runtime = try await context.openRuntime(dependencies: dependencies)
+        let project = try ProjectID(validating: "invoice-project")
+        let read = Task { try await runtime.readLiveInvoices(accountId: context.accountId, projectId: project) }
+        await gate.waitUntilEntered()
+        let close = Task { try await runtime.close() }
+        try await Task.sleep(for: .milliseconds(30))
+        #expect(!events.values.contains(.structuredDatabaseCloseAttempted))
+        read.cancel()
+        await gate.release()
+        await #expect(throws: CancellationError.self) { try await read.value }
+        try await close.value
+        await #expect(throws: LedgerOfflineClientRuntimeFailure.runtimeClosed) {
+            try await runtime.readLiveInvoices(accountId: context.accountId, projectId: project)
+        }
+        #expect(events.values.filter { $0 == .structuredDatabaseCloseAttempted }.count == 1)
         context.remove()
     }
 

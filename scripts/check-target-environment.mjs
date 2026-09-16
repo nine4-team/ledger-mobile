@@ -2551,6 +2551,7 @@ if (
     "item_images",
     "account_business_profile",
     "property_management_report",
+    "project_live_invoices",
     "project_expenses",
     "project_invoicing_item_charges",
     "transaction_receipts",

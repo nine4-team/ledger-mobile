@@ -1,6 +1,6 @@
 {
   "schemaVersion": 2,
-  "stateVersion": 978,
+  "stateVersion": 984,
   "userRequestedPause": {
     "date": "2026-09-15",
     "status": "resumed",
@@ -62,7 +62,7 @@
     "lastResult": "Local native1359/193 suites, MCP116 and SQL1645 passed before Expense edits. CI35039310979 on41b0f5e7 terminal failure: conversion/provider passed; Mac UI failed; iOS cancelled. Transaction owner retains triage. Not whole-batch acceptance.",
     "activeProcesses": {"localEdgeService":14316},
     "databaseReview": "Database source review complete. Local SQL54files/1645assertions and fresh provider job CI35039310979 passed. Do not repeat passing checks for context recovery.",
-    "immediateFollowup": "Live Invoice read20260916050431 applied LOCAL direct/no history; SQL1744/MCP16/typecheck/advisors pass. Native LiveInvoiceContents and wire decoder5tests PASS81160; evidence in invoice-build-edit. Next connect native local query/PowerSync stream/schema/runtime, then create API/queue/MCP/reused CreateInvoiceModal. Fee creation/cap validation remains dependency. No hosted Invoice deployment or exposed creation endpoint yet. Do not repeat passing checks for context. Existing local migrations direct/no history; no reset. Hosted88migrations, QA permissions restored. Collection equality/O-023/sent/zero unresolved; no resend gate. Mac automation unavailable; earlier CI/full readiness/leaked-password warning remain.",
+    "immediateFollowup": "Live Invoice stream/query/runtime/reused UI ready for checkpoint: iPhone2 PASS95741 and actual sync/offline reopen PASS56449 (0.616s). Earlier timeouts diagnosed stale running service config; local-service --restart now explicit. Evidence in invoice-build-edit. Next real stream revocation/mixed-source parity and live PDF/create API/queue/MCP/Fee cap. No context reruns. Local37-table service current; local migrations direct/no history, no reset. Hosted88/QA restored, Invoice changes not deployed. Collection equality/O-023/sent/zero unresolved; no resend gate. Prior CI/readiness warnings remain.",
     "nextVerification": "CI35039310979 terminal failed; MacUI14failures/57tests/3skips, iOS cancelled. Transaction owner has screenshots/triage. Monitor/two scroll fixes compile, not UI-verified; Invoice retry fixture read2→3 remains UI-unverified. Other Sale/badge/gallery/reentry failures open. No duplicate dispatch."
   }
 }

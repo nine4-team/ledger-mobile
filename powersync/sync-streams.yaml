@@ -297,6 +297,46 @@ streams:
         )
         AND principal.auth_user_id = auth.user_id() AND membership.state = 'active' AND membership.financial_access = 'full'
 
+  project_live_invoices:
+    auto_subscribe: false
+    queries:
+      - |
+        SELECT live_invoices.id, live_invoices.account_id, live_invoices.project_id,
+          live_invoices.name, live_invoices.notes, live_invoices.status, live_invoices.revision::text AS revision
+        FROM ledger_private.live_invoices
+        JOIN spike_account_memberships AS membership ON membership.account_id = live_invoices.account_id
+        JOIN spike_principals AS principal ON principal.id = membership.principal_id
+        WHERE live_invoices.account_id = subscription.parameter('account_id')
+        AND live_invoices.project_id = subscription.parameter('project_id')
+        AND (live_invoices.status = 'created' OR live_invoices.status = 'sent')
+        AND principal.auth_user_id = auth.user_id() AND membership.state = 'active' AND membership.financial_access = 'full'
+      - |
+        SELECT live_invoice_memberships.account_id || '/' || live_invoice_memberships.invoice_id || '/' ||
+          live_invoice_memberships.source_kind || '/' || live_invoice_memberships.source_id AS id,
+          live_invoice_memberships.account_id, live_invoice_memberships.invoice_id,
+          live_invoice_memberships.source_kind, live_invoice_memberships.source_id, live_invoice_memberships.position
+        FROM ledger_private.live_invoice_memberships
+        JOIN spike_account_memberships AS membership ON membership.account_id = live_invoice_memberships.account_id
+        JOIN spike_principals AS principal ON principal.id = membership.principal_id
+        WHERE live_invoice_memberships.account_id = subscription.parameter('account_id')
+        AND live_invoice_memberships.released_at IS NULL
+        AND live_invoice_memberships.invoice_id IN (
+          SELECT live_invoices.id FROM ledger_private.live_invoices
+          WHERE live_invoices.account_id = subscription.parameter('account_id')
+          AND live_invoices.project_id = subscription.parameter('project_id')
+          AND (live_invoices.status = 'created' OR live_invoices.status = 'sent'))
+        AND principal.auth_user_id = auth.user_id() AND membership.state = 'active' AND membership.financial_access = 'full'
+      - |
+        SELECT fee_installments.id, fee_installments.account_id, fee_installments.project_id,
+          fee_installments.category_id, fee_installments.label, fee_installments.amount_minor_units::text AS amount_minor_units,
+          fee_installments.currency, fee_installments.revision::text AS revision, fee_installments.sort_order
+        FROM ledger_private.fee_installments
+        JOIN spike_account_memberships AS membership ON membership.account_id = fee_installments.account_id
+        JOIN spike_principals AS principal ON principal.id = membership.principal_id
+        WHERE fee_installments.account_id = subscription.parameter('account_id')
+        AND fee_installments.project_id = subscription.parameter('project_id')
+        AND principal.auth_user_id = auth.user_id() AND membership.state = 'active' AND membership.financial_access = 'full'
+
   project_expenses:
     auto_subscribe: false
     queries:

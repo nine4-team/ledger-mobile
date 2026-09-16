@@ -682,6 +682,34 @@ final class WorkspaceChecklistUITests: XCTestCase {
         XCTAssertTrue(app.staticTexts["Balanced"].waitForExistence(timeout: 5))
     }
 
+    func testLiveInvoiceUsesExistingListAndReport() throws {
+        continueAfterFailure = false
+        let app = XCUIApplication()
+        app.launchArguments = ["--ledger-ui-test-workspace-checklist", "--ledger-ui-test-live-invoice", "--ledger-ui-test-expense-withdrawal"]
+        app.launch(); defer { app.terminate() }
+        let project = app.buttons["target-active-project-card-project-ui-test"]
+        XCTAssertTrue(project.waitForExistence(timeout: 10)); project.tap()
+        let invoicing = app.buttons["target-project-invoicing"]
+        reveal(invoicing, in: app); invoicing.tap()
+        let section = app.buttons["Invoices"].firstMatch
+        reveal(section, in: app); section.tap()
+        let row = app.descendants(matching: .any)["target-invoicing-invoice-live-invoice-ui-test"].firstMatch
+        reveal(row, in: app)
+        XCTAssertTrue(row.waitForExistence(timeout: 5))
+        let sent = app.buttons["Sent"].firstMatch
+        reveal(sent, in: app); sent.tap()
+        XCTAssertTrue(row.waitForExistence(timeout: 5)); row.tap()
+        XCTAssertTrue(app.descendants(matching: .any)["target-live-invoice-preview"].firstMatch.waitForExistence(timeout: 5))
+        XCTAssertTrue(app.staticTexts["Invoice Total"].exists)
+        XCTAssertTrue(app.staticTexts["Receipt vendor"].exists)
+        XCTAssertFalse(app.buttons["target-invoice-download"].isEnabled)
+        #if os(iOS)
+        XCUIDevice.shared.press(.home); app.activate()
+        XCTAssertTrue(app.staticTexts["Invoice unavailable"].waitForExistence(timeout: 5))
+        XCTAssertFalse(app.staticTexts["Invoice Total"].exists)
+        #endif
+    }
+
     func testCollectedInvoicesUseExistingPipelineControls() throws {
         continueAfterFailure = false
         let app = XCUIApplication()
@@ -711,7 +739,7 @@ final class WorkspaceChecklistUITests: XCTestCase {
         let sent = app.buttons["Sent"].firstMatch
         reveal(sent, in: app); sent.tap()
         XCTAssertTrue(row.waitForNonExistence(timeout: 5))
-        XCTAssertTrue(app.staticTexts["Created, sent and canceled Invoice coverage is not connected yet."].exists)
+        XCTAssertTrue(app.staticTexts["No matching live Invoices in downloaded data."].waitForExistence(timeout: 5))
         app.buttons["Paid"].firstMatch.tap()
         XCTAssertTrue(row.waitForExistence(timeout: 5))
         row.tap()

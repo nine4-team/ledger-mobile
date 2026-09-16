@@ -15,7 +15,7 @@ const local=JSON.parse(execFileSync('npx',['--offline','--yes','supabase@2.116.0
 assert.equal(local.API_URL,'http://127.0.0.1:54321');
 assert.ok(!process.argv.includes('--expense-edit-conflict') || process.argv.includes('--native-expense-edit'),
     '--expense-edit-conflict requires --native-expense-edit');
-if (process.argv.includes('--native-expense') || process.argv.includes('--native-expense-edit')) {
+if (process.argv.includes('--native-expense') || process.argv.includes('--native-expense-edit') || process.argv.includes('--native-live-invoice')) {
     const ready = await fetch('http://127.0.0.1:5590/probes/readiness', {
         redirect:'error', signal:AbortSignal.timeout(3000),
     }).catch(() => null);
@@ -72,6 +72,7 @@ try {
                 LEDGER_SALE_LOCAL_ITEM:selectedItem,LEDGER_SALE_LOCAL_PROJECT:selectedProject,LEDGER_SALE_LOCAL_KEY:local.PUBLISHABLE_KEY,
                 LEDGER_SALE_LOCAL_DESTINATION_PROJECT:project,
                 ...(process.argv.includes('--expense-paid')?{LEDGER_EXPENSE_LOCAL_PAID:'1'}:{}),
+                ...(process.argv.includes('--native-live-invoice')?{LEDGER_LIVE_INVOICE_LOCAL:'1'}:{}),
                 ...(process.argv.includes('--native-expense-edit')?{LEDGER_EXPENSE_LOCAL_EDIT:'1'}:{}),
                 ...(process.argv.includes('--expense-edit-media')?{LEDGER_EXPENSE_LOCAL_EDIT_MEDIA:'1'}:{}),
                 ...(process.argv.includes('--expense-edit-conflict')?{LEDGER_EXPENSE_LOCAL_EDIT_CONFLICT:'1'}:{}),
@@ -221,7 +222,22 @@ try {
                 assert.ok([401,403].includes(anonymous.status));
             }
         }
-        if(process.argv.includes('--native-expense') || process.argv.includes('--native-expense-edit')) {
+        if(process.argv.includes('--native-live-invoice')) {
+            assert.ok(!process.argv.includes('--expense-paid') && !process.argv.includes('--expense-edit') && !process.argv.includes('--native-expense'),
+                'Live Invoice replication requires the uncollected revision1 Expense fixture');
+            const command = {operationId:key+'-invoice-op',accountId:account,actorPrincipalId:principal,
+                projectId:project,clientId:client,invoiceId:key+'-invoice',contractVersion:'invoice-create-v1',
+                createdAtMs:'1788523200000',name:'Live sync Invoice',notes:'External delivery',
+                sources:[{kind:'expense',sourceId:expense,expectedRevision:'1',amountMinorUnits:intent.amountMinorUnits,currency:intent.currency}]};
+            const result = sql(`begin; select set_config('request.jwt.claim.sub',${q(user.id)},true);
+                select ledger_private.create_live_invoice(${q(JSON.stringify(command))}); commit;`);
+            assert.match(result,/invoice_created/);
+            const response = await call('/rest/v1/rpc/spike_read_live_invoice',
+                {p_account_id:account,p_project_id:project,p_invoice_id:key+'-invoice'},token);
+            assert.equal(response.status,200);
+            assert.equal((await response.json()).totalMinorUnits,intent.amountMinorUnits);
+        }
+        if(process.argv.includes('--native-expense') || process.argv.includes('--native-expense-edit') || process.argv.includes('--native-live-invoice')) {
             assert.ok(!(process.argv.includes('--native-expense-edit') && (process.argv.includes('--expense-edit') || process.argv.includes('--expense-paid') || process.argv.includes('--native-expense'))),
                 'Native edit uses its own uncollected revision1 fixture');
             runNative('expenseLiveReplication',project,expense);
@@ -371,8 +387,11 @@ try {
     // Preserve native test diagnostics even if fixture cleanup subsequently fails.
     // Do not dump exec options/environment, which contain temporary credentials.
     if (typeof error?.stdout === 'string') console.error(error.stdout);
+    console.error('Local integration failure:', error?.code ?? error?.name, error?.signal ?? '');
     throw error;
 } finally {
     sql(`update public.spike_account_memberships set state='removed' where account_id=${q(account)} and principal_id=${q(principal)}`);
-    await call('/auth/v1/logout?scope=local',{},token);
+    await call('/auth/v1/logout?scope=local',{},token).catch(() => {
+        console.error('Local fixture logout transport failed; membership has been removed.');
+    });
 }

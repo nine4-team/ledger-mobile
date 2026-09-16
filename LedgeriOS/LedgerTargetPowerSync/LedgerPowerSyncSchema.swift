@@ -26,6 +26,9 @@ public enum LedgerPowerSyncTable {
     public static let itemChargeOccurrences = "item_charge_occurrences"
     public static let collectedInvoiceLines = "collected_invoice_lines"
     public static let collectedInvoices = "collected_invoices"
+    public static let liveInvoices = "live_invoices"
+    public static let liveInvoiceMemberships = "live_invoice_memberships"
+    public static let feeInstallments = "fee_installments"
     public static let itemProjectCategories = "spike_item_project_categories"
     public static let spaceCoreDetails = "spike_space_core_details"
     public static let spaceChecklists = "spike_space_checklists"
@@ -94,6 +97,15 @@ public enum LedgerPowerSyncSchema {
         Table(name: LedgerPowerSyncTable.collectedInvoices,
             columns: [.text("account_id"), .text("project_id"), .text("client_id"), .integer("sealed"),
                       .text("purchase_id"), .text("invoice_revision"), .text("currency"), .text("total_minor_units"), .text("display_metadata")]),
+        Table(name: LedgerPowerSyncTable.liveInvoices,
+            columns: [.text("account_id"), .text("project_id"), .text("name"), .text("notes"),
+                      .text("status"), .text("revision")]),
+        Table(name: LedgerPowerSyncTable.liveInvoiceMemberships,
+            columns: [.text("account_id"), .text("invoice_id"), .text("source_kind"), .text("source_id"), .integer("position")],
+            indexes: [.ascending(name: "live_invoice_members", columns: ["account_id", "invoice_id", "position"])]),
+        Table(name: LedgerPowerSyncTable.feeInstallments,
+            columns: [.text("account_id"), .text("project_id"), .text("category_id"), .text("label"),
+                      .text("amount_minor_units"), .text("currency"), .text("revision"), .integer("sort_order")]),
         Table(name: LedgerPowerSyncTable.itemClientPaymentConnections,
             columns: [.text("account_id"), .text("project_id"), .text("client_id"), .text("item_id"),
                       .text("placement_id"), .text("transaction_id"), .text("transaction_type"),

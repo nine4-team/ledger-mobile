@@ -13,6 +13,8 @@ struct ProjectInvoicingWorkspaceView: View {
     @State private var items: ProjectInvoicingItems?
     @State private var expenses: ProjectExpenses?
     @State private var invoices: [FrozenInvoiceContents]?
+    @State private var liveInvoices: [LiveInvoiceContents]?
+    @State private var liveInvoiceError: String?
     @State private var invoiceError: String?
     @State private var invoiceFilter: InvoicePipelineFilter = .all
     @State private var itemError: String?
@@ -133,8 +135,28 @@ struct ProjectInvoicingWorkspaceView: View {
                                 .accessibilityIdentifier("target-invoicing-invoice-\(invoice.invoiceId.rawValue)")
                             }
                         }
-                        if invoiceFilter != .paid {
-                            BillingEmptyRow("Created, sent and canceled Invoice coverage is not connected yet.")
+                        if invoiceFilter == .all || invoiceFilter == .created || invoiceFilter == .sent {
+                            if let liveInvoiceError { BillingEmptyRow(liveInvoiceError) }
+                            else if let liveInvoices {
+                                let visible = liveInvoices.filter { invoiceFilter == .all || $0.status.rawValue == invoiceFilter.rawValue }
+                                if visible.isEmpty { BillingEmptyRow("No matching live Invoices in downloaded data.") }
+                                ForEach(visible, id: \.invoiceId) { invoice in
+                                    NavigationLink(value: invoice.invoiceId) {
+                                        BillingRowSurface(isMuted: false) {
+                                            HStack(spacing: Spacing.md) {
+                                                BillingInvoiceSummaryPresentation(title: invoice.name.isEmpty ? "Invoice" : invoice.name,
+                                                    amountText: amount(invoice.total), date: nil)
+                                                Spacer(minLength: Spacing.sm)
+                                                BillingInvoiceStatusPresentation(label: invoice.status.rawValue.capitalized, color: BrandColors.textSecondary)
+                                            }
+                                        }
+                                    }.buttonStyle(.plain)
+                                    .accessibilityIdentifier("target-invoicing-invoice-\(invoice.invoiceId.rawValue)")
+                                }
+                            } else { ProgressView("Downloading live Invoices") }
+                        }
+                        if invoiceFilter == .all || invoiceFilter == .canceled {
+                            BillingEmptyRow("Canceled Invoice coverage is not connected yet.")
                         }
                         BillingEmptyRow("Invoice lifecycle actions are still being connected.")
                     } else { ProgressView("Downloading Invoices") }
@@ -193,6 +215,18 @@ struct ProjectInvoicingWorkspaceView: View {
                     if Task.isCancelled { return }; invoices = value
                 }
             } catch { if !Task.isCancelled { invoices = nil; invoiceError = "Invoices are unavailable." } }
+        }
+        .task(id: projectId) {
+            liveInvoices = nil; liveInvoiceError = nil
+            guard let reader = runtime as? any ProjectLiveInvoiceReading else {
+                liveInvoiceError = "Live Invoices are not connected in this build."; return
+            }
+            do {
+                for try await value in reader.watchLiveInvoices(accountId: accountId, projectId: projectId) {
+                    guard !Task.isCancelled else { return }; liveInvoices = value
+                }
+                if !Task.isCancelled { liveInvoices = nil; liveInvoiceError = "Live Invoices are unavailable." }
+            } catch { if !Task.isCancelled { liveInvoices = nil; liveInvoiceError = "Live Invoices are unavailable." } }
         }
     }
 

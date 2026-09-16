@@ -23,12 +23,12 @@ test('every checked-in stream output resolves to the native schema', () => {
   const yaml = readFileSync(new URL('../../powersync/sync-streams.yaml', import.meta.url), 'utf8');
   const nativeSchema = readFileSync(new URL('../../LedgeriOS/LedgerTargetPowerSync/LedgerPowerSyncSchema.swift', import.meta.url), 'utf8');
   const count = validateSyncOutputTables(yaml, nativeSchema);
-  assert.equal(count, 78);
+  assert.equal(count, 81);
   const compiled = SqlSyncRules.fromYaml(yaml, { defaultSchema: 'public', throwOnError: false });
   assert.deepEqual(compiled.errors.map(error => error.message), []);
   const nativeNames = new Set([...nativeSchema.matchAll(/public static let \w+ = "([a-z_]+)"/g)].map(m => m[1]));
   const outputs = Object.keys(compiled.config.debugGetOutputTables());
-  assert.equal(outputs.length, 34);
+  assert.equal(outputs.length, 37);
   for (const output of outputs) assert.ok(nativeNames.has(output), `Service outputs unknown client table ${output}`);
 });
 test('service parser proves primary aliases change the downloaded table', () => {
@@ -40,6 +40,23 @@ streams:
 `, { defaultSchema: 'public', throwOnError: false });
   assert.deepEqual(result.errors.map(error => error.message), []);
   assert.deepEqual(Object.keys(result.config.debugGetOutputTables()), ['item']);
+});
+
+test('live Invoice stream scopes all new outputs to full financial membership and the selected Project', () => {
+  const yaml = readFileSync(new URL('../../powersync/sync-streams.yaml', import.meta.url), 'utf8');
+  const block = yaml.split('  project_live_invoices:')[1].split('  project_expenses:')[0];
+  const queries = block.split('      - |').slice(1);
+  assert.equal(queries.length, 3);
+  for (const query of queries) {
+    assert.match(query, /principal\.auth_user_id = auth\.user_id\(\)/);
+    assert.match(query, /membership\.state = 'active' AND membership\.financial_access = 'full'/);
+    assert.match(query, /account_id = subscription\.parameter\('account_id'\)/);
+    assert.match(query, /project_id = subscription\.parameter\('project_id'\)/);
+  }
+  assert.match(queries[1], /released_at IS NULL/);
+  assert.match(queries[1], /live_invoices\.status = 'created' OR live_invoices\.status = 'sent'/);
+  assert.match(queries[2], /amount_minor_units::text AS amount_minor_units/);
+  assert.match(queries[2], /revision::text AS revision/);
 });
 
 test('Item image-set joins explicitly constrain the subscription before expansion', () => {

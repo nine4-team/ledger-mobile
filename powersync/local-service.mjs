@@ -115,7 +115,8 @@ try {
     syncURL: 'http://127.0.0.1:5590' });
   stage = 'starting the Ledger-only service';
   if (existing) {
-    if (!existing.State.Running) run('docker', ['start', container]);
+    if (process.argv.includes('--restart')) run('docker', ['restart', container]);
+    else if (!existing.State.Running) run('docker', ['start', container]);
   } else {
     run('docker', ['run', '-d', '--name', container, '--label', `ledger.local-powersync=${root}`,
       '--network', network, '-p', '127.0.0.1:5590:8080',
@@ -131,6 +132,9 @@ try {
     await new Promise(resolve => setTimeout(resolve, 1_000));
   }
   console.log(`Ledger local PowerSync ready on 127.0.0.1:5590; ${tables.length} explicit source tables. Test configuration saved privately under tmp/ledger-powersync-local.`);
+  if (existing?.State.Running && !process.argv.includes('--restart')) {
+    console.log('Existing service retained. After stream configuration changes, use --restart to load them; readiness alone does not verify the loaded configuration.');
+  }
 } catch {
   // Child-process diagnostics can contain generated credentials; never echo them.
   console.error(`Ledger local PowerSync failed while ${stage}. No automatic reset/deletion was performed.`);

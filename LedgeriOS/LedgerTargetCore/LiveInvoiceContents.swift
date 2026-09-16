@@ -1,5 +1,10 @@
 import Foundation
 
+public protocol ProjectLiveInvoiceReading: Sendable {
+    func readLiveInvoices(accountId: AccountID, projectId: ProjectID) async throws -> [LiveInvoiceContents]
+    func watchLiveInvoices(accountId: AccountID, projectId: ProjectID) -> AsyncThrowingStream<[LiveInvoiceContents]?, Error>
+}
+
 /// Current source facts for an uncollected Invoice; never a paid snapshot.
 public struct LiveInvoiceContents: Equatable, Sendable {
     public enum Status: String, Codable, Sendable { case created, sent }

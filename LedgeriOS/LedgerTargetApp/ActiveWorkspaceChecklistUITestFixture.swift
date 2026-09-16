@@ -661,7 +661,7 @@ private struct UITestFixtureSpaceDetailQuery: SpaceCoreDetailsQuerying {
         source.stream
     }
 }
-private struct UITestFixtureItemReader: DownloadedItemPlacementReading, DownloadedProjectItemsReading, DownloadedItemPlacementHistoryReading, AccountBusinessProfileReading, DownloadedItemImageReading, InventorySaleWorkflowServing, ProjectInvoicingReading, ExpenseCreating, ExpenseEditing {
+private struct UITestFixtureItemReader: DownloadedItemPlacementReading, DownloadedProjectItemsReading, DownloadedItemPlacementHistoryReading, AccountBusinessProfileReading, DownloadedItemImageReading, InventorySaleWorkflowServing, ProjectInvoicingReading, ProjectLiveInvoiceReading, ExpenseCreating, ExpenseEditing {
     private let expenseAccess = NSLockingTransactionFixtureUpdates()
     func editExpense(_ entry: BusinessPaidExpenseDraft, expectedRevision: Int64, operationUUID: UUID, capturedAt: Date, recovery: ExpenseEntryRecovery? = nil) async throws -> OperationReceipt {
         guard expenseAccess.hasAccess, expectedRevision == 1, entry.expenseId.rawValue == "expense-ui-test",
@@ -817,6 +817,30 @@ private struct UITestFixtureItemReader: DownloadedItemPlacementReading, Download
 
     func readCollectedInvoices(accountId: AccountID, projectId: ProjectID) async throws -> [FrozenInvoiceContents] {
         try await readExpenses(accountId: accountId, projectId: projectId).expenses.compactMap(\.collectedInvoice)
+    }
+    func readLiveInvoices(accountId: AccountID, projectId: ProjectID) async throws -> [LiveInvoiceContents] {
+        let expenses = try await readExpenses(accountId: accountId, projectId: projectId)
+        guard ProcessInfo.processInfo.arguments.contains("--ledger-ui-test-live-invoice"),
+              let expense = expenses.expenses.first else { return [] }
+        return try [.init(invoiceId: .init(validating: "live-invoice-ui-test"), revision: 1, status: .sent,
+            name: "Live Invoice", notes: "Sent outside Ledger",
+            scope: .project(accountId: accountId, projectId: projectId, clientId: .init(validating: "client-ui-test")),
+            lines: [.init(selection: .init(source: .expense(expense.entry.expenseId), expectedRevision: expense.revision,
+                reviewedAmount: expense.entry.finalAmount), categoryId: expense.entry.categoryId,
+                description: expense.entry.vendor)], reportedTotal: expense.entry.finalAmount)]
+    }
+    func watchLiveInvoices(accountId: AccountID, projectId: ProjectID) -> AsyncThrowingStream<[LiveInvoiceContents]?, Error> {
+        AsyncThrowingStream { continuation in
+            let task = Task {
+                do {
+                    for try await value in watchExpenses(accountId: accountId, projectId: projectId) {
+                        continuation.yield(value == nil ? nil : try await readLiveInvoices(accountId: accountId, projectId: projectId))
+                    }
+                    continuation.finish()
+                } catch { continuation.finish(throwing: error) }
+            }
+            continuation.onTermination = { _ in task.cancel() }
+        }
     }
     func watchCollectedInvoices(accountId: AccountID, projectId: ProjectID, invoiceId: InvoiceID? = nil) -> AsyncThrowingStream<[FrozenInvoiceContents]?, Error> {
         AsyncThrowingStream { continuation in
