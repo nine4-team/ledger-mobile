@@ -5,6 +5,24 @@ import Testing
 
 @Suite("Account business profile presentation") @MainActor
 struct AccountBusinessProfileModelTests {
+    @Test("An open silent watch never hides cached branding or leaves an uncached profile spinning", arguments: [false, true])
+    func localReadBeforeSilentWatch(hasCache: Bool) async throws {
+        let value = try profile()
+        let updates = AsyncThrowingStream<AccountBusinessProfile, Error>.makeStream()
+        let started = AsyncStream<Void>.makeStream()
+        let reader = SilentReader(cached: hasCache ? value : nil, updates: updates.stream, started: started.continuation)
+        let model = AccountBusinessProfileModel()
+        let task = Task { await model.load(accountId: value.accountId, reader: reader) }
+        var observed = started.stream.makeAsyncIterator()
+        _ = await observed.next()
+        #expect(model.state == (hasCache ? .downloaded(value) : .unavailable))
+        updates.continuation.yield(value)
+        updates.continuation.finish()
+        await task.value
+        #expect(model.state == .downloaded(value))
+        started.continuation.finish()
+    }
+
     @Test("Export comparison tolerates retrieval status but rejects changed branding")
     func exportBrandingComparison() throws {
         let unavailable = try profile(logo: .unavailable)
@@ -52,6 +70,18 @@ struct AccountBusinessProfileModelTests {
         throws -> AccountBusinessProfile {
         try AccountBusinessProfile(accountId: AccountID(validating: account),
             name: AccountDisplayName(validating: "1584 Design"), logo: logo, isStale: true)
+    }
+}
+
+private struct SilentReader: AccountBusinessProfileReading {
+    let cached: AccountBusinessProfile?
+    let updates: AsyncThrowingStream<AccountBusinessProfile, Error>
+    let started: AsyncStream<Void>.Continuation
+    func readAccountBusinessProfile(accountId: AccountID) async throws -> AccountBusinessProfile {
+        guard let cached else { throw Reader.Failure.unavailable }; return cached
+    }
+    func watchAccountBusinessProfile(accountId: AccountID) -> AsyncThrowingStream<AccountBusinessProfile, Error> {
+        started.yield(()); return updates
     }
 }
 

@@ -37,6 +37,20 @@ public final class AccountBusinessProfileModel {
         generation = request
         state = .loading
         do {
+            // The watcher can remain open without a first row when offline.
+            // Resolve local presentation first; keep watching for a later download.
+            let cached: AccountBusinessProfile?
+            do { cached = try await reader.readAccountBusinessProfile(accountId: accountId) }
+            catch is CancellationError { throw CancellationError() }
+            catch { cached = nil }
+            try Task.checkCancellation()
+            guard request == generation else { return }
+            if let cached {
+                guard cached.accountId.rawValue.utf8.elementsEqual(accountId.rawValue.utf8) else {
+                    state = .unavailable; return
+                }
+                state = .downloaded(cached)
+            } else { state = .unavailable }
             for try await profile in reader.watchAccountBusinessProfile(accountId: accountId) {
                 try Task.checkCancellation()
                 guard request == generation else { return }
