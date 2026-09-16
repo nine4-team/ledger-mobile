@@ -1,6 +1,6 @@
 {
   "schemaVersion": 2,
-  "stateVersion": 1103,
+  "stateVersion": 1104,
   "userRequestedPause": {
     "date": "2026-09-15",
     "status": "resumed",
@@ -22,7 +22,7 @@
   },
   "activeWorkflow": {
     "id": "inventory-to-project-sale",
-    "integrationWorkflowIds": ["inventory-to-project-sale", "item-remove-before-invoice", "transaction-browser-and-detail", "project-invoicing-workspace", "invoice-report-readback", "downloaded-item-browsing-and-detail", "local-vendor-pdf-review", "item-history-source-reconciliation"],
+    "integrationWorkflowIds": ["inventory-to-project-sale", "item-remove-before-invoice", "transaction-browser-and-detail", "project-invoicing-workspace", "invoice-report-readback", "downloaded-item-browsing-and-detail", "item-history-source-reconciliation"],
     "kind": "product_ui",
     "status": "implementation",
     "recordPath": "docs/plans/ledger-accounting-redesign/conversion/product-behavior-checklist.json",
@@ -65,6 +65,6 @@
     "nextVerification": "No CI running. Diagnose remaining captured UI failures from /tmp/ledger-ci-35094251669-macos.log and /tmp/ledger-ci-35094251669-ios.log. Targeted interaction verification of repaired selectors/scrolling remains required when desktop available. No unchanged broad retry or Firebase merge.",
     "resaleBatchCI": {"run":35094251669,"attempt":1,"commit":"7836695f2a766960a1bd7de2644bc255d6bc63f0","status":"failed","url":"https://github.com/nine4-team/ledger-mobile/actions/runs/35094251669"},
     "returnBatchCI": {"run":35093201085,"attempt":1,"commit":"726431917f3acdd3091e7ca369222c5225c00754","status":"failed","url":"https://github.com/nine4-team/ledger-mobile/actions/runs/35093201085","reason":"PR1 conflicts suppress automatic PR CI.","lastObserved":"Conversion passed; provider failed at outdated physical-query classification; native skipped, aggregate failed. Local consumer fix passed60captures; property consumer149captures. No unchanged rerun."},
-    "nextWorkflowDecision": "UI repairs84773e29 build on both platforms; final Vendor-PDF reveal dirty. Reviewed Furnishings copier repair now uses tested pure source guard: native39120 PASS2, SQL89519 PASS6; owner item-history-source-reconciliation.reviewedCategoryIsolatedVerification. Full copier rehearsal still needs isolated source namespace/destination, not bypass/reset of existing copy. NEXT commit reviewed mapping repair after conversion check, then remaining approved workflow work; UI execution needs unlock, gallery unresolved. No running tests/CI or hosted/source writes. Preserve private .native-pdf files."
+    "nextWorkflowDecision": "Reviewed Furnishings mapping committed04570c17 (native2/SQL6 pass, full copy rehearsal incomplete). D-029 retires Vendor PDF review: inappropriate opening-test repair undone, do not run/repair that retired workflow. NEXT active business-paid-expense-entry remaining checks/implementation while desktop locked; pending active UI fixes84773e29 still need interaction verification. No running tests/CI or hosted/source writes. Preserve private .native-pdf files."
   }
 }

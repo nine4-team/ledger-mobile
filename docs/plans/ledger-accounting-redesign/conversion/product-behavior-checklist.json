@@ -26884,6 +26884,8 @@
     {
       "schemaVersion": 1,
       "workflowId": "local-vendor-pdf-review",
+      "retiredUITestExecution": "2026-09-16: all five testVendorPDF scenarios explicitly XCTSkipIf(true,D-029) before fixture launch. Historical code retained; no Invoice export, Expense receipt, Transaction PDF/gallery or pinning tests skipped. This prevents retired importer QA work from consuming future broad runs; not a pass or feature acceptance. Existing target entry-point cleanup remains necessary separately.",
+      "retiredRepairCorrection": "2026-09-16: checklist review reconfirmed D-029 retirement. The isolated opening-test reveal added in04570c17 was inappropriate active work and is undone. capturedOpeningTestRepair remains historical evidence only, not a required verification action or authority to revive this importer. Existing retired route/test cleanup must follow D-029; do not repair or count its scenario toward conversion readiness.",
       "capturedOpeningTestRepair": "2026-09-16 after84773e29: CI35094251669 Mac unreadable-PDF scenario failed historical2300 before selection, button target-vendor-pdf-open at y520 explicitly not hittable. Only direct unscrolled tap remained; added existing reveal before tap, no parser/view change. Its error/diagnostic assertions still require targeted interaction verification. Separately iOS build-for-testing66284 at84773e29 PASS /tmp/ledger-ios-captured-ui-repair-build.log for accumulated shared-PDF/selector changes; not UI execution and predates this final reveal edit.",
       "reusePlan": {
         "decision": "Retired by user D-029. Do not resume this workflow or reuse integration. Prior records below are historical, not remaining build requirements.",

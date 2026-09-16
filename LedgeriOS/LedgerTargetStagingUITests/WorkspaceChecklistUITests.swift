@@ -2296,6 +2296,7 @@ final class WorkspaceChecklistUITests: XCTestCase {
 
     #if os(macOS)
     func testVendorPDFActualFileReview() throws {
+        try XCTSkipIf(true, "D-029 retires vendor invoice importers; retained historical test, not conversion scope")
         guard ProcessInfo.processInfo.environment["LEDGER_ISOLATED_CI_CLIPBOARD"] == "true" else {
             throw XCTSkip("Diagnostic Copy uses only the isolated CI clipboard")
         }
@@ -2312,9 +2313,7 @@ final class WorkspaceChecklistUITests: XCTestCase {
         let project = app.buttons["target-active-project-card-project-ui-test"]
         XCTAssertTrue(project.waitForExistence(timeout: 10))
         project.tap()
-        let reviewPDF = app.buttons["target-vendor-pdf-open"]
-        reveal(reviewPDF, in: app, fullyInsideScrollView: true)
-        reviewPDF.tap()
+        app.buttons["target-vendor-pdf-open"].tap()
         let select = app.buttons["target-vendor-pdf-select"]
         XCTAssertTrue(select.waitForExistence(timeout: 5))
         selectVendorPDF(file, in: app)
@@ -2439,6 +2438,7 @@ final class WorkspaceChecklistUITests: XCTestCase {
     }
 
     func testVendorPDFRemovalClosesLoadedReview() throws {
+        try XCTSkipIf(true, "D-029 retires vendor invoice importers; retained historical test, not conversion scope")
         continueAfterFailure = false
         let app = XCUIApplication()
         app.launchArguments = ["--ledger-ui-test-workspace-checklist", "--ledger-ui-test-vendor-pdf-bytes",
@@ -2475,6 +2475,7 @@ final class WorkspaceChecklistUITests: XCTestCase {
     }
 
     func testVendorPDFSelectionCancellation() throws {
+        try XCTSkipIf(true, "D-029 retires vendor invoice importers; retained historical test, not conversion scope")
         continueAfterFailure = false
         #if os(macOS)
         let permissionMonitor = installOfflinePDFPermissionHandler()
@@ -2510,6 +2511,7 @@ final class WorkspaceChecklistUITests: XCTestCase {
 
     #if os(iOS)
     func testVendorPDFIOSFailureAndEmptyStates() throws {
+        try XCTSkipIf(true, "D-029 retires vendor invoice importers; retained historical test, not conversion scope")
         continueAfterFailure = false
         let cases: [(Data, String, String)] = [
             (Data("Unreadable synthetic PDF".utf8), "target-vendor-pdf-error",
@@ -2543,6 +2545,7 @@ final class WorkspaceChecklistUITests: XCTestCase {
     }
 
     func testVendorPDFIOSLoadedReview() throws {
+        try XCTSkipIf(true, "D-029 retires vendor invoice importers; retained historical test, not conversion scope")
         continueAfterFailure = false
         let app = XCUIApplication()
         app.launchArguments = ["--ledger-ui-test-workspace-checklist", "--ledger-ui-test-vendor-pdf-bytes"]
