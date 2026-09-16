@@ -1,6 +1,6 @@
 {
   "schemaVersion": 2,
-  "stateVersion": 1191,
+  "stateVersion": 1193,
   "userRequestedPause": {
     "date": "2026-09-15",
     "status": "resumed",
@@ -65,6 +65,6 @@
     "nextVerification": "No CI running. Diagnose remaining captured UI failures from /tmp/ledger-ci-35094251669-macos.log and /tmp/ledger-ci-35094251669-ios.log. Targeted interaction verification of repaired selectors/scrolling remains required when desktop available. No unchanged broad retry or Firebase merge.",
     "resaleBatchCI": {"run":35094251669,"attempt":1,"commit":"7836695f2a766960a1bd7de2644bc255d6bc63f0","status":"failed","url":"https://github.com/nine4-team/ledger-mobile/actions/runs/35094251669"},
     "returnBatchCI": {"run":35093201085,"attempt":1,"commit":"726431917f3acdd3091e7ca369222c5225c00754","status":"failed","url":"https://github.com/nine4-team/ledger-mobile/actions/runs/35093201085","reason":"PR1 conflicts suppress automatic PR CI.","lastObserved":"Conversion passed; provider failed at outdated physical-query classification; native skipped, aggregate failed. Local consumer fix passed60captures; property consumer149captures. No unchanged rerun."},
-    "nextWorkflowDecision": "Profile offline loading fixed, model63023 and iPhone35282 PASS; owner account-profile-readback.offlineLocalFirstRepair. Hosted history verified. NEXT approved implementation gap; Transfer/credit questions pending, no repeat. Mac UI system auth blocked. No active processes or new hosted changes."
+    "nextWorkflowDecision": "Integration82671 ended1436tests/203suites, only3 obsolete importer assertions failed. D029 retirement test corrected; focused75989 PASS11. Owner active-workspace-to-space-checklist.retiredImporterContractRepair. No full retry for test-only fix. NEXT approved implementation gap; Transfer/credit questions pending, Mac UI system auth blocked. No active processes."
   }
 }

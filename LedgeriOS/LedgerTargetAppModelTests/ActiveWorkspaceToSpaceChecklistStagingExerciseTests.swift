@@ -102,10 +102,7 @@ struct ActiveWorkspaceToSpaceChecklistStagingExerciseTests {
             "No Spaces in this Project.",
             "Exact Space details are loading or unavailable.",
             "Rejected checklist changes are preserved for review.",
-            "target-vendor-pdf-open",
-            "LocalVendorDocumentReviewView(",
             "runtime.watchBudgetCategories()",
-            "model.closeVendorDocumentReview()",
             "target-business-inventory-card",
             "target-inventory-section",
             "target-inventory-transactions-unavailable",
@@ -114,6 +111,10 @@ struct ActiveWorkspaceToSpaceChecklistStagingExerciseTests {
         }
 
         for excluded in [
+            // D-029 retired importer entry; ordinary receipt viewing remains.
+            "target-vendor-pdf-open",
+            "LocalVendorDocumentReviewView(",
+            "model.openVendorDocumentReview()",
             "Add Project",
             "Archive Project",
             "Button(\"Edit\")",

@@ -28711,6 +28711,7 @@
     {
       "schemaVersion": 1,
       "workflowId": "active-workspace-to-space-checklist", "reusePlan": {"decision":"Adapt existing shell/Project and Space presentation; keep target workspace access/controllers.","sourceComponents":["LedgeriOS/LedgeriOS/Components/ProjectCard.swift","LedgeriOS/LedgeriOS/Views/Projects/SpacesTabView.swift","LedgeriOS/LedgeriOS/Views/Projects/SpaceDetailView.swift"],"boundary":"Inject authorized images instead of FirebaseImage, target budget values instead of old aggregation, and scoped navigation/selection inputs. New Client identity/note history follows existing spec authority; harness IDs/status are not release UI.","stopBuilding":"No second final staging navigation shell or recreation of Project/Space card controls. Items/media stay in their owning workflow."},
+      "retiredImporterContractRepair": "2026-09-16 integration82671 at d6b670d4:1436tests/203suites161.824s, only3 assertions failed requiring removed importer controls. D029/removaldd9aec32 confirm intentional retirement. Test now requires importer absence; app unchanged. Focused75989 PASS11/.087s /tmp/ledger-retired-importer-contract-20260916.log. Original failed full run /tmp/ledger-history-profile-native-integration-20260916.log retained; not a new whole-suite/CI pass. No broad retry for test-only fix.",
       "title": "Browse Projects, Inventory, note history and Space checklists",
       "kind": "product_ui",
       "status": "implementation",
