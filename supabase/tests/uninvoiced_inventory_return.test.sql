@@ -34,6 +34,23 @@ select is(public.spike_read_uninvoiced_return_review('account-primary','return-p
 select throws_ok($$select public.spike_read_uninvoiced_return_review('account-primary','other-project',array['return-item-a'])$$,'42501',null,'Review cannot cross Project scope');
 select throws_ok($$select public.spike_read_uninvoiced_return_review('account-primary','return-project',array['return-item-a','return-item-a'])$$,'22023',null,'Review rejects duplicate selection');
 reset role;
+savepoint foreign_item_case;
+insert into public.spike_items(id,account_id,description,created_by_principal_id)
+values('return-foreign-item','account-other','Foreign Item','principal-other');
+set local role authenticated;
+select throws_ok($$select public.spike_read_uninvoiced_return_review('account-primary','return-project',array['return-item-a','return-foreign-item'])$$,
+ '42501',null,'Mixed foreign-Account Item selection cannot be reviewed');
+select is((public.spike_return_uninvoiced_items(jsonb_set(pg_temp.return_command('return-foreign-item-request')::jsonb,
+ '{items,1,itemId}','"return-foreign-item"'::jsonb)::text)).error_code,
+ 'return_item_unavailable','Authenticated writer rejects foreign Item even with own Account and valid first Item');
+reset role;
+select is((select count(*) from public.spike_item_placements where id in ('return-project-a','return-project-b') and ended_at is null),
+ 2::bigint,'Foreign Item request leaves own placements unchanged');
+select is((select count(*) from ledger_private.item_charge_occurrences where id in ('return-charge-a','return-charge-b') and withdrawn_at is null),
+ 2::bigint,'Foreign Item request leaves own charges unchanged');
+select is((select count(*) from ledger_private.uninvoiced_item_returns where account_id in ('account-primary','account-other')),
+ 0::bigint,'Foreign Item request creates no return fact in either Account');
+rollback to foreign_item_case;
 select is((ledger_private.return_uninvoiced_items(pg_temp.return_command('return-stale','2'))).error_code,
  'return_charge_stale','Stale second charge rejects whole return');
 select is((select count(*) from public.spike_item_placements where id in ('return-project-a','return-project-b') and ended_at is null),2::bigint,'No partial physical movement');

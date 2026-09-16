@@ -1866,9 +1866,9 @@ struct AccountWorkspacePendingWorkRuntimeTests {
         try await resumed.close()
     }
 
-    @Test("Sale acceptance drains, survives restart and remains retained after access removal", .timeLimit(.minutes(1)), arguments: [false, true])
-    func inventorySaleUsesWorkspaceLifecycle(removing: Bool) async throws {
-        let context = try RuntimeTestContext(suffix: "sale-lifecycle-\(removing)")
+    @Test("Sale and return acceptance drain, survive restart and remain retained after access removal", .timeLimit(.minutes(1)), arguments: [false, true], [false, true])
+    func inventorySaleUsesWorkspaceLifecycle(removing: Bool, returning: Bool) async throws {
+        let context = try RuntimeTestContext(suffix: "sale-lifecycle-\(removing)-\(returning)")
         defer { context.remove() }
         let events = LockedRecorder<AccountWorkspaceRuntimeLifecycleEvent>()
         let gate = ManualGate()
@@ -1883,19 +1883,40 @@ struct AccountWorkspacePendingWorkRuntimeTests {
                 "INSERT INTO spike_projects(id,account_id,client_id,display_name,lifecycle,revision) VALUES ('sale-project',?,'sale-client','Project','active',1)",
                 "INSERT INTO spike_item_placements(id,account_id,item_id,scope_kind) VALUES ('sale-old',?,'sale-item','business_inventory')"
             ] { _ = try await database.execute(sql: sql,parameters: [context.accountId.rawValue]) }
+            if returning {
+                _ = try await database.execute(sql: "UPDATE spike_item_placements SET scope_kind='project',project_id='sale-project',start_evidence='recorded_move',started_at='2025-01-01T00:00:00Z' WHERE id='sale-old'", parameters: nil)
+                for sql in [
+                    "INSERT INTO spike_item_placements(id,account_id,item_id,scope_kind,ended_at) VALUES('return-origin',?,'sale-item','business_inventory','2025-01-01T00:00:00Z')",
+                    "INSERT INTO spike_budget_categories(id,account_id,display_name,kind,visibility_class) VALUES('return-category',?,'Furnishings','itemized','ordinary')",
+                    "INSERT INTO return_charge_sources(id,account_id,project_id,item_id,placement_id,category_id,revision) VALUES('return-charge',?,'sale-project','sale-item','sale-old','return-category','1')"
+                ] { _ = try await database.execute(sql: sql, parameters: [context.accountId.rawValue]) }
+                let parameters = String(decoding: try JSONEncoder().encode([
+                    "account_id": context.accountId.rawValue, "project_id": "sale-project"
+                ]), as: UTF8.self)
+                _ = try await database.execute(sql: "INSERT INTO ps_stream_subscriptions(stream_name,active,is_default,local_params,last_synced_at) VALUES('item_return_review',1,0,?,1000000)", parameters: [parameters])
+            }
         }
         dependencies.finiteOperationCheckpoint = { operation in
-            if operation == .sellInventoryItems { await gate.wait() }
+            if operation == (returning ? .returnUninvoicedItems : .sellInventoryItems) { await gate.wait() }
         }
         let uuid = UUID(), capturedAt = Date(timeIntervalSince1970: 1_788_600_000)
-        let id = try InventorySaleOperationIdentity.make(accountId: context.accountId,uuid: uuid)
+        let id = try returning
+            ? ReturnUninvoicedItemsOperationIdentity.make(accountId: context.accountId, uuid: uuid)
+            : InventorySaleOperationIdentity.make(accountId: context.accountId,uuid: uuid)
         let payload = try InventorySalePayload(projectId: .init(validating: "sale-project"),currency: .init(validating: "USD"),
             items: [.init(itemId: .init(validating: "sale-item"),placementId: .init(validating: "sale-old"),
                 priceRevision: 0,reviewedPriceMinorUnits: 100,newPlacementId: .init(validating: "sale-new"),
                 occurrenceId: .init(validating: "sale-charge"))])
+        let returnPayload = try ReturnUninvoicedItemsPayload(projectId: .init(validating: "sale-project"), items: [
+            .init(itemId: .init(validating: "sale-item"), placementId: .init(validating: "sale-old"),
+                chargeId: .init(validating: "return-charge"), expectedChargeRevision: 1,
+                inventoryPlacementId: .init(validating: "returned"), returnOccurrenceId: .init(validating: "return-fact"))])
         let runtime = try await context.openRuntime(dependencies: dependencies)
         let seeded = try await runtime.pendingUploadCount()
-        let acceptance = Task { try await runtime.sellInventoryItems(payload,operationUUID: uuid,capturedAt: capturedAt) }
+        let acceptance = Task {
+            if returning { return try await runtime.returnUninvoicedItems(returnPayload, operationUUID: uuid, capturedAt: capturedAt) }
+            return try await runtime.sellInventoryItems(payload,operationUUID: uuid,capturedAt: capturedAt)
+        }
         await gate.waitUntilEntered()
         let close = Task { try await runtime.close() }
         try await Task.sleep(for: .milliseconds(30))
@@ -1904,18 +1925,24 @@ struct AccountWorkspacePendingWorkRuntimeTests {
         #expect(try await acceptance.value.localState == .queued)
         try await close.value
         await #expect(throws: LedgerOfflineClientRuntimeFailure.runtimeClosed) {
-            try await runtime.sellInventoryItems(payload,operationUUID: uuid,capturedAt: capturedAt)
+            if returning { return try await runtime.returnUninvoicedItems(returnPayload, operationUUID: uuid, capturedAt: capturedAt) }
+            return try await runtime.sellInventoryItems(payload,operationUUID: uuid,capturedAt: capturedAt)
         }
         let reopened = try await context.openRuntime()
-        #expect(try await reopened.sellInventoryItems(payload,operationUUID: uuid,capturedAt: capturedAt).localState == .queued)
+        if returning {
+            #expect(try await reopened.returnUninvoicedItems(returnPayload, operationUUID: uuid, capturedAt: capturedAt).localState == .queued)
+        } else {
+            #expect(try await reopened.sellInventoryItems(payload,operationUUID: uuid,capturedAt: capturedAt).localState == .queued)
+        }
         #expect(try await reopened.pendingUploadCount() == seeded + 1)
-        var updates = reopened.watchInventorySale(id).makeAsyncIterator()
+        var updates = (returning ? reopened.watchUninvoicedReturn(id) : reopened.watchInventorySale(id)).makeAsyncIterator()
         #expect(try await updates.next()??.state.phase == .queued)
         if removing { try await reopened.lockAccessPreservingPendingWork() }
         else { try await reopened.close() }
-        try await Self.expectClosed(reopened.watchInventorySale(id))
+        try await Self.expectClosed(returning ? reopened.watchUninvoicedReturn(id) : reopened.watchInventorySale(id))
         await #expect(throws: LedgerOfflineClientRuntimeFailure.runtimeClosed) {
-            try await reopened.sellInventoryItems(payload,operationUUID: uuid,capturedAt: capturedAt)
+            if returning { return try await reopened.returnUninvoicedItems(returnPayload, operationUUID: uuid, capturedAt: capturedAt) }
+            return try await reopened.sellInventoryItems(payload,operationUUID: uuid,capturedAt: capturedAt)
         }
         if removing {
             await #expect(throws: LedgerPowerSyncLocalBootstrapFailure(stage: .workspaceAccessRemoved)) {
