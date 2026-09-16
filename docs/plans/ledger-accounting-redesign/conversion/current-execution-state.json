@@ -1,6 +1,6 @@
 {
   "schemaVersion": 2,
-  "stateVersion": 924,
+  "stateVersion": 929,
   "userRequestedPause": {
     "date": "2026-09-15",
     "status": "resumed",
@@ -64,6 +64,6 @@
     "databaseReview": "Source review complete for commands/auth/categories, uploads, Expense storage/read/import, Transaction read/projections and Invoice/accounting sync. SQL PASS54 files/1645 assertions/4s: /tmp/ledger-database-integration-review.log session40737 exit0. Fresh migration replay remains pending; use existing CI fresh-stack job after checkpoint scope is resolved, not a destructive local reset.",
     "immediateFollowup": "Integration scope/risk gate passes: /tmp/ledger-integration-risk-check.log. CI controls19 pass; target contracts/TypeScript pass (integration-ci-controls/contract-check logs). No GitHub run started.",
     "uiAvailabilityWait": "Category UI failed11.423s before assertion; /tmp/ledger-expense-category-integration.log. Screenshot again shows Boards foreground. No retries until isolated execution. Direct pass retained.",
-    "nextVerification": "CI35037980093 FAILED fresh MCP fixture category insert: untargeted ON CONFLICT incompatible with deferrable ordering constraint. Prior race/SQL/streams pass. Script now targets(id), adds rolled-back fresh insert probe; full local MCP/HTTP PASS /tmp/ledger-report-fresh-category.log. Commit/push test repair then one CI dispatch. Watcher39159 terminal1; native/UI not run."
+    "nextVerification": "CI35038415049 finished FAILED: backend PASS; Mac stale environment guards, iOS missing ignored plist. Environment now PASS /tmp/ledger-environment-fixed.log; parser4tests PASS. Removed erroneous plist ignore: commit generated plist with Xcode project (CI does not regenerate). plutil/state checks PASS. Commit repairs then one integration run; no live CI."
   }
 }

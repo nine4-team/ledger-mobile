@@ -14,6 +14,13 @@ test("legacy import helpers and broad source directories cannot join the target"
     assert.ok(validateLocalVendorParserBoundary(changed, sources).length);
   }
 });
+test("shared presentation does not expand the parser boundary", () => {
+  const changed = spec.replace("- path: LedgerTargetApp", "- path: LedgerTargetApp\n      - path: LedgeriOS/Components/ExampleView.swift");
+  assert.deepEqual(validateLocalVendorParserBoundary(changed, sources), []);
+  for (const path of sharedVendorParserPaths) {
+    assert.ok(validateLocalVendorParserBoundary(spec.replace(`- path: ${path}`, ""), sources).length);
+  }
+});
 test("shared parser cannot gain a provider or autonomous data access", () => {
   for (const code of ["import FirebaseFirestore", "import Supabase", "URLSession.shared", "FileManager.default", "Data(contentsOf: url)"]) {
     const changed = new Map(sources);

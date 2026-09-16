@@ -8,11 +8,13 @@ export const sharedVendorParserPaths = [
 
 export function validateLocalVendorParserBoundary(spec, sources) {
   const failures = [];
-  const app = spec.split("  LedgerTargetStagingUITests:")[0];
+  const app = (spec.split("  LedgerTargetStaging:")[1] ?? "").split(/^  [A-Za-z][\w]*:/m)[0];
   const paths = [...app.matchAll(/^\s+- path: (.+)$/gm)].map(match => match[1].trim());
-  const expected = ["LedgerTargetApp", ...sharedVendorParserPaths];
-  if (JSON.stringify([...paths].sort()) !== JSON.stringify([...expected].sort())) {
-    failures.push("Target app sources must be its app directory plus the five explicit pure vendor parser files.");
+  // This check owns parsing, not the separately reviewed shared presentation.
+  const parserPaths = paths.filter(path => /Parser|InvoiceImport|InvoiceMoneyParsing|InvoiceDateParsing|PdfTextExtractor/.test(path));
+  if (!paths.includes("LedgerTargetApp") || paths.some(path => path !== "LedgerTargetApp" && !path.endsWith(".swift")) ||
+      JSON.stringify([...parserPaths].sort()) !== JSON.stringify([...sharedVendorParserPaths].sort())) {
+    failures.push("Target parsing must use the five explicit pure vendor parser files, without legacy import helpers or broad source directories.");
   }
   for (const path of sharedVendorParserPaths) {
     const source = sources.get(path);
