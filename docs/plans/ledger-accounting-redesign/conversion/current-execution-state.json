@@ -1,6 +1,6 @@
 {
   "schemaVersion": 2,
-  "stateVersion": 1009,
+  "stateVersion": 1011,
   "userRequestedPause": {
     "date": "2026-09-15",
     "status": "resumed",
@@ -62,7 +62,7 @@
     "lastResult": "Local native1359/193 suites, MCP116 and SQL1645 passed before Expense edits. CI35039310979 on41b0f5e7 terminal failure: conversion/provider passed; Mac UI failed; iOS cancelled. Transaction owner retains triage. Not whole-batch acceptance.",
     "activeProcesses": {"localEdgeService":14316},
     "databaseReview": "Database source review complete. Local SQL54files/1645assertions and fresh provider job CI35039310979 passed. Do not repeat passing checks for context recovery.",
-    "immediateFollowup": "5917c561 saved Fee backend. Dirty reused form/browse/pending and archived read eligibility tested; evidence fee-demand-lifecycle. MCP create_fee_installment now wired: typecheck/focused4/full128 pass, real local HTTP39279 proves creation/replay/cap/denial/no Transaction. Script needs Node24 --import ./LedgerTargetMCP/node_modules/tsx/dist/loader.mjs with --expense --financial --fee-mcp. NEXT standalone Fee discovery/read MCP parity, integrated diff review/checkpoint; Fee editing remains unfinished. Previous real native sync/SQL1763/advisors/global guard passed; no context reruns. No whole Fee workflow completion. Endpoint20260916071547 LOCAL direct/no history; no hosted Invoice/Fee deploy. Invoice watch73068; MCP discovery/live PDF/integration/editing/manual/credit remain.37-table service current. Hosted88/QA restored. Collection equality/O-023/sent/zero unresolved; no resend gate. Prior CI/readiness warnings remain.",
+    "immediateFollowup": "Fee MCP browsing verified locally; evidence fee-demand-lifecycle. e6b19645 has prior UI/creation. NEXT preserve original Fee grouping/per-group Add using FeeGroupCard/feeSummaryLine/DualToneFeeProgressBar and canonical exact/readiness-aware values. Flat rows are incomplete per reusePlan. No new installment-edit UI from unused service methods; contract-derived updates retain separate scope. See remainingScopeReview. Platform/integration acceptance pending. Migration20260916075932 LOCAL direct/no history; no hosted Invoice/Fee deploy. Hosted88/QA restored;37-table local sync current. Existing product/CI blockers remain. Do not rerun passing tests for context.",
     "nextVerification": "CI35039310979 failed: Mac14/57/3skips, iOS cancelled. Existing workflow owners retain failures and unverified UI fixes. No duplicate dispatch."
   }
 }

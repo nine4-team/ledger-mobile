@@ -11,6 +11,7 @@ import { SupabaseCollectedInvoiceReader } from "./collectedInvoiceRead.js";
 import { SupabaseLiveInvoiceReader } from "./liveInvoiceRead.js";
 import { SupabaseInvoiceCreationService } from "./invoiceCreation.js";
 import { SupabaseFeeCreationService } from "./feeCreation.js";
+import { SupabaseFeeReader } from "./feeRead.js";
 
 // One local process per user/account. Credentials are supplied by the launching
 // host, never tool arguments. No token persistence or service-role fallback.
@@ -39,7 +40,9 @@ try {
     new URL(process.env.LEDGER_TARGET_SUPABASE_URL ?? ""), process.env.LEDGER_TARGET_PUBLISHABLE_KEY ?? "");
   const feeCreation = new SupabaseFeeCreationService(
     new URL(process.env.LEDGER_TARGET_SUPABASE_URL ?? ""), process.env.LEDGER_TARGET_PUBLISHABLE_KEY ?? "");
-  const server = createTargetServer(reader, context, clientSummaryReader, categoryManagement, transactionReceipts, transactionDetails, inventorySale, expenseCreation, expenseCreation, collectedInvoices, liveInvoices, invoiceCreation, feeCreation);
+  const fees = new SupabaseFeeReader(
+    new URL(process.env.LEDGER_TARGET_SUPABASE_URL ?? ""), process.env.LEDGER_TARGET_PUBLISHABLE_KEY ?? "");
+  const server = createTargetServer(reader, context, clientSummaryReader, categoryManagement, transactionReceipts, transactionDetails, inventorySale, expenseCreation, expenseCreation, collectedInvoices, liveInvoices, invoiceCreation, feeCreation, fees);
   await server.connect(new StdioServerTransport());
 } catch {
   process.stderr.write("Ledger target MCP could not start: check target configuration and user session.\n");

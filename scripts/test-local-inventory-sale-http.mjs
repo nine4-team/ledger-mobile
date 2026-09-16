@@ -49,6 +49,7 @@ const mcp=process.argv.includes('--mcp') ? await import('../LedgerTargetMCP/src/
 const expenseMCP=process.argv.includes('--expense-mcp') ? await import('../LedgerTargetMCP/src/expenseCreation.ts') : null;
 const invoiceCreationMCP=process.argv.includes('--invoice-mcp') ? await import('../LedgerTargetMCP/src/invoiceCreation.ts') : null;
 const feeMCP=process.argv.includes('--fee-mcp') ? await import('../LedgerTargetMCP/src/feeCreation.ts') : null;
+const feeReadMCP=feeMCP ? await import('../LedgerTargetMCP/src/feeRead.ts') : null;
 assert.ok(!feeMCP || (process.argv.includes('--expense') && process.argv.includes('--financial')
     && !process.argv.includes('--native-fee-create')), 'Fee MCP requires its own financial Expense fixture');
 assert.ok(!invoiceCreationMCP || (process.argv.includes('--expense') && process.argv.includes('--financial')
@@ -300,6 +301,13 @@ try {
             await assert.rejects(service.apply(feeMCP.makeFeeCreationRequest(input,foreign),foreign));
             assert.equal(sql(`select count(*) from ledger_private.fee_installments where account_id=${q(account)}`),'1');
             assert.equal(sql(`select amount_minor_units from ledger_private.fee_installments where id=${q(key+'-fee')}`),'12345');
+            const reader=new feeReadMCP.SupabaseFeeReader(new URL(local.API_URL),local.PUBLISHABLE_KEY);
+            const snapshot=await reader.read({projectId:project},context);
+            assert.equal(snapshot.fees.length,1);
+            assert.equal(snapshot.fees[0].id,key+'-fee');
+            assert.equal(snapshot.fees[0].amountMinorUnits,'12345');
+            assert.equal(snapshot.fees[0].status,'available');
+            await assert.rejects(reader.read({projectId:project},foreign),error=>error.statusCode===403);
         }
         if(process.argv.includes('--native-expense') || process.argv.includes('--native-expense-edit') || process.argv.includes('--native-live-invoice') || process.argv.includes('--native-fee-create')) {
             assert.ok(!(process.argv.includes('--native-expense-edit') && (process.argv.includes('--expense-edit') || process.argv.includes('--expense-paid') || process.argv.includes('--native-expense'))),
@@ -323,6 +331,8 @@ try {
         sql(`update public.spike_account_memberships set state='removed' where account_id=${q(account)} and principal_id=${q(principal)}`);
         if(feeMCP) {
             const service=new feeMCP.SupabaseFeeCreationService(new URL(local.API_URL),local.PUBLISHABLE_KEY);
+            await assert.rejects(new feeReadMCP.SupabaseFeeReader(new URL(local.API_URL),local.PUBLISHABLE_KEY)
+                .read({projectId:project},context),error=>error.statusCode===403);
             const request=feeMCP.makeFeeCreationRequest({operationUUID:randomUUID(),clientCreatedAtMilliseconds:1788523200000,
                 payload:{projectId:project,installmentId:key+'-removed',categoryId:key+'-fee-category',
                     label:'Removed member',amountMinorUnits:'1',currency:'USD'}},context);
