@@ -548,6 +548,7 @@ struct LedgerPowerSyncLocalBootstrapDependencies: @unchecked Sendable {
 }
 
 enum AccountWorkspaceRuntimeLifecycleEvent: Equatable, Sendable {
+    case sessionEndingStarted
     case structuredDatabaseOpened
     case attachmentDatabaseOpened
     case vaultConstructed
@@ -728,6 +729,7 @@ actor AccountWorkspacePendingWorkRuntime {
     }
 
     private var state: State = .open
+    private var sessionEndValidation: Result<SessionEndEvaluation, any Error>?
     private var accessLocked = false
     private let accessFence: LedgerWorkspaceAccessFence
     private var normalAccessLocked: Bool { accessLocked || accessFence.isRemoved }
@@ -2799,6 +2801,36 @@ actor AccountWorkspacePendingWorkRuntime {
         }
     }
 
+    /// Internal session-ending boundary, not a sign-out API. The coordinator
+    /// must persist recoverable cleanup intent before deleting anything in its
+    /// teardown callback. A returned summary alone never authorizes deletion.
+    func withSessionEndShutdown(
+        _ request: SessionEndRequest,
+        teardown: @Sendable () async throws -> Void
+    ) async throws {
+        let initial = try await pendingWorkSummary()
+        guard case .readyForTeardown = try SessionEndPolicy.evaluate(request, against: initial) else {
+            throw SessionEndingFailure.synchronizationIncomplete
+        }
+        guard !normalAccessLocked, case .open = state else {
+            throw LedgerOfflineClientRuntimeFailure.runtimeClosed
+        }
+        try accessFence.beginSessionEnding()
+        defer { accessFence.endSessionEnding() }
+        let task = Task { await self.performClose(sessionEndRequest: request) }
+        state = .closing(task)
+        resources?.lifecycleEvent(.sessionEndingStarted)
+        try await task.value.get()
+        try Task.checkCancellation()
+        guard !normalAccessLocked, let sessionEndValidation else {
+            throw LedgerOfflineClientRuntimeFailure.runtimeClosed
+        }
+        guard case .readyForTeardown = try sessionEndValidation.get() else {
+            throw SessionEndingFailure.synchronizationIncomplete
+        }
+        try await teardown()
+    }
+
     func close() async throws {
         let task: Task<Result<Void, LedgerOfflineClientRuntimeFailure>, Never>
         switch state {
@@ -2915,7 +2947,7 @@ actor AccountWorkspacePendingWorkRuntime {
         resumeDrainWaitersIfDrained()
     }
 
-    private func performClose() async -> Result<Void, LedgerOfflineClientRuntimeFailure> {
+    private func performClose(sessionEndRequest: SessionEndRequest? = nil) async -> Result<Void, LedgerOfflineClientRuntimeFailure> {
         for task in streamTasks.values { task.cancel() }
         commandUploadTask?.cancel()
         syncConnectionTask?.cancel()
@@ -2952,6 +2984,17 @@ actor AccountWorkspacePendingWorkRuntime {
         await resources.projectArchiveStore.cancelAndDrainWatches()
         await resources.spaceChecklistRevisionStore.cancelAndDrainWatches()
         await resources.clientArchiveStore.cancelAndDrainWatches()
+
+        if let sessionEndRequest {
+            do {
+                // All admitted mutations and SDK callbacks have drained, and
+                // replication is disconnected. Recheck before closing either DB.
+                let summary = try await resources.pendingWorkQuery.summary()
+                sessionEndValidation = .success(try SessionEndPolicy.evaluate(sessionEndRequest, against: summary))
+            } catch {
+                sessionEndValidation = .failure(error)
+            }
+        }
 
         resources.lifecycleEvent(.attachmentDatabaseCloseAttempted)
         do {
@@ -3151,6 +3194,10 @@ public enum LedgerPowerSyncLocalBootstrap {
 
         do {
             stage = .workspaceAccessCheck
+            try LedgerWorkspaceSessionCleanup.requireNoPendingCleanup(
+                environment: validatedEnvironment.manifest.environment,
+                principalId: principalId, accountId: accountId
+            )
             try dependencies.requireWorkspaceNotRemoved(
                 validatedEnvironment.manifest.environment, principalId, accountId
             )
@@ -3352,6 +3399,10 @@ public enum LedgerPowerSyncLocalBootstrap {
             runtimeResources = madeRuntimeResources
 
             stage = .workspaceAccessCheck
+            try LedgerWorkspaceSessionCleanup.requireNoPendingCleanup(
+                environment: validatedEnvironment.manifest.environment,
+                principalId: principalId, accountId: accountId
+            )
             try dependencies.requireWorkspaceNotRemoved(
                 validatedEnvironment.manifest.environment, principalId, accountId
             )

@@ -46,6 +46,17 @@ struct LedgerPowerSyncKeychain: Sendable {
         }
     }
 
+    /// Delete one exact record, never a service-wide or identity-wide query.
+    func removeRecord(key: String) throws {
+        guard !key.isEmpty, key.utf8.count <= 256 else {
+            throw LedgerPowerSyncKeychainFailure.invalidNamespace
+        }
+        let status = SecItemDelete(baseQuery(principalNamespace: key) as CFDictionary)
+        guard status == errSecSuccess || status == errSecItemNotFound else {
+            throw LedgerPowerSyncKeychainFailure.keychainWriteFailed(status)
+        }
+    }
+
     func loadOrCreateKeyBytes(principalNamespace: String) throws -> Data {
         guard !principalNamespace.isEmpty, principalNamespace.utf8.count <= 256 else {
             throw LedgerPowerSyncKeychainFailure.invalidNamespace

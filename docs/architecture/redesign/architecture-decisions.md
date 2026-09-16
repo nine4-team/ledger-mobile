@@ -2264,6 +2264,38 @@ Client/Project storage and Project form tests also pass in2.385s
 (`/tmp/ledger-client-project-timestamp-consumers.log`). No schema change, hosted
 deployment, or new Project allocation policy was required.
 
+### Session-ending shutdown boundary (2026-09-16, implementation in progress)
+
+The runtime now reuses its existing close/drain path for a final session-ending
+policy check. A temporary workspace fence excludes other handles and new opens;
+admitted writes finish, watches/uploads drain, and replication disconnects before
+the exact pending summary is checked again. Cleanup is called only after both
+databases close successfully and the final policy evaluation permits teardown.
+The fence remains held during cleanup. This is not the permanent membership-
+removal fence: voluntary logout must not prevent a later authorized sign-in.
+
+A changed summary refuses cleanup and preserves the databases and captured work.
+That race leaves the runtime closed, so the caller must reopen it to resume work.
+Already-pending sync-first requests are rejected before shutdown instead of
+stopping the sync needed to settle them. No collection, history, or retention
+policy changes. The internal callback is not a feature-screen signout API.
+
+`LedgerWorkspaceSessionCleanup` now stores the approved request and exact
+resolved workspace binding in device-local Keychain before deleting the owned
+workspace directory and its two exact encryption-key records. Recovery reuses
+that intent, never a newly generated empty summary. It is idempotent after
+partial deletion. Bootstrap checks for pending cleanup before loading keys and
+again before exposing the runtime; malformed intent also denies access. The
+marker cannot be cleared while the workspace directory or either key remains.
+A changed configuration/location is refused rather than deleting another path.
+
+Remaining implementation: the session-ending coordinator must run this cleanup
+inside guarded shutdown, coordinate identity-wide Auth/offline admissions and
+caches across Accounts, resume pending cleanup during sign-in, and bind the
+existing Settings action. Bootstrap currently denies pending cleanup; automatic
+recovery orchestration and complete signout are not yet delivered. Focused
+real-database evidence belongs to the existing session-ending checklist stories.
+
 ## A-008 — No General-Purpose Dual Writing
 
 **Decision:** Do not make clients permanently write Firebase and Supabase for

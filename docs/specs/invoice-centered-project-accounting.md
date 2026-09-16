@@ -377,11 +377,12 @@ and safe to retry.
     The initial recommendation is to require exact equality and reject a
     mismatch until Ledger has an approved model for payment fees, discounts,
     underpayments, or overpayments.
-11. Which membership changes are permitted after an Invoice is sent and how a
-    revised sent Invoice is versioned, rendered, and delivered. Source financial
-    values remain live until collection under D-011; that does not by itself
-    decide whether adding/removing sources requires an explicit revise-and-resend
-    action and a preserved delivery audit.
+11. Which membership changes are permitted after an Invoice is marked sent and
+    what historical revisions Ledger retains. Source financial values remain
+    live until collection under D-011. Invoices are delivered outside Ledger:
+    neither editing nor collection requires a resend acknowledgment or a
+    delivered-revision gate. Remaining status/history choices are O-034; they
+    must not reintroduce an in-app sending requirement.
 12. What the Client Summary report's “Total Spent” and category totals mean:
     actual paid value, paid plus open recognized demand, or current physical Item
     project prices. The initial recommendation is to label paid and open/

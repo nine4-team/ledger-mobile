@@ -1,6 +1,6 @@
 {
   "schemaVersion": 2,
-  "stateVersion": 1193,
+  "stateVersion": 1197,
   "userRequestedPause": {
     "date": "2026-09-15",
     "status": "resumed",
@@ -58,13 +58,13 @@
     "acceptanceCheckIds": ["SALE-GENERAL","SALE-ATOMIC"],
     "meaning": "Story5 resale follow-up through existing Sell implementation; retain return batch and other workflows under their own acceptance records.",
     "verificationCommands": ["swift test --package-path LedgeriOS --no-parallel --filter ReturnUninvoicedItemsCommandTests"],
-    "lastResult": "CI35094251669 terminal failed; Mac78UI/28failures, iOS cancelled. Hosted Return deployed/verified at87f8e777. Actual failing Invoice PDF contains SHIPPING: uppercase heading CSS, not missing data. Corrected test expectation; all live PDF content assertions replayed with PDFKit PASS. Evidence owner invoice-report-readback.liveInvoicePDFCaseDiagnosis. App/renderer unchanged.",
+    "lastResult": "CI35094251669 failed; later scoped passes do not waive it. PDF case-only assertion repair evidence: invoice-report-readback.liveInvoicePDFCaseDiagnosis. Current session-ending evidence stays with session-clean-logout.",
     "activeProcesses": {},
     "desktopPrerequisite": "Mac UI70530: runner initialization failed, system authentication running; zero tests. /tmp/ledger-mac-invoice-followup-20260916.{log,xcresult}. Build passed. No unchanged retry; iOS unaffected.",
-    "immediateFollowup": "Follow nextWorkflowDecision. Sale/Return evidence9f1700ce/169e7114 does not replace failed CI7836695f. Private .native-pdf untouched.",
-    "nextVerification": "No CI running. Diagnose remaining captured UI failures from /tmp/ledger-ci-35094251669-macos.log and /tmp/ledger-ci-35094251669-ios.log. Targeted interaction verification of repaired selectors/scrolling remains required when desktop available. No unchanged broad retry or Firebase merge.",
+    "immediateFollowup": "Follow nextWorkflowDecision; leave private .native-pdf files untouched.",
+    "nextVerification": "No CI running. Retain unresolved UI failures in /tmp/ledger-ci-35094251669-{macos,ios}.log; targeted follow-up remains. No unchanged broad retry or Firebase merge.",
     "resaleBatchCI": {"run":35094251669,"attempt":1,"commit":"7836695f2a766960a1bd7de2644bc255d6bc63f0","status":"failed","url":"https://github.com/nine4-team/ledger-mobile/actions/runs/35094251669"},
     "returnBatchCI": {"run":35093201085,"attempt":1,"commit":"726431917f3acdd3091e7ca369222c5225c00754","status":"failed","url":"https://github.com/nine4-team/ledger-mobile/actions/runs/35093201085","reason":"PR1 conflicts suppress automatic PR CI.","lastObserved":"Conversion passed; provider failed at outdated physical-query classification; native skipped, aggregate failed. Local consumer fix passed60captures; property consumer149captures. No unchanged rerun."},
-    "nextWorkflowDecision": "Integration82671 ended1436tests/203suites, only3 obsolete importer assertions failed. D029 retirement test corrected; focused75989 PASS11. Owner active-workspace-to-space-checklist.retiredImporterContractRepair. No full retry for test-only fix. NEXT approved implementation gap; Transfer/credit questions pending, Mac UI system auth blocked. No active processes."
+    "nextWorkflowDecision": "Continue session ending. Guarded shutdown PASS80/35.147s; cleanup intent/physical deletion/bootstrap denial now implemented, final34123 PASS11/2.335s in /tmp/ledger-session-cleanup-final-20260916.log. Owners session-clean-logout.shutdownBoundaryVerification and session-interrupted-cleanup.localCleanupRecoveryVerification; A007 design. NEXT AccountSessionEnding coordinator: identity-wide Supabase Auth/offline admissions/cache handling, automatic recovery and existing Settings binding. Cleanup begin/remove/complete must run inside guarded shutdown; marker survives until all steps finish. OfflineWorkspaceAdmissionStore still lacks ending/forget APIs. No complete logout or automatic recovery claim. Never use permanent RemovalRegistry for logout. Other questions pending; no repeat. No live processes."
   }
 }

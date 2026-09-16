@@ -1237,7 +1237,8 @@
     {
       "path": "docs/specs/invoice-centered-project-accounting.md",
       "canonicalTarget": true,
-      "sourceHash": "6b363a7ea56182489441bf211ff1d41fd5b93a53e416f519589e681b86f6baa5",
+      "sourceHash": "5d5cdb58c7eaf720067a978ae18f9671f06842dcbb2498f8b8ae63cde5eedef4",
+      "externalDeliveryClarificationReview": "2026-09-16: Removed the contradictory revise-and-resend possibility from open question11; aligned it with existing manual-collection/external-delivery authority. O-034 still owns status, membership and retained history, not an in-app resend requirement. No implementation or collection-completeness claim.",
       "collectionClarificationReview": "2026-09-15: Manual collection prompts for payment amount; partial-payment handling excluded; Expenses editable until collected; external delivery. Applies to project-invoicing-workspace and business-paid-expense-entry. No approval of mandatory resend/delivered-revision gates or the full O-006/O-033 proposal; unresolved portions remain blocked, not accepted.",
       "auditStatus": "audited",
       "supportingHeadings": [
@@ -20949,6 +20950,7 @@
     },
     {
       "storyId": "session-clean-logout",
+      "shutdownBoundaryVerification": "2026-09-16 partial implementation: AccountWorkspacePendingWorkRuntime.withSessionEndShutdown reuses drainage/disconnect/close, rechecks SessionEndPolicy after admitted writes settle, excludes other/pending opens and holds a temporary fence through cleanup. Focused98052 PASS3/.685s /tmp/ledger-session-shutdown-20260916.log. Expanded runtime suite25419 PASS80/35.147s /tmp/ledger-session-runtime-regression-20260916.log: five new tests cover clean ordering/open denial, stale-summary refusal and encrypted reopen preserving admitted work, second-handle refusal, pending sync-first versus exact destructive consent, and callback failure propagation/fence release. Intermediate36677 compilation failed missing inner try in Testing macro; corrected, not a runtime failure. conversion:check PASS /tmp/ledger-session-conversion-20260916.log. A-007 records design. No real deletion, durable cleanup recovery, identity-wide Auth/admission coordination or UI binding yet; not complete logout or hosted/release proof.",
       "scopeReview": {"classification":"approved_redesign","evidence":["Views/Settings/SettingsView.swift:102","docs/specs/session-ending-pending-work.md"],"note":"Preserve sign-out without losing accepted local work."},
       "title": "Log out only after a fresh clean summary",
       "outcome": "Allow ordinary logout only when every pending class is zero; detect new accepted work or a changed summary before teardown so a stale clean decision cannot discard work.",
@@ -21111,6 +21113,7 @@
     },
     {
       "storyId": "session-interrupted-cleanup",
+      "localCleanupRecoveryVerification": "2026-09-16 partial implementation: LedgerWorkspaceSessionCleanup persists exact request/scope/location outside workspace databases; guarded caller can remove owned directory and two exact Keychain keys idempotently. Bootstrap denies any pending/malformed marker before key loading and before runtime exposure. Marker completion refuses surviving files/keys. Tests use isolated synthetic principal, real encrypted DB/captured bytes/native Keychain: interrupted-after-intent restart denial; stored request recovery; repeated deletion; denial until marker completed; clean reopen; foreign-scope and corrupt intent preserve files. Final34123 PASS11/2.335s (session tests plus existing runtime isolation), /tmp/ledger-session-cleanup-final-20260916.log. Earlier95683 PASS2/.663s not final evidence because exact directory binding was edited during its build; final run rebuilt it. No production deletion or UI/hosted proof. Automatic sign-in recovery, Auth/admission/cache coordinator and Settings action remain unfinished. Design A-007.",
       "scopeReview": {"classification":"approved_redesign","evidence":["docs/specs/session-ending-pending-work.md"],"note":"Restart/privacy invariant of local teardown, not a new unrelated feature."},
       "title": "Resume interrupted cleanup before protected data reopens",
       "outcome": "Treat termination, token expiry, revocation and interrupted cleanup as no destructive consent. Resume fail-closed cleanup before the same Principal can reopen protected local data.",
@@ -29676,7 +29679,7 @@
         "End-to-end simulator interaction and assistive-technology semantics remain part of the release UI-validation batch; this workflow proves AppModel behavior plus compiled SwiftUI control/action wiring only."
       ],
       "blockers": [
-        "O-026 must be approved before this workflow can become cutover-ready because final Project-budget command authorization, RLS, and Sync policy are not yet product-authoritative. The current can_manage_project_budgets check is a provisional implementation for local validation only."
+        "O-052 governs final Project creation/category-allocation authorization; current can_manage_project_budgets is provisional. O-026 shared-category management was resolved by D-030 and is not this Project-budget gate. Await the approved Project permission matrix before cutover readiness."
       ],
       "verification": {
         "local": {

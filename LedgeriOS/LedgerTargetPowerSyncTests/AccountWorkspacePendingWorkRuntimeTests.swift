@@ -888,6 +888,209 @@ struct AccountWorkspacePendingWorkRuntimeTests {
         return dependencies
     }
 
+    @Test("Session shutdown closes databases before cleanup and fences concurrent opens")
+    func sessionShutdownClean() async throws {
+        let context = try RuntimeTestContext(suffix: "session-clean")
+        defer { context.remove() }
+        let events = LockedRecorder<AccountWorkspaceRuntimeLifecycleEvent>()
+        let runtime = try await context.openRuntime(events: events)
+        let summary = try await runtime.pendingWorkSummary()
+        let request = try SessionEndRequest(disposition: .ordinaryCleanLogout,
+            expectedSummary: summary, requestedAt: summary.observedAt)
+        try await runtime.lifecycleOwner.withSessionEndShutdown(request) {
+            #expect(events.values.contains(.attachmentDatabaseCloseAttempted))
+            #expect(events.values.contains(.structuredDatabaseCloseAttempted))
+            await #expect(throws: LedgerOfflineClientRuntimeFailure.runtimeClosed) {
+                _ = try await context.openRuntime()
+            }
+        }
+        // This primitive does not delete data or revoke membership. A subsequent
+        // coordinator supplies durable cleanup; the temporary fence is released.
+        let reopened = try await context.openRuntime()
+        #expect(try await reopened.pendingWorkSummary().hasBlockingWork == false)
+        try await reopened.close()
+    }
+
+    @Test("Session shutdown detects an admitted write after the clean prompt and preserves it")
+    func sessionShutdownAdmittedWrite() async throws {
+        let context = try RuntimeTestContext(suffix: "session-write-race")
+        defer { context.remove() }
+        let gate = ManualGate()
+        let ending = AsyncStream<Void>.makeStream()
+        defer { ending.continuation.finish() }
+        var dependencies = context.dependencies()
+        dependencies.finiteOperationCheckpoint = { operation in
+            if operation == .createClient { await gate.wait() }
+        }
+        dependencies.lifecycleEvent = { event in
+            if event == .sessionEndingStarted { ending.continuation.yield(()) }
+        }
+        let runtime = try await context.openRuntime(dependencies: dependencies)
+        let summary = try await runtime.pendingWorkSummary()
+        let request = try SessionEndRequest(disposition: .ordinaryCleanLogout,
+            expectedSummary: summary, requestedAt: summary.observedAt)
+        let write = Task { try await runtime.createClient(context.clientCommand(id: "during-logout")) }
+        await gate.waitUntilEntered()
+        let shutdown = Task {
+            try await runtime.lifecycleOwner.withSessionEndShutdown(request) {
+                Issue.record("Stale clean summary must not reach destructive cleanup")
+            }
+        }
+        var iterator = ending.stream.makeAsyncIterator()
+        _ = await iterator.next()
+        await gate.release()
+        _ = try await write.value
+        await #expect(throws: SessionEndingFailure.summaryChanged) { try await shutdown.value }
+        let reopened = try await context.openRuntime()
+        #expect(try await reopened.pendingWorkSummary().queuedOperationCount == 1)
+        try await reopened.close()
+    }
+
+    @Test("Session shutdown rejects additional handles without closing the workspace")
+    func sessionShutdownOtherHandle() async throws {
+        let context = try RuntimeTestContext(suffix: "session-other-handle")
+        defer { context.remove() }
+        let first = try await context.openRuntime()
+        let second = try await context.openRuntime()
+        let summary = try await first.pendingWorkSummary()
+        let request = try SessionEndRequest(disposition: .ordinaryCleanLogout,
+            expectedSummary: summary, requestedAt: summary.observedAt)
+        await #expect(throws: LedgerOfflineClientRuntimeFailure.syncRequiresExclusiveWorkspace) {
+            try await first.lifecycleOwner.withSessionEndShutdown(request) {
+                Issue.record("Another open handle prevents safe cleanup")
+            }
+        }
+        #expect(try await first.pendingWorkSummary() == summary)
+        try await second.close()
+        try await first.close()
+    }
+
+    @Test("Pending sync-first keeps the runtime usable; exact destructive consent reaches cleanup")
+    func sessionShutdownPendingDisposition() async throws {
+        let context = try RuntimeTestContext(suffix: "session-pending")
+        defer { context.remove() }
+        let runtime = try await context.openRuntime()
+        _ = try await runtime.createClient(context.clientCommand(id: "pending-logout"))
+        let summary = try await runtime.pendingWorkSummary()
+        let sync = try SessionEndRequest(disposition: .synchronizeThenLogout,
+            expectedSummary: summary, requestedAt: summary.observedAt)
+        await #expect(throws: SessionEndingFailure.synchronizationIncomplete) {
+            try await runtime.lifecycleOwner.withSessionEndShutdown(sync) {
+                Issue.record("Sync-first cannot discard pending work")
+            }
+        }
+        #expect(try await runtime.pendingWorkSummary() == summary)
+        let discard = try #require(try SessionEndPolicy.makeRequest(
+            choice: .removeFromDeviceDiscardingPendingWork(confirmedAt: summary.observedAt),
+            summary: summary, requestedAt: summary.observedAt))
+        let calls = LockedRecorder<Bool>()
+        try await runtime.lifecycleOwner.withSessionEndShutdown(discard) { calls.append(true) }
+        #expect(calls.values == [true])
+        // No cleanup adapter is installed by this test: consent alone does not
+        // erase bytes, and it must never be reported as server synchronization.
+        let reopened = try await context.openRuntime()
+        #expect(try await reopened.pendingWorkSummary().queuedOperationCount == 1)
+        try await reopened.close()
+    }
+
+    @Test("Cleanup failure propagates and does not permanently revoke workspace access")
+    func sessionShutdownCleanupFailure() async throws {
+        let context = try RuntimeTestContext(suffix: "session-cleanup-failure")
+        defer { context.remove() }
+        let runtime = try await context.openRuntime()
+        let summary = try await runtime.pendingWorkSummary()
+        let request = try SessionEndRequest(disposition: .ordinaryCleanLogout,
+            expectedSummary: summary, requestedAt: summary.observedAt)
+        await #expect(throws: CancellationError.self) {
+            try await runtime.lifecycleOwner.withSessionEndShutdown(request) { throw CancellationError() }
+        }
+        let reopened = try await context.openRuntime()
+        #expect(try await reopened.pendingWorkSummary().hasBlockingWork == false)
+        try await reopened.close()
+    }
+
+    @Test("Interrupted session cleanup denies bootstrap and resumes exact files and keys idempotently")
+    func sessionCleanupRecovery() async throws {
+        let context = try RuntimeTestContext(suffix: "session-cleanup-recovery",
+            principalId: PrincipalID(validating: "session-test-\(UUID())"))
+        defer { context.remove() }
+        let location = try context.location()
+        var dependencies = context.dependencies()
+        dependencies.loadDatabaseKey = LedgerPowerSyncLocalBootstrapDependencies.live.loadDatabaseKey
+        dependencies.loadMediaKeyBytes = LedgerPowerSyncLocalBootstrapDependencies.live.loadMediaKeyBytes
+        let runtime = try await context.openRuntime(dependencies: dependencies)
+        _ = try await runtime.createClient(context.clientCommand(id: "discard-confirmed"))
+        _ = try await runtime.captureAttachment(context.capture(id: "discard-captured"))
+        let summary = try await runtime.pendingWorkSummary()
+        #expect(summary.queuedOperationCount == 1)
+        #expect(summary.unverifiedAttachmentCount == 1)
+        let request = try #require(try SessionEndPolicy.makeRequest(
+            choice: .removeFromDeviceDiscardingPendingWork(confirmedAt: summary.observedAt),
+            summary: summary, requestedAt: summary.observedAt))
+        defer {
+            try? LedgerWorkspaceSessionCleanup.removeLocalData(request, location: location)
+            try? LedgerWorkspaceSessionCleanup.complete(request, location: location)
+        }
+        await #expect(throws: RuntimeInjectedFailure.self) {
+            try await runtime.lifecycleOwner.withSessionEndShutdown(request) {
+                try LedgerWorkspaceSessionCleanup.begin(request, location: location)
+                throw RuntimeInjectedFailure() // Crash after durable intent, before deletion.
+            }
+        }
+        #expect(FileManager.default.fileExists(atPath: location.structuredDatabaseURL.path))
+        #expect(try LedgerWorkspaceSessionCleanup.pendingRequest(location: location) == request)
+        await #expect(throws: LedgerPowerSyncLocalBootstrapFailure(stage: .workspaceAccessCheck)) {
+            _ = try await context.openRuntime(dependencies: dependencies)
+        }
+        #expect(throws: LedgerWorkspaceSessionCleanup.Failure.cleanupPending) {
+            try LedgerWorkspaceSessionCleanup.complete(request, location: location)
+        }
+        // Resume from stored consent, not a fabricated fresh empty summary.
+        let recovered = try #require(try LedgerWorkspaceSessionCleanup.pendingRequest(location: location))
+        try LedgerWorkspaceSessionCleanup.removeLocalData(recovered, location: location)
+        try LedgerWorkspaceSessionCleanup.removeLocalData(recovered, location: location)
+        #expect(!FileManager.default.fileExists(atPath: location.mediaVaultRootURL.path))
+        #expect(!FileManager.default.fileExists(atPath: location.structuredDatabaseURL.path))
+        #expect(try LedgerPowerSyncKeychain(service: location.databaseKeychainService)
+            .loadRecord(key: location.databaseKeychainAccount) == nil)
+        #expect(try LedgerPowerSyncKeychain(service: location.mediaKeychainService)
+            .loadRecord(key: location.mediaKeychainAccount) == nil)
+        await #expect(throws: LedgerPowerSyncLocalBootstrapFailure(stage: .workspaceAccessCheck)) {
+            _ = try await context.openRuntime(dependencies: dependencies)
+        }
+        try LedgerWorkspaceSessionCleanup.complete(recovered, location: location)
+        let reopened = try await context.openRuntime()
+        #expect(try await reopened.pendingWorkSummary().hasBlockingWork == false)
+        try await reopened.close()
+    }
+
+    @Test("Cleanup refuses a different physical workspace or malformed intent")
+    func sessionCleanupScopeAndCorruption() async throws {
+        let context = try RuntimeTestContext(suffix: "session-cleanup-scope",
+            principalId: PrincipalID(validating: "session-test-\(UUID())"))
+        defer { context.remove() }
+        let runtime = try await context.openRuntime()
+        let summary = try await runtime.pendingWorkSummary()
+        try await runtime.close()
+        let request = try SessionEndRequest(disposition: .ordinaryCleanLogout,
+            expectedSummary: summary, requestedAt: summary.observedAt)
+        let foreign = try context.location(principalId: PrincipalID(validating: "other-principal"))
+        #expect(throws: LedgerWorkspaceSessionCleanup.Failure.intentMismatch) {
+            try LedgerWorkspaceSessionCleanup.begin(request, location: foreign)
+        }
+        let location = try context.location()
+        let store = try LedgerPowerSyncKeychain(service: "ledger.target.session-cleanup.v1")
+        defer { try? store.removeRecord(key: location.sessionScopeIdentity) }
+        try store.storeRecord(key: location.sessionScopeIdentity, value: Data("corrupt".utf8))
+        await #expect(throws: LedgerPowerSyncLocalBootstrapFailure(stage: .workspaceAccessCheck)) {
+            _ = try await context.openRuntime()
+        }
+        #expect(throws: (any Error).self) {
+            try LedgerWorkspaceSessionCleanup.removeLocalData(request, location: location)
+        }
+        #expect(FileManager.default.fileExists(atPath: location.structuredDatabaseURL.path))
+    }
+
     @Test("WORKRUNTIME-TEST-001 exact composition returns clean and all pending classes")
     func exactCompositionAndPendingClasses() async throws {
         let cleanContext = try RuntimeTestContext(suffix: "clean")

@@ -8,6 +8,7 @@ public enum LedgerWorkspaceRuntimeIsolationFailure: Error, Equatable, Sendable {
 }
 
 struct LedgerWorkspaceRuntimeLocation: Equatable, Sendable {
+    let sessionScopeIdentity: String
     let structuredDatabaseURL: URL
     let attachmentDatabaseURL: URL
     let mediaVaultRootURL: URL
@@ -17,6 +18,7 @@ struct LedgerWorkspaceRuntimeLocation: Equatable, Sendable {
     let mediaKeychainAccount: String
 
     fileprivate init(
+        sessionScopeIdentity: String,
         structuredDatabaseURL: URL,
         attachmentDatabaseURL: URL,
         mediaVaultRootURL: URL,
@@ -25,6 +27,7 @@ struct LedgerWorkspaceRuntimeLocation: Equatable, Sendable {
         mediaKeychainService: String,
         mediaKeychainAccount: String
     ) {
+        self.sessionScopeIdentity = sessionScopeIdentity
         self.structuredDatabaseURL = structuredDatabaseURL
         self.attachmentDatabaseURL = attachmentDatabaseURL
         self.mediaVaultRootURL = mediaVaultRootURL
@@ -92,6 +95,8 @@ enum LedgerWorkspaceRuntimeIsolation {
         }
 
         return LedgerWorkspaceRuntimeLocation(
+            sessionScopeIdentity: try LedgerWorkspaceRemovalRegistry.identity(
+                environment: binding.environment, principalId: principalId, accountId: accountId),
             structuredDatabaseURL: structuredDatabaseURL,
             attachmentDatabaseURL: attachmentDatabaseURL,
             mediaVaultRootURL: mediaVaultRootURL,

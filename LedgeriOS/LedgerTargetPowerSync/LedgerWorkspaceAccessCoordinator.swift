@@ -7,6 +7,7 @@ final class LedgerWorkspaceAccessFence: @unchecked Sendable {
     private var commandUploadInProgress = false
     private var syncConnectionInUse = false
     private var openRuntimeCount = 0
+    private var sessionEnding = false
     private var observers: [UUID: AsyncStream<Void>.Continuation] = [:]
     var isRemoved: Bool { lock.withLock { removed } }
 
@@ -14,6 +15,7 @@ final class LedgerWorkspaceAccessFence: @unchecked Sendable {
     // can alter the SDK coordinator shared by the physical database filename.
     func beginRuntimeOpen() throws {
         try lock.withLock {
+            guard !sessionEnding else { throw LedgerOfflineClientRuntimeFailure.runtimeClosed }
             guard !removed else {
                 throw LedgerPowerSyncLocalBootstrapFailure(stage: .workspaceAccessRemoved)
             }
@@ -28,6 +30,20 @@ final class LedgerWorkspaceAccessFence: @unchecked Sendable {
             openRuntimeCount -= 1
         }
     }
+
+    // Voluntary logout is not membership revocation. This temporary fence also
+    // covers pending opens, and stays held through the caller's cleanup.
+    func beginSessionEnding() throws {
+        try lock.withLock {
+            guard !removed, !sessionEnding else { throw LedgerOfflineClientRuntimeFailure.runtimeClosed }
+            guard openRuntimeCount == 1 else {
+                throw LedgerOfflineClientRuntimeFailure.syncRequiresExclusiveWorkspace
+            }
+            sessionEnding = true
+        }
+    }
+
+    func endSessionEnding() { lock.withLock { sessionEnding = false } }
 
     func beginSyncConnection() throws {
         try lock.withLock {
