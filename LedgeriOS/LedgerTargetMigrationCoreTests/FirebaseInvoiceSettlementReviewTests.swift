@@ -291,6 +291,73 @@ struct FirebaseInvoiceSettlementReviewTests {
         }
         let mapped = try convert([Self.payment()])
         let historicalCategories = ["historical-category": try BudgetCategoryID(validating: "historical-target-category")]
+        let feeLine = Self.map(["id": .string("fee-line"), "amountCents": .integer("50"), "sign": .integer("1"),
+            "sourceType": .string("feeInstallment"), "sourceId": .string("fee"),
+            "snapshotName": .string("Historical Fee"), "budgetCategoryId": .string("historical-category")])
+        let feeSource = FirebaseSourceDocument(accountScopeID: "source-account",
+            documentPathSegments: ["accounts", "source-account", "projects", "source-project", "feeInstallments", "fee"],
+            entityCode: "feeInstallments", evidenceKind: .record,
+            fields: Self.map(["label": .string("Current Fee"), "amountCents": .integer("50"),
+                "budgetCategoryId": .string("historical-category")]), sourceRecordID: "fee")
+        let mixedPayment = Self.payment(lines: ["line", "fee-line"], amount: "150")
+        let mixed = try Self.review(Self.invoice(lines: [line, feeLine], total: "150"), [mixedPayment])
+            .resolveSources(in: [source(), category, feeSource])
+        let expenseMapping = try FirebaseExpenseConversion.convertInvoiceSource(mixed, lineID: "line",
+            targetScope: targetScope, expenseID: .init(validating: "target-expense"),
+            categoryID: .init(validating: "target-category"), currency: .init(validating: "USD"), lineage: [])
+        let feeMapping = try mixed.mapFee(lineID: "fee-line", targetScope: targetScope,
+            installmentID: .init(validating: "target-fee"), categories: historicalCategories, currency: .init(validating: "USD"))
+        let feeResult = FirebaseExpenseConversion.Result.feeSourceMapped(feeMapping.draft,
+            original: feeSource, invoice: mixed.settlement.invoice, line: feeLine)
+        let mixedParameters = try paymentParameters(source: mixedPayment, amount: "150")
+        func mixedRecord(_ mappings: [FirebaseExpenseConversion.Result]) throws -> FrozenInvoiceContents {
+            try FirebaseExpenseConversion.frozenInvoice(mixed, mappedSources: mappings, targetScope: targetScope,
+                invoiceID: .init(validating: "target-mixed"), payment: mixedParameters, invoiceRevision: 1,
+                sourceRevision: 1, historicalCategories: historicalCategories, currency: .init(validating: "USD")).restored()
+        }
+        let combined = try mixedRecord([expenseMapping, feeResult])
+        #expect(combined.total.minorUnits == 150 && combined.lines.map(\.signedAmount.minorUnits) == [100, 50])
+        #expect(combined.lines.map(\.description) == ["Historical vendor", "Historical Fee"])
+        #expect(combined.lines[1].source == .feeInstallment(installmentId: feeMapping.draft.installmentId))
+        #expect(throws: (any Error).self) { try mixedRecord([expenseMapping]) }
+        #expect(throws: (any Error).self) { try mixedRecord([feeResult, expenseMapping]) }
+        let mixedImport = try FirebaseExpenseInvoiceImportParameters.make(review: mixed,
+            mappedSources: [expenseMapping, feeResult], targetScope: targetScope,
+            invoiceID: .init(validating: "target-mixed"), payment: mixedParameters,
+            invoiceRevision: 1, sourceRevision: 1, historicalCategories: historicalCategories, currency: .init(validating: "USD"))
+        #expect(mixedImport.p_expenses.count == 1 && mixedImport.p_fees.count == 1)
+        #expect(mixedImport.p_fees[0].record.amount_minor_units == "50")
+        #expect(mixedImport.p_fees[0].record.created_at == nil && mixedImport.p_fees[0].record.created_by_principal_id == nil)
+        #expect(mixedImport.p_fees[0].source_bytes == "\\x" + (try feeSource.canonicalEvidenceData()).map { String(format: "%02x", $0) }.joined())
+        func feeMetadata(_ metadata: [String: FirebaseSourceValue], principals: [String: PrincipalID] = [:]) throws -> FirebaseExpenseInvoiceImportParameters {
+            guard case .map(let fields) = feeSource.fields else { throw FirebaseExpenseConversion.MappingFailure.incompleteInvoiceMapping }
+            var values = Dictionary(uniqueKeysWithValues: fields.map { ($0.key, $0.value) })
+            values.merge(metadata) { _, new in new }
+            let changed = FirebaseSourceDocument(accountScopeID: feeSource.accountScopeID,
+                documentPathSegments: feeSource.documentPathSegments, entityCode: feeSource.entityCode,
+                evidenceKind: .record, fields: Self.map(values), sourceRecordID: feeSource.sourceRecordID)
+            let review = mixed.settlement.resolveSources(in: [source(), category, changed])
+            let result = FirebaseExpenseConversion.Result.feeSourceMapped(feeMapping.draft,
+                original: changed, invoice: review.settlement.invoice, line: feeLine)
+            return try FirebaseExpenseInvoiceImportParameters.make(review: review,
+                mappedSources: [expenseMapping, result], targetScope: targetScope,
+                invoiceID: .init(validating: "target-mixed"), payment: mixedParameters,
+                invoiceRevision: 1, sourceRevision: 1, historicalCategories: historicalCategories,
+                currency: .init(validating: "USD"), principalMappings: principals)
+        }
+        let knownCreator = try PrincipalID(validating: "mapped-creator")
+        let attributed = try feeMetadata(["createdBy": .string("original-creator"),
+            "createdAt": .timestamp(seconds: "1700000000", nanoseconds: 123456789)],
+            principals: ["original-creator": knownCreator])
+        #expect(attributed.p_fees[0].record.created_by_principal_id == knownCreator.rawValue)
+        #expect(attributed.p_fees[0].record.created_at == "2023-11-14T22:13:20.123456Z")
+        for metadata: [String: FirebaseSourceValue] in [
+            ["createdBy": .string("unmapped")], ["createdBy": .integer("1")],
+            ["createdAt": .string("not-a-timestamp")],
+            ["createdAt": .timestamp(seconds: "253402300800", nanoseconds: 0)]
+        ] {
+            #expect(throws: (any Error).self) { try feeMetadata(metadata) }
+        }
         let frozenRecord = try frozen([mapped], categories: historicalCategories)
         #expect(frozenRecord.total.minorUnits == 100 && frozenRecord.lines.count == 1)
         #expect(frozenRecord.lines[0].description == "Historical vendor")

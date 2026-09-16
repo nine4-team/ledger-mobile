@@ -19,14 +19,14 @@ package enum FirebaseExpenseConversion {
         case invoiceSourceUnresolved, settlementUnresolved, invoiceAmountRequiresMapping
     }
 
-    /// Compose an Expense-only Invoice import record using the canonical frozen
-    /// contract. Mixed Item/Fee/manual invoices must provide their own complete
+    /// Compose mapped Expense/Fee lines using the canonical frozen
+    /// contract. Item/manual invoices must provide their own complete
     /// source mapping; this function never drops those lines to make a subtotal.
     package static func frozenInvoice(_ review: FirebaseInvoiceSourcesReview, mappedSources: [Result],
         targetScope: TransactionScope, invoiceID: InvoiceID, payment: FirebaseClientPaymentImportParameters,
         invoiceRevision: Int64, sourceRevision: Int64,
         historicalCategories: [String: BudgetCategoryID], currency: CurrencyCode) throws -> FrozenInvoiceStorageRecord {
-        guard review.settlement.hasSinglePaymentLineCoverage,
+        guard review.settlement.hasSinglePaymentLineCoverage, review.settlement.targetScope == targetScope,
               mappedSources.count == review.lines.count, !mappedSources.isEmpty else {
             throw MappingFailure.incompleteInvoiceMapping
         }
@@ -35,20 +35,34 @@ package enum FirebaseExpenseConversion {
             return fields.first { $0.key.utf8.elementsEqual(key.utf8) }?.value
         }
         let lines: [FrozenInvoiceLine] = try zip(review.lines, mappedSources).map { reviewed, mapped in
-            guard case .invoiceSourceMapped(let draft, let original, let invoice, let line) = mapped,
-                  let reviewedSource = reviewed.source,
+            let original: FirebaseSourceDocument, invoice: FirebaseSourceDocument, line: FirebaseSourceValue
+            let accountID: AccountID, projectID: ProjectID, money: Money, source: FrozenInvoiceLineSource
+            switch mapped {
+            case .invoiceSourceMapped(let draft, let document, let parent, let evidence):
+                guard reviewed.issues == [.transactionMeaningNotMapped] else { throw MappingFailure.incompleteInvoiceMapping }
+                original = document; invoice = parent; line = evidence
+                accountID = draft.accountId; projectID = draft.projectId; money = draft.finalAmount
+                source = .expense(expenseId: draft.expenseId)
+            case .feeSourceMapped(let draft, let document, let parent, let evidence):
+                guard reviewed.issues == [.feeNotMapped] else { throw MappingFailure.incompleteInvoiceMapping }
+                original = document; invoice = parent; line = evidence
+                accountID = draft.accountId; projectID = draft.projectId; money = draft.amount
+                source = .feeInstallment(installmentId: draft.installmentId)
+            default: throw MappingFailure.incompleteInvoiceMapping
+            }
+            guard let reviewedSource = reviewed.source,
                   try invoice.canonicalEvidenceData() == review.settlement.invoice.canonicalEvidenceData(),
                   try FirebaseSourceFixtureCatalog.canonicalData(for: line) == FirebaseSourceFixtureCatalog.canonicalData(for: reviewed.line),
                   try original.canonicalEvidenceData() == reviewedSource.canonicalEvidenceData(),
-                  draft.accountId == targetScope.accountId, draft.projectId == targetScope.projectId,
-                  draft.finalAmount.currency == currency,
+                  accountID == targetScope.accountId, projectID == targetScope.projectId,
+                  money.currency == currency,
                   case .string(let lineID) = field(line, "id"),
                   case .string(let category) = field(line, "budgetCategoryId"),
                   let targetCategory = historicalCategories.first(where: { $0.key.utf8.elementsEqual(category.utf8) })?.value,
                   case .string(let description) = field(line, "snapshotName"),
                   case .integer("1") = field(line, "sign"),
                   case .integer(let amountText) = field(line, "amountCents"),
-                  let amount = Int64(amountText), amount == draft.finalAmount.minorUnits else {
+                  let amount = Int64(amountText), amount == money.minorUnits else {
                 throw MappingFailure.incompleteInvoiceMapping
             }
             // Source line IDs are scoped to their original Invoice. Target
@@ -59,7 +73,7 @@ package enum FirebaseExpenseConversion {
             let identity = try encoder.encode([targetScope.accountId.rawValue, invoiceID.rawValue, lineID])
             let targetLineID = "import-line-" + (try MigrationSHA256.make(bytes: identity)).rawValue
             return try FrozenInvoiceLine(id: .init(validating: targetLineID), scope: targetScope,
-                source: .expense(expenseId: draft.expenseId), sourceRevision: sourceRevision, categoryId: targetCategory,
+                source: source, sourceRevision: sourceRevision, categoryId: targetCategory,
                 signedAmount: .init(minorUnits: amount, currency: currency), description: description)
         }
         guard case .integer(let totalText) = field(review.settlement.invoice.fields, "totalCents"),
@@ -91,6 +105,8 @@ package enum FirebaseExpenseConversion {
     package enum Result: Sendable {
         case sourceMapped(BusinessPaidExpenseDraft, original: FirebaseSourceDocument)
         case invoiceSourceMapped(BusinessPaidExpenseDraft, original: FirebaseSourceDocument,
+            invoice: FirebaseSourceDocument, line: FirebaseSourceValue)
+        case feeSourceMapped(FeeInstallmentDraft, original: FirebaseSourceDocument,
             invoice: FirebaseSourceDocument, line: FirebaseSourceValue)
         case unresolved(Issue)
     }
