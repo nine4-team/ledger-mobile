@@ -88,6 +88,7 @@ public final class ExpenseCreationSession {
     public func saveEdit(_ entry: BusinessPaidExpenseDraft, expectedRevision: Int64,
                          operationUUID: UUID, capturedAt: Date) async throws -> OperationReceipt {
         guard !isSaving else { throw Failure.saving }
+        guard unconfirmedReceiptIds.isEmpty else { throw Failure.invalidCaptures }
         guard let editor = service as? any ExpenseEditing, attempt == nil else { throw Failure.changedAttempt }
         let requested = EditAttempt(entry: entry, revision: expectedRevision, uuid: operationUUID, date: capturedAt)
         if let editAttempt { guard editAttempt == requested else { throw Failure.changedAttempt } }

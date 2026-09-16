@@ -44,6 +44,37 @@ struct ExpenseCreationSessionTests {
         #expect(session.receiptCaptures == [capture])
     }
 
+    @Test func editCannotSubmitWhileReceiptRecoveryIsIncomplete() async throws {
+        let service = Creator(), session = ExpenseCreationSession(service: service)
+        let draft = try BusinessPaidExpenseDraft(accountId: .init(validating: "account"),
+            projectId: .init(validating: "project"), expenseId: .init(validating: "expense"),
+            vendor: "Vendor", date: "2024-02-29", finalAmount: .init(minorUnits: 1250, currency: .init(validating: "USD")),
+            categoryId: .init(validating: "general"), notes: "", receiptAttachmentIds: [])
+        let capture = try LocalAttachmentCapture(attachmentId: .init(validating: "new-receipt"),
+            scope: await service.expenseAttachmentCaptureScope(projectId: draft.projectId, expenseId: draft.expenseId),
+            capturedAt: .init(validating: 1000), bytes: Data([1, 2, 3]), metadata: nil)
+        let recovery = ExpenseEntryRecovery(accountId: draft.accountId, projectId: draft.projectId,
+            expenseId: draft.expenseId, operationUUID: UUID(), capturedAt: Date(), vendor: draft.vendor,
+            date: Date(), amountText: "12.50", notes: "", categoryId: draft.categoryId, lines: [],
+            attachmentIds: [capture.attachmentId], editContext: try .init(expectedRevision: 1, retainedAttachmentIds: []))
+        await service.configureRecovery(captures: [capture], failsOnce: true)
+        await #expect(throws: Creator.Failure.once) {
+            try await session.restoreForEditing(recovery, source: .init(entry: draft, revision: 1))
+        }
+        await #expect(throws: ExpenseCreationSession.Failure.invalidCaptures) {
+            try await session.saveEdit(draft, expectedRevision: 1,
+                operationUUID: recovery.operationUUID, capturedAt: recovery.capturedAt)
+        }
+        #expect(await service.operations.isEmpty)
+        #expect(!session.hasAttempt && !session.isSaving)
+        #expect(session.savedEntry == recovery)
+        #expect(session.unconfirmedReceiptIds == [capture.attachmentId])
+        try await session.retryReceiptRecovery()
+        #expect(session.unconfirmedReceiptIds.isEmpty)
+        #expect(session.receiptCaptures == [capture])
+        #expect(await service.operations.isEmpty)
+    }
+
     @Test func receiptLinesKeepIdentitySourceOrderAndExactAmounts() throws {
         let session = ExpenseCreationSession(service: Creator())
         let currency = try CurrencyCode(validating: "USD")
