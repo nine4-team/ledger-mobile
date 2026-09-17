@@ -57,16 +57,7 @@ public struct ExpenseEntryRecovery: Codable, Equatable, Sendable, Identifiable {
         }
         private enum CodingKeys: String, CodingKey { case expectedRevision, retainedAttachmentIds }
     }
-    public struct Line: Codable, Equatable, Sendable, Identifiable {
-        public let id: UUID
-        /// Existing receipt-line identity may come from migration and need not be a UUID.
-        public var sourceLineId: String?
-        public var description = ""
-        public var amountText = ""
-        public var effect: NonItemReceiptLineEffect = .increase
-        public var quantityText = ""
-        public init(id: UUID = UUID()) { self.id = id }
-    }
+    public typealias Line = ReceiptLineEntry
     public var id: ExpenseID { expenseId }
     public let accountId: AccountID
     public let projectId: ProjectID

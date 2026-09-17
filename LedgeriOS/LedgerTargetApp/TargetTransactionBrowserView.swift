@@ -109,7 +109,8 @@ private struct BoundTransactionBrowserView: View {
                     transactionId: selectedDetailId, scopeName: scopeName, itemReader: itemReader,
                     spaceNavigation: spaceNavigation,
                     attachmentReader: browser as? any DownloadedTransactionAttachmentReading,
-                    editor: browser as? any TransactionDetailsEditing)
+                    editor: browser as? any TransactionDetailsEditing,
+                    receiptEditor: browser as? any TransactionReceiptLinesEditing)
                     .environment(find)
                     .navigationTitle("Transaction")
                     .toolbar { ToolbarItem(placement: .confirmationAction) { Button("Done") { self.selectedDetailId = nil } } }
@@ -183,12 +184,14 @@ private struct TransactionNavigationDetail: View {
     let spaceNavigation: ItemSpaceNavigation?
     let attachmentReader: (any DownloadedTransactionAttachmentReading)?
     let editor: (any TransactionDetailsEditing)?
+    let receiptEditor: (any TransactionReceiptLinesEditing)?
 
     var body: some View {
         Group {
             if let row = session.rows.first(where: { $0.transactionId == transactionId }) {
                 TransactionReadDetail(row: row, scopeName: scopeName, itemReader: itemReader,
-                    spaceNavigation: spaceNavigation, attachmentReader: attachmentReader, editor: editor)
+                    spaceNavigation: spaceNavigation, attachmentReader: attachmentReader, editor: editor,
+                    receiptEditor: receiptEditor)
                     .id(row.transactionId)
             } else if session.state == .loading {
                 ProgressView("Loading Transaction…")
@@ -208,7 +211,13 @@ private struct TransactionReadDetail: View {
     let spaceNavigation: ItemSpaceNavigation?
     let attachmentReader: (any DownloadedTransactionAttachmentReading)?
     let editor: (any TransactionDetailsEditing)?
+    let receiptEditor: (any TransactionReceiptLinesEditing)?
     @State private var editSelection: EditSelection?
+    @State private var receiptEditSelection: ReceiptEditSelection?
+    private struct ReceiptEditSelection: Identifiable {
+        let id = UUID()
+        let session: TransactionReceiptLinesEditSession
+    }
     private struct EditSelection: Identifiable {
         let id = UUID()
         let row: TransactionDetailSnapshot
@@ -242,6 +251,9 @@ private struct TransactionReadDetail: View {
             if let editor {
                 TransactionDetailsEditForm(session: .init(original: selection.row, service: editor), notesOnly: selection.notesOnly)
             }
+        }
+        .sheet(item: $receiptEditSelection) { selection in
+            TransactionReceiptLinesEditForm(session: selection.session)
         }
         #if DEBUG
         .toolbar {
@@ -294,6 +306,13 @@ private struct TransactionReadDetail: View {
                     }.padding(.top, Spacing.xs)
                 }
                 if let receipt = row.receipt {
+                    if row.origin == .vendorPayment, let receiptEditor {
+                        Button("Edit receipt lines") {
+                            if let session = try? TransactionReceiptLinesEditSession(original: row, service: receiptEditor) {
+                                receiptEditSelection = .init(session: session)
+                            }
+                        }.accessibilityIdentifier("target-transaction-edit-receipt-lines")
+                    }
                     if let presentation = try? TransactionReceiptAuditPresentation(receipt: receipt) {
                         TargetTransactionAuditPanel(presentation: presentation)
                             .accessibilityIdentifier("target-vendor-receipt-audit")

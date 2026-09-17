@@ -11,6 +11,7 @@ import { manageCategoriesTool, SupabaseCategoryManagementApplier, type CategoryM
 import { SupabaseTransactionReceiptReader } from "../src/transactionReceiptRead.js";
 import { SupabaseTransactionDetailReader } from "../src/transactionDetailRead.js";
 import { transactionDetailsEditTool } from "../src/transactionDetailsEdit.js";
+import { transactionReceiptLinesEditTool } from "../src/transactionReceiptLinesEdit.js";
 
 const root = fileURLToPath(new URL("../../", import.meta.url));
 assert.ok(!process.env.DOCKER_HOST && !process.env.DOCKER_CONTEXT, "Local tests refuse Docker endpoint overrides");
@@ -772,8 +773,9 @@ try {
       });
       native = { status: 0, ...result };
     } catch (failure) {
-      const result = failure as Error & { stdout?: string; stderr?: string };
-      native = { status: 1, stdout: result.stdout ?? "", stderr: result.stderr ?? result.message };
+      const result = failure as Error & { stdout?: string; stderr?: string; code?: string | number; signal?: string; killed?: boolean };
+      native = { status: 1, stdout: result.stdout ?? "",
+        stderr: `${result.stderr ?? result.message}\nNative process termination: code=${result.code ?? "unknown"} signal=${result.signal ?? "none"} killed=${result.killed ?? false}` };
     } finally {
       if (liveReplication) await new Promise<void>((resolve, reject) => control.close(error => error ? reject(error) : resolve()));
     }
@@ -834,6 +836,38 @@ try {
     assert.deepEqual(await details.read({ transactionId: paid.transactionId }, owner), paid);
     assert.deepEqual(await details.read({ transactionId: receiptId }, owner), after);
     console.log('PASS: real HTTP Transaction descriptive edit/readback, exact retry, stale/conflicting edit and removed/foreign/imported-payment denial; cash/history unchanged');
+  }
+  if (process.argv.includes('--transaction-receipt-edit')) {
+    const before = await details.read({ transactionId: receiptId }, owner);
+    assert.ok(before.receipt);
+    const expectedLines = before.receipt.nonItemReceiptLines.map(line => ({ id: line.id, description: line.description,
+      magnitudeMinorUnits: line.amountMinorUnits, currency: before.currency, effect: line.effect, quantity: line.quantity ?? null }));
+    const lines = [...expectedLines, { id: 'receipt-http-tax', description: 'Printed tax',
+      magnitudeMinorUnits: '101', currency: before.currency, effect: 'increase' as const, quantity: null }];
+    const edit = { operationUUID: randomUUID(), clientCreatedAtMilliseconds: 123000, payload: {
+      transactionId: receiptId, scopeKind: before.scopeKind, projectId: before.projectId, clientId: before.clientId,
+      currency: before.currency, expectedLines, lines } };
+    const result = await transactionReceiptLinesEditTool(edit, owner, details);
+    assert.equal(result.phase, 'applied');
+    assert.deepEqual(await transactionReceiptLinesEditTool(edit, owner, details), result);
+    const after = await details.read({ transactionId: receiptId }, owner);
+    assert.deepEqual(after, { ...before, receipt: { ...before.receipt, nonItemReceiptLines: lines.map(line => ({
+      id: line.id, description: line.description, amountMinorUnits: line.magnitudeMinorUnits,
+      effect: line.effect, quantity: line.quantity })) } });
+    assert.equal((await transactionReceiptLinesEditTool({ ...edit, operationUUID: randomUUID() }, owner, details)).errorCode,
+      'transaction_receipt_edit_stale');
+    await assert.rejects(transactionReceiptLinesEditTool({ ...edit, payload: { ...edit.payload, lines: [] } }, owner, details),
+      { code: 'transaction_edit_request_failed' });
+    await assert.rejects(transactionReceiptLinesEditTool({ ...edit, operationUUID: randomUUID() }, member, details),
+      { code: 'transaction_edit_unavailable' });
+    await assert.rejects(transactionReceiptLinesEditTool({ ...edit, operationUUID: randomUUID() },
+      { ...owner, accountId: foreignAccountId }, details), { code: 'transaction_edit_unavailable' });
+    const paid = await details.read({ transactionId: `${receiptId}-payment` }, owner);
+    await assert.rejects(transactionReceiptLinesEditTool({ ...edit, operationUUID: randomUUID(), payload: {
+      ...edit.payload, transactionId: paid.transactionId, scopeKind: paid.scopeKind, projectId: paid.projectId,
+      clientId: paid.clientId, expectedLines: [] } }, owner, details), { code: 'transaction_edit_unavailable' });
+    assert.deepEqual(await details.read({ transactionId: paid.transactionId }, owner), paid);
+    console.log('PASS: real HTTP receipt-line edit/readback, replay/stale/conflict and removed/foreign/imported-payment denial; other Transaction facts unchanged');
   }
 } finally {
   // The local test owns these exact synthetic Accounts. Bypass immutable-history

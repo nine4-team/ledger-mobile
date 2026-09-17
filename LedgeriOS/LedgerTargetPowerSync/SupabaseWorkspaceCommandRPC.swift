@@ -4,7 +4,7 @@ import LedgerTargetCore
 /// Transport mappings for the existing Client/Project/category command ports.
 /// Business validation and terminal-result checks stay in their existing owners.
 struct SupabaseWorkspaceCommandRPC: ClientCreationCommandApplying, ProjectCreationCommandApplying,
-    EditTransactionDetailsApplying,
+    EditTransactionDetailsApplying, EditTransactionReceiptLinesApplying,
     CategoryManagementCommandApplying, InventorySaleCommandApplying, EditUncollectedItemPriceApplying, EditItemDetailsApplying, ReturnUninvoicedItemsCommandApplying, ReturnPaidItemsCommandApplying, CreateExpenseCommandApplying, EditExpenseCommandApplying, CreateInvoiceCommandApplying, ReviseCreatedInvoiceCommandApplying, CreateFeeInstallmentCommandApplying, InventorySaleReviewReading, TransactionReceiptReading, Sendable {
     enum Failure: Error, Equatable { case scopeMismatch, invalidResponse, rejected(Int) }
     let url: URL
@@ -58,6 +58,15 @@ struct SupabaseWorkspaceCommandRPC: ClientCreationCommandApplying, ProjectCreati
                          principal: command.envelope.actorPrincipalId.rawValue)
         let request = try EditTransactionDetailsUploadRequest(command)
         let result: EditTransactionDetailsServerResult = try await call("spike_edit_transaction_details", body: request.rpcBody)
+        try result.validate(for: command)
+        return result
+    }
+
+    func apply(_ command: EditTransactionReceiptLinesCommand) async throws -> EditTransactionReceiptLinesServerResult {
+        try requireScope(account: command.envelope.accountId.rawValue,
+                         principal: command.envelope.actorPrincipalId.rawValue)
+        let request = try EditTransactionReceiptLinesUploadRequest(command)
+        let result: EditTransactionReceiptLinesServerResult = try await call("spike_edit_transaction_receipt_lines", body: request.rpcBody)
         try result.validate(for: command)
         return result
     }

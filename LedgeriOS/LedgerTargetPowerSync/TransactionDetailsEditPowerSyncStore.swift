@@ -20,30 +20,36 @@ actor TransactionDetailsEditPowerSyncStore {
     }
 
     func submit(_ command: EditTransactionDetailsCommand) async throws -> OperationReceipt {
-        let e = command.envelope
+        try await submit(.details(command))
+    }
+
+    func submit(_ command: EditTransactionReceiptLinesCommand) async throws -> OperationReceipt {
+        try await submit(.receiptLines(command))
+    }
+
+    private func submit(_ e: TransactionEditWork) async throws -> OperationReceipt {
         guard e.accountId == accountId, e.actorPrincipalId == principalId else { throw Failure.unavailable }
-        guard AccountBoundOperationIdentity.isValid(e.operationId, family: .transactionDetailsEdit, accountId: accountId) else {
+        guard AccountBoundOperationIdentity.isValid(e.operationId, family: e.kind.namespace, accountId: accountId) else {
             throw Failure.invalidIdentity
         }
-        let request = try EditTransactionDetailsUploadRequest(command)
-        let json = String(decoding: try OperationContractCodec.encode(e), as: UTF8.self)
+        let fingerprint = try e.fingerprint, json = try e.json
         let instant = (now().timeIntervalSince1970 * 1000).rounded(.down)
         guard instant.isFinite, instant >= 0, instant < Double(Int64.max) else { throw Failure.invalidClock }
         let fence = accessFence, checkpoint = afterOperationWrite
-        let query = TransactionDetailPowerSyncQuery(database: database, principalId: principalId, scope: e.payload.scope)
+        let query = TransactionDetailPowerSyncQuery(database: database, principalId: principalId, scope: e.scope)
         return try await database.writeTransaction { local in
             try Task.checkCancellation()
             guard !fence.isRemoved else { throw LedgerOfflineClientRuntimeFailure.runtimeClosed }
             // Reuse the reader's membership, current category visibility and completed
             // download checks inside the same atomic snapshot as admission.
-            let rows = try query.readRows(transaction: local, transactionId: e.payload.transactionId)
+            let rows = try query.readRows(transaction: local, transactionId: e.transactionId)
             guard rows.count == 1, let current = rows.first, current.origin == .vendorPayment else {
                 throw Failure.unavailable
             }
             let ownership: LocalOperationIdentityDisposition
             do {
                 ownership = try LocalOperationIdentityGuard.inspect(transaction: local, operationId: e.operationId,
-                    expectedFamily: .editTransactionDetails, expectedFingerprint: request.fingerprint)
+                    expectedFamily: e.kind.family, expectedFingerprint: fingerprint)
             } catch LocalOperationIdentityGuardFailure.payloadMismatch {
                 throw OperationContractFailure.payloadMismatch(e.operationId)
             }
@@ -57,24 +63,24 @@ actor TransactionDetailsEditPowerSyncStore {
                         return OperationReceipt(operationId: e.operationId, localState: state)
                     }
             }
-            guard current.detailsRevision == e.payload.expectedRevision else { throw Failure.staleReview }
+            guard e.matchesReview(current) else { throw Failure.staleReview }
             let pending = try local.get(sql: """
                 SELECT count(*) FROM spike_local_operations WHERE account_id=? AND subject_id=?
-                  AND command_type='edit_transaction_details' AND local_state IN ('queued','applying')
-                """, parameters: [e.accountId.rawValue,e.payload.transactionId.rawValue]) { try $0.getInt(index: 0) }
+                  AND command_type=? AND local_state IN ('queued','applying')
+                """, parameters: [e.accountId.rawValue,e.transactionId.rawValue,e.kind.family.rawValue]) { try $0.getInt(index: 0) }
             guard pending == 0 else { throw Failure.alreadyAccepted }
             _ = try local.execute(sql: """
                 INSERT INTO spike_local_operations(id,account_id,actor_principal_id,contract_version,fingerprint,
                   subject_id,local_state,accepted_at_ms,updated_at_ms,command_type,command_envelope_json)
-                VALUES (?,?,?,?,?,?,'queued',?,?,'edit_transaction_details',?)
+                VALUES (?,?,?,?,?,?,'queued',?,?,?,?)
                 """, parameters: [e.operationId.rawValue,e.accountId.rawValue,e.actorPrincipalId.rawValue,
-                    e.contractVersion.rawValue,request.fingerprint,e.payload.transactionId.rawValue,Int64(instant),Int64(instant),json])
+                    e.contractVersion.rawValue,fingerprint,e.transactionId.rawValue,Int64(instant),Int64(instant),e.kind.family.rawValue,json])
             try checkpoint()
             _ = try local.execute(sql: """
-                INSERT INTO spike_transaction_details_edit_commands(id,account_id,actor_principal_id,transaction_id,
+                INSERT INTO \(e.kind.table)(id,account_id,actor_principal_id,transaction_id,
                   contract_version,fingerprint,envelope_json) VALUES (?,?,?,?,?,?,?)
                 """, parameters: [e.operationId.rawValue,e.accountId.rawValue,e.actorPrincipalId.rawValue,
-                    e.payload.transactionId.rawValue,e.contractVersion.rawValue,request.fingerprint,json])
+                    e.transactionId.rawValue,e.contractVersion.rawValue,fingerprint,json])
             try Task.checkCancellation()
             guard !fence.isRemoved else { throw LedgerOfflineClientRuntimeFailure.runtimeClosed }
             return OperationReceipt(operationId: e.operationId, localState: .queued)
@@ -82,6 +88,19 @@ actor TransactionDetailsEditPowerSyncStore {
     }
 
     func pending(scope: TransactionScope, transactionId: TransactionID) async throws -> PendingTransactionDetailsEdit? {
+        guard let saved = try await pending(kind: .details, scope: scope, transactionId: transactionId),
+              case .details(let command) = saved.0 else { return nil }
+        return .init(payload: command.envelope.payload, receipt: saved.1)
+    }
+
+    func pendingReceiptLines(scope: TransactionScope, transactionId: TransactionID) async throws -> PendingTransactionReceiptLinesEdit? {
+        guard let saved = try await pending(kind: .receiptLines, scope: scope, transactionId: transactionId),
+              case .receiptLines(let command) = saved.0 else { return nil }
+        return .init(payload: command.envelope.payload, receipt: saved.1)
+    }
+
+    private func pending(kind: TransactionEditWork.Kind, scope: TransactionScope,
+                         transactionId: TransactionID) async throws -> (TransactionEditWork, OperationReceipt)? {
         guard scope.accountId == accountId else { throw Failure.unavailable }
         let account = accountId, principal = principalId, fence = accessFence
         let query = TransactionDetailPowerSyncQuery(database: database, principalId: principal, scope: scope)
@@ -92,29 +111,27 @@ actor TransactionDetailsEditPowerSyncStore {
             guard rows.count == 1, let current = rows.first, current.origin == .vendorPayment else { throw Failure.unavailable }
             let operations = try local.getAll(sql: """
                 SELECT id,command_envelope_json,local_state FROM spike_local_operations
-                WHERE account_id=? AND actor_principal_id=? AND subject_id=? AND command_type='edit_transaction_details'
+                WHERE account_id=? AND actor_principal_id=? AND subject_id=? AND command_type=?
                   AND local_state IN ('queued','applying','rejected','applied')
                 ORDER BY accepted_at_ms DESC,id DESC
-                """, parameters: [account.rawValue,principal.rawValue,transactionId.rawValue]) {
+                """, parameters: [account.rawValue,principal.rawValue,transactionId.rawValue,kind.family.rawValue]) {
                     (try $0.getString(index: 0),try $0.getString(index: 1),try $0.getString(index: 2))
                 }
             for row in operations {
-                let command = try OperationContractCodec.decode(EditTransactionDetailsCommand.self,
-                    from: Data("{\"envelope\":\(row.1)}".utf8))
-                let e = command.envelope
+                let e = try kind.decode(row.1)
                 guard e.operationId.rawValue == row.0, e.accountId == account, e.actorPrincipalId == principal,
-                      e.payload.transactionId == transactionId, e.payload.scope == scope,
+                      e.transactionId == transactionId, e.scope == scope,
                       let state = LocalOperationState(rawValue: row.2),
-                      AccountBoundOperationIdentity.isValid(e.operationId, family: .transactionDetailsEdit, accountId: account),
+                      AccountBoundOperationIdentity.isValid(e.operationId, family: kind.namespace, accountId: account),
                       try LocalOperationIdentityGuard.inspect(transaction: local, operationId: e.operationId,
-                        expectedFamily: .editTransactionDetails,
-                        expectedFingerprint: EditTransactionDetailsUploadRequest(command).fingerprint) == .matchingOwner else {
+                        expectedFamily: kind.family,
+                        expectedFingerprint: e.fingerprint) == .matchingOwner else {
                     throw LocalOperationIdentityGuardFailure.malformedEvidence
                 }
                 // Applied edits stop occupying the form only after their newer
                 // authoritative row arrives; rejected work remains reviewable.
-                if state == .applied, let revision = current.detailsRevision, revision > e.payload.expectedRevision { continue }
-                return .init(payload: e.payload, receipt: .init(operationId: e.operationId, localState: state))
+                if state == .applied, try e.hasReadback(current, local: local) { continue }
+                return (e, .init(operationId: e.operationId, localState: state))
             }
             return nil
         }
@@ -122,33 +139,32 @@ actor TransactionDetailsEditPowerSyncStore {
 
     func status(_ operationId: OperationID) async throws -> OperationSnapshot? {
         let account = accountId, principal = principalId, fence = accessFence
+        guard let kind = [TransactionEditWork.Kind.details, .receiptLines].first(where: {
+            AccountBoundOperationIdentity.isValid(operationId, family: $0.namespace, accountId: account)
+        }) else { throw Failure.invalidIdentity }
         return try await database.readTransaction { local in
             try Task.checkCancellation()
             guard !fence.isRemoved else { throw LedgerOfflineClientRuntimeFailure.runtimeClosed }
             guard try ItemDetailsEditPowerSyncStore.hasMembership(local, account: account, principal: principal) else {
                 throw Failure.unavailable
             }
-            guard AccountBoundOperationIdentity.isValid(operationId, family: .transactionDetailsEdit, accountId: account) else {
-                throw Failure.invalidIdentity
-            }
             let row = try local.getOptional(sql: """
                 SELECT command_envelope_json,local_state,accepted_at_ms,updated_at_ms,
                   terminal_error_code,terminal_server_received_at_ms,terminal_completed_at_ms
                 FROM spike_local_operations WHERE id=? AND account_id=? AND actor_principal_id=?
-                  AND command_type='edit_transaction_details'
-                """, parameters: [operationId.rawValue,account.rawValue,principal.rawValue]) {
+                  AND command_type=?
+                """, parameters: [operationId.rawValue,account.rawValue,principal.rawValue,kind.family.rawValue]) {
                     (try $0.getString(index: 0),try $0.getString(index: 1),try $0.getInt64(index: 2),
                      try $0.getInt64(index: 3),try $0.getStringOptional(index: 4),
                      try $0.getInt64Optional(index: 5),try $0.getInt64Optional(index: 6))
                 }
             guard let row else { return nil }
-            let command = try OperationContractCodec.decode(EditTransactionDetailsCommand.self,
-                from: Data("{\"envelope\":\(row.0)}".utf8))
-            let fingerprint = try EditTransactionDetailsUploadRequest(command).fingerprint
-            guard command.envelope.operationId == operationId, command.envelope.accountId == account,
-                  command.envelope.actorPrincipalId == principal, row.2 >= 0, row.3 >= row.2,
+            let command = try kind.decode(row.0)
+            let fingerprint = try command.fingerprint
+            guard command.operationId == operationId, command.accountId == account,
+                  command.actorPrincipalId == principal, row.2 >= 0, row.3 >= row.2,
                   try LocalOperationIdentityGuard.inspect(transaction: local, operationId: operationId,
-                    expectedFamily: .editTransactionDetails, expectedFingerprint: fingerprint) == .matchingOwner else {
+                    expectedFamily: kind.family, expectedFingerprint: fingerprint) == .matchingOwner else {
                 throw LocalOperationIdentityGuardFailure.malformedEvidence
             }
             func date(_ ms: Int64) -> Date { Date(timeIntervalSince1970: Double(ms) / 1000) }
@@ -158,10 +174,10 @@ actor TransactionDetailsEditPowerSyncStore {
             case "applying": state = .applying(attempt: 1, startedAt: date(row.3))
             case "applied":
                 guard let received = row.5, let completed = row.6 else { throw EditTransactionDetailsServerResult.Failure.receiptMismatch }
-                state = .applied(.init(resultCode: try .init(validating: "transaction_details_updated"),
+                state = .applied(.init(resultCode: try .init(validating: kind.resultCode),
                     serverReceivedAt: date(received), completedAt: date(completed)))
             case "rejected":
-                guard let error = row.4, EditTransactionDetailsServerResult.rejections.contains(error), let completed = row.6 else {
+                guard let error = row.4, kind.rejections.contains(error), let completed = row.6 else {
                     throw EditTransactionDetailsServerResult.Failure.receiptMismatch
                 }
                 state = .rejected(.init(error: .init(code: try .init(validating: error), category: .conflict,
@@ -169,7 +185,7 @@ actor TransactionDetailsEditPowerSyncStore {
             default: throw LocalOperationIdentityGuardFailure.malformedEvidence
             }
             return OperationSnapshot(operationId: operationId, accountId: account,
-                contractVersion: command.envelope.contractVersion, fingerprint: try .init(validating: fingerprint),
+                contractVersion: command.contractVersion, fingerprint: try .init(validating: fingerprint),
                 acceptedAt: date(row.2), updatedAt: date(row.3), state: state)
         }
     }

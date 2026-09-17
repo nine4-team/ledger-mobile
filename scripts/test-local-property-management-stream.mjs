@@ -172,7 +172,7 @@ const columns = {
   item_placement_versions: ["id","account_id","revision","placement_id","space_id","project_id"],
   spike_transactions: ["id", "account_id", "project_id", "client_id", "type", "role", "amount_minor_units", "currency", "origin",
     "scope_kind", "source", "transaction_date", "created_at_ms", "notes", "payment_method", "has_email_receipt",
-    "legacy_subtotal_minor_units", "legacy_tax_rate_pct"],
+    "details_revision", "receipt_lines_revision", "legacy_subtotal_minor_units", "legacy_tax_rate_pct"],
   item_image_sets: ["id", "account_id", "item_id", "revision", "expected_count"],
   spike_projects: ["id", "account_id", "client_id", "display_name", "description", "legacy_notes", "property_address", "lifecycle", "revision", "category_configuration_revision", "created_at_ms", "updated_at_ms", "created_by_principal_id"],
   spike_spaces: ["id", "account_id", "scope_kind", "project_id", "display_name", "lifecycle", "revision"],

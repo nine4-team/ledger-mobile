@@ -612,6 +612,7 @@ if (
     "itemDetailsEditStatus", "editItemDetails", "watchItemDetailsEdit",
     "transactionDetailsEditStatus", "editTransactionDetails", "watchTransactionDetailsEdit",
     "pendingTransactionDetailsEdit",
+    "editTransactionReceiptLines", "pendingTransactionReceiptLinesEdit", "watchTransactionReceiptLinesEdit",
     "itemPriceEditStatus", "reviewItemPrice", "editItemPrice", "watchItemPriceEdit", "watchItemPriceReview",
     "readInvoicingCharges", "watchInvoicingCharges",
     "readProjectBudget", "watchProjectBudget",
@@ -2728,7 +2729,7 @@ if (!fs.existsSync(localOperationGuardPath) || !fs.existsSync(localOperationGuar
   }
   const expectedInsertOnly = [
     "clientCommands", "projectCommands", "projectArchiveCommands", "clientArchiveCommands",
-    "spaceChecklistRevisionCommands", "categoryCommands", "inventorySaleCommands", "itemPriceEditCommands", "itemDetailsEditCommands", "transactionDetailsEditCommands", "uninvoicedReturnCommands", "paidReturnCommands", "expenseCommands", "invoiceCommands", "feeCommands",
+    "spaceChecklistRevisionCommands", "categoryCommands", "inventorySaleCommands", "itemPriceEditCommands", "itemDetailsEditCommands", "transactionDetailsEditCommands", "transactionReceiptLinesEditCommands", "uninvoicedReturnCommands", "paidReturnCommands", "expenseCommands", "invoiceCommands", "feeCommands",
   ];
   const insertOnlyBlock = guardCompact.match(
     /staticletinsertOnlyCommandTables=\[([^\]]*)\]/,

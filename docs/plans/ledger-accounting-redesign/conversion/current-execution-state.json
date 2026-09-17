@@ -1,6 +1,6 @@
 {
   "schemaVersion": 2,
-  "stateVersion": 1494,
+  "stateVersion": 1514,
   "userRequestedPause": {
     "date": "2026-09-15",
     "status": "resumed",
@@ -26,10 +26,10 @@
     "status": "implementation",
     "recordPath": "docs/plans/ledger-accounting-redesign/conversion/product-behavior-checklist.json",
     "outcome": "Preserve shared Project/Inventory search/sort/filter, cards/detail, selection/copy and honest readiness/financial visibility. Keep Project-only Add/select-all/export and Inventory-only planning distinct. Compose Item, receipt, media/history and owning mutation routes; a visible tab alone is not completion.",
-    "baseCommit": "7ed45e59b406ca9e599eeefa75704abbaee9e559",
+    "baseCommit": "d57aae9c6fb8d22d6a88d4731203346bb28694da",
     "integrationWorkflowIds": ["downloaded-item-browsing-and-detail", "account-profile-readback", "inventory-return-to-source-project", "item-history-source-reconciliation", "item-space-assignment", "project-invoicing-workspace", "learned-account-removal-enforcement", "transaction-browser-and-detail"],
     "nextActions": [
-      "Transaction descriptive editing committed16d7bd0c; focused Mac Notes and Details now pass. Commit test-only selector/scroll corrections, then prepare integrated verification. Space code remains dirty; combined local evidence is not clean-commit verification.",
+      "CI35259056786 attempt1 at d57aae9c FAILED: provider expected-column assertion omitted details_revision; local fix passed165captures. Conversion passed; native jobs skipped. Include fix in current coherent checkpoint; no duplicate CI or Firebase merge.",
       "Prior CI failed; preserve integrationCI evidence. Do not repeat passed iPhone/native/SQL checks for context recovery or rerun the passing Mac scenarios."
     ]
   },
@@ -56,12 +56,12 @@
   "currentTask": {
     "id": "transaction-browser-and-detail",
     "status": "implementation",
-    "acceptanceCheckIds": ["TX-DETAIL-EDIT"],
-    "meaning": "Transaction descriptive editing is connected through offline Save and reused controls, with local native/MCP/database and focused iPhone evidence. Mac interaction and exact-commit integrated verification remain; broader Transaction financial editing is not claimed complete.",
-    "verificationCommands": ["npm run conversion:check","swift test --package-path LedgeriOS --no-parallel --filter EditTransactionDetailsCommandTests"],
-    "lastResult": "Mac Notes46612 PASS20.428s; Details97899 PASS22.287s /tmp/ledger-transaction-edit-macos-details-ax.log. Test-only reveal/menuButtons fixes; captured hierarchy disproved earlier PopUpButton guess. Original failures retained. Both named scenarios executed. No app UI change, hosted write, push or CI. Exact-commit integrated acceptance still outstanding.",
+    "acceptanceCheckIds": ["TX-RECEIPT-EDIT"],
+    "meaning": "Start receipt-line editing under Transaction accounting, separate from descriptive edits. Reuse existing Expense line input/parser and controls; preserve saved draft bytes, source IDs and exact amounts. No billing allocation or frozen-parent permission is inferred.",
+    "verificationCommands": ["npm run conversion:check","swift test --package-path LedgeriOS --no-parallel --filter TransactionDetailsEditQueueTests"],
+    "lastResult": "Revision migration20260917193630 APPLIED LOCAL once. SQL34828 PASS2344assertions70files6s +fresh races; MCP55679 PASS5tests/types; HTTP49058PASS; guard50998 PASS28tests44.5s; native91235 PASS5tests1.396s incl result-first/later-edit/restart;165projection captures and security advisors PASS. MacUI44434FAILED before app launch: automation-mode timeout; DevToolsSecurity disabled. Existing runtime live-sync test extended; no hosted change.",
     "activeProcesses": {},
     "integrationCI": {"run":35218414703,"attempt":1,"commit":"7ed45e59b406ca9e599eeefa75704abbaee9e559","status":"failed","meaning":"Completed13:01:47UTC. Provider/conversion PASS; Mac boundary failed (local fix). iOS1hour timeout:73passed,3failed of76finished, remaining unexecuted. Full log /tmp/ledger-ci-35218414703-ios-latest.log: capture first Photos picker still Loading; category reorder order assertion; Invoice cancel picker appears in final AX dump after15s wait failed. Diagnose targeted readiness/drag, no UI rebuild or blanket retry. Live log was incomplete; tests began12:13, not compile hang."},
-    "nextWorkflowDecision": "Checkpoint Mac test correction and prepare integrated verification. Preserve dirty Space work and shared concurrency runner (includes Transaction races). Do not push a partial integration snapshot missing required evidence code. Three Transaction migrations already LOCAL; do not replay. Cash/date/type/audit writes remain outside descriptive-edit completion."
+    "nextWorkflowDecision": "Receipt sync fixed: explicit operation_id AS id;15projection tests PASS;local reload95844PASS;live36208PASS /tmp/ledger-receipt-live-operation-id-fixed.log. Shared Expense iPhone16073 PASS1test36.605s /tmp/ledger-receipt-shared-expense-ui.log;receipt iPhone47480PASS29.903s. ConversionPASS -operation-id-conversion.log. No running tests. Next integrated diff review/checkpoint; MacUI initialization failure remains external verification gap. Three migrations already LOCAL; no replay/hosted/duplicate CI."
   }
 }

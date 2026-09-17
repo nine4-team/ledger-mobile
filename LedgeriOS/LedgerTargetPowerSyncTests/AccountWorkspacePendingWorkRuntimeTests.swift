@@ -5052,6 +5052,43 @@ struct AccountWorkspacePendingWorkRuntimeTests {
             #expect(NSDictionary(dictionary: beforeWire).isEqual(to: afterWire))
             #expect(try await runtime.editTransactionDetails(detailsPayload,
                 operationUUID: detailsUUID, capturedAt: detailsTime).localState == .applied)
+            let reviewedLines = try #require(afterDetailsEdit.receipt).lines
+            let receiptPayload = try EditTransactionReceiptLinesCommand.Payload(transactionId: transactionId,
+                scope: scope, currency: afterDetailsEdit.amount.currency, expectedLines: reviewedLines,
+                lines: reviewedLines + [.init(id: .init(validating: "native-receipt-tax"),
+                    description: .init(validating: "Offline printed tax"),
+                    magnitude: .init(minorUnits: 101, currency: afterDetailsEdit.amount.currency), effect: .increase)])
+            try await runtime.close()
+            runtime = try await context.openRuntime(dependencies: dependencies)
+            let receiptUUID = UUID(), receiptTime = Date()
+            let receiptEdit = try await runtime.editTransactionReceiptLines(receiptPayload,
+                operationUUID: receiptUUID, capturedAt: receiptTime)
+            #expect(receiptEdit.localState == .queued)
+            try await runtime.close()
+            runtime = try await context.openRuntime(dependencies: dependencies)
+            #expect(try await runtime.pendingUploadCount() == 1)
+            #expect(try await runtime.pendingTransactionReceiptLinesEdit(scope: scope, transactionId: transactionId)?.payload == receiptPayload)
+            try await entry.startWorkspaceSync(runtime, authorization: authorization, powerSyncURL: syncURL)
+            var receiptApplied = false
+            for try await snapshot in runtime.watchTransactionReceiptLinesEdit(receiptEdit.operationId) {
+                if snapshot?.state.localState == .rejected { throw RuntimeInjectedFailure() }
+                if snapshot?.state.localState == .applied { receiptApplied = true; break }
+            }
+            #expect(receiptApplied)
+            var receiptReadback = false
+            for try await update in runtime.watchTransactions(scope: scope) {
+                if case .partial(let rows) = update,
+                   let row = rows.first(where: { $0.transactionId == transactionId }),
+                   row.receipt?.lines == receiptPayload.lines,
+                   try await runtime.pendingTransactionReceiptLinesEdit(scope: scope, transactionId: transactionId) == nil {
+                    #expect(row.amount == afterDetailsEdit.amount && row.notes == afterDetailsEdit.notes
+                        && row.detailsRevision == afterDetailsEdit.detailsRevision)
+                    receiptReadback = true; break
+                }
+            }
+            #expect(receiptReadback)
+            #expect(try await runtime.editTransactionReceiptLines(receiptPayload,
+                operationUUID: receiptUUID, capturedAt: receiptTime).localState == .applied)
             func changeReviewVisibility(_ mode: String) async throws {
                 var parts = try #require(URLComponents(url: revokeURL, resolvingAgainstBaseURL: false))
                 parts.queryItems = [URLQueryItem(name: "review",value: mode)]

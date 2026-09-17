@@ -62,6 +62,7 @@
 		4607F0BA4C4A5FA7F2477823 /* InventorySaleForm.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5E300F1046C6F7CCB6CB9F8D /* InventorySaleForm.swift */; };
 		49DC392E33A075F038F9A911 /* ClientArchiveBrowserStagingRuntimeAdapter.swift in Sources */ = {isa = PBXBuildFile; fileRef = F375FB58D9D64D4DCC3174F4 /* ClientArchiveBrowserStagingRuntimeAdapter.swift */; };
 		4A42C11EB422755283858C55 /* ImageGalleryPresentation.swift in Sources */ = {isa = PBXBuildFile; fileRef = ADF642AC2FF7A558AF267BCB /* ImageGalleryPresentation.swift */; };
+		4B14A7D7DF07D6C413070A94 /* ReceiptLineEntryFields.swift in Sources */ = {isa = PBXBuildFile; fileRef = 38AC8ACFE41203E944B9EC2C /* ReceiptLineEntryFields.swift */; };
 		4B2D2C236B9C31F68FBB46BA /* TransactionCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6072FB3877C65F0463E50421 /* TransactionCard.swift */; };
 		4B2E67F1224159C2E6B6F853 /* TransferDestinationSelectionStagingExerciseView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E3001820AB92E6BCA0CF9C49 /* TransferDestinationSelectionStagingExerciseView.swift */; };
 		4B7F25B22DB3FC2091DED43D /* ProjectSetupStagingExerciseView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E7A12BB16D6D3DAE965E907B /* ProjectSetupStagingExerciseView.swift */; };
@@ -91,6 +92,7 @@
 		7314CC6DD91BB1D038F9ECD9 /* ActiveWorkspaceChecklistUITestFixture.swift in Sources */ = {isa = PBXBuildFile; fileRef = E51CB207D4B3540BFF10616D /* ActiveWorkspaceChecklistUITestFixture.swift */; };
 		772755FB29D83FF532F39DA0 /* ReportPDFSharing.swift in Sources */ = {isa = PBXBuildFile; fileRef = D9C66A8C602BD14B02C57641 /* ReportPDFSharing.swift */; };
 		793BFC80C10AEF7706A7FF91 /* FormDateField.swift in Sources */ = {isa = PBXBuildFile; fileRef = FE3F94BC7CF2C706DA8B5A45 /* FormDateField.swift */; };
+		7A023C978181333AFF3A6FCB /* TransactionReceiptLinesEditForm.swift in Sources */ = {isa = PBXBuildFile; fileRef = 25B3DC42BA6F8FD53F0234FB /* TransactionReceiptLinesEditForm.swift */; };
 		7BD3218B9AACB12C9E1E9887 /* StatusColors.swift in Sources */ = {isa = PBXBuildFile; fileRef = DDEF2192CC57D816F34B1029 /* StatusColors.swift */; };
 		7C8664E8A4F83BA754D09E73 /* PropertyManagementReportPreview.swift in Sources */ = {isa = PBXBuildFile; fileRef = 23D3EB4EC0B5447391266FA3 /* PropertyManagementReportPreview.swift */; };
 		7DD4163575F01FD29ABB479E /* ProjectBudgetContent.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5BCA98B2F410544CED7EEBDD /* ProjectBudgetContent.swift */; };
@@ -212,6 +214,7 @@
 		21F16E0B23F86FF1C0A05D7D /* TargetCategoryManagementView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TargetCategoryManagementView.swift; sourceTree = "<group>"; };
 		229EA2E72160E66DDE7DC3CB /* BrandColors.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BrandColors.swift; sourceTree = "<group>"; };
 		23D3EB4EC0B5447391266FA3 /* PropertyManagementReportPreview.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PropertyManagementReportPreview.swift; sourceTree = "<group>"; };
+		25B3DC42BA6F8FD53F0234FB /* TransactionReceiptLinesEditForm.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TransactionReceiptLinesEditForm.swift; sourceTree = "<group>"; };
 		29F6E16DC62B4B9E6E6C1BCA /* FormSheetAction.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FormSheetAction.swift; sourceTree = "<group>"; };
 		2A76D650DEF9B6C432BE0B31 /* SetSpaceModal.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SetSpaceModal.swift; sourceTree = "<group>"; };
 		3073E8B1FEEB07F80FBBE757 /* ActionMenuSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ActionMenuSheet.swift; sourceTree = "<group>"; };
@@ -219,6 +222,7 @@
 		33A3796166F337AF9B3285CC /* PerformanceDiagnostics.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PerformanceDiagnostics.swift; sourceTree = "<group>"; };
 		33BE0835EF060B599B952729 /* ProjectNoteHistoryStagingExerciseView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProjectNoteHistoryStagingExerciseView.swift; sourceTree = "<group>"; };
 		35C196DE1EDFB5DC754AED92 /* Spacing.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Spacing.swift; sourceTree = "<group>"; };
+		38AC8ACFE41203E944B9EC2C /* ReceiptLineEntryFields.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReceiptLineEntryFields.swift; sourceTree = "<group>"; };
 		39D577B8BBCE3AB118232585 /* MediaCapturePresentation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MediaCapturePresentation.swift; sourceTree = "<group>"; };
 		3A1D16067F65E6E09530FCA0 /* ProjectArchiveBrowserStagingRuntimeAdapter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProjectArchiveBrowserStagingRuntimeAdapter.swift; sourceTree = "<group>"; };
 		3C27ED100C4144D99CABC334 /* CardHeader.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CardHeader.swift; sourceTree = "<group>"; };
@@ -482,6 +486,7 @@
 				6F3A99088887DC7B2360A3F0 /* ProjectTransactionExportButton.swift */,
 				23D3EB4EC0B5447391266FA3 /* PropertyManagementReportPreview.swift */,
 				A10B71B6C3684A1638A35F7E /* PropertyManagementReportSystemDelivery.swift */,
+				38AC8ACFE41203E944B9EC2C /* ReceiptLineEntryFields.swift */,
 				FB7A2B9D4B056045C345FD43 /* ReferencedSpaceDetailView.swift */,
 				F46CE1B43F64A4C3592E441C /* SpaceAssignmentDestinationStagingExerciseView.swift */,
 				0CEEEB779EFED0B88F129D31 /* SpaceAssignmentDestinationStagingRuntimeAdapter.swift */,
@@ -498,6 +503,7 @@
 				C721CF2297AA4DCD4F8544CA /* TransactionAttachmentsSection.swift */,
 				C7CDE9C1C90F4F11BA4E3C78 /* TransactionCardUITestFixture.swift */,
 				45654D26F725BEDAFBE149D9 /* TransactionDetailsEditForm.swift */,
+				25B3DC42BA6F8FD53F0234FB /* TransactionReceiptLinesEditForm.swift */,
 				E3001820AB92E6BCA0CF9C49 /* TransferDestinationSelectionStagingExerciseView.swift */,
 				A1B6D8AE49E874CEEFAA469C /* TransferDestinationSelectionStagingRuntimeAdapter.swift */,
 				D4FB453A448C833B40412841 /* UninvoicedReturnForm.swift */,
@@ -919,6 +925,7 @@
 				AFC80A7B67670D9A3F8D6136 /* ProjectTransactionExportButton.swift in Sources */,
 				7C8664E8A4F83BA754D09E73 /* PropertyManagementReportPreview.swift in Sources */,
 				5575BF25F4BDACAA5C26ADB3 /* PropertyManagementReportSystemDelivery.swift in Sources */,
+				4B14A7D7DF07D6C413070A94 /* ReceiptLineEntryFields.swift in Sources */,
 				30EBCD87CCD201841C9751AB /* ReferencedSpaceDetailView.swift in Sources */,
 				D5942DD6184C318C7307D9C5 /* ReportHTMLBuilder.swift in Sources */,
 				19C05197C75072B767CBCB00 /* ReportPDFSharing.swift in Sources */,
@@ -952,6 +959,7 @@
 				DAFFF2EBBE0C391347BC86BF /* TransactionCardUITestFixture.swift in Sources */,
 				E335B7123DEFA8FF26C5A2BB /* TransactionDetailsEditForm.swift in Sources */,
 				7FEF31200288B9518F30167A /* TransactionExportCalculations.swift in Sources */,
+				7A023C978181333AFF3A6FCB /* TransactionReceiptLinesEditForm.swift in Sources */,
 				4B2E67F1224159C2E6B6F853 /* TransferDestinationSelectionStagingExerciseView.swift in Sources */,
 				EA4A0C9C16E6943A9260D731 /* TransferDestinationSelectionStagingRuntimeAdapter.swift in Sources */,
 				863B314F07B41BBE1496B8D3 /* Typography.swift in Sources */,

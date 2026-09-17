@@ -4353,3 +4353,64 @@ authoritative revision arrives. Rejected-operation resolution policy is unchange
 Focused Mac Notes/retry/reopen and Details/Cancel/clear/rejection interactions
 also pass. Exact-commit integration acceptance remains outstanding; the workflow
 checklist owns that gap. No hosted deployment is implied.
+
+## 2026-09-17 — Receipt-line edits compare the reviewed line values
+
+Transaction receipt-line editing has a separate narrow command from descriptive
+editing. It replaces only the ordered non-Item lines and carries the reviewed
+lines as its concurrency precondition. The server must compare those values
+under the Transaction lock before replacement, after current authorization and
+the existing immutable-payment guard. Missing optional quantity and explicit
+null mean the same absent quantity; ordering, IDs, wording, amounts and effects
+remain significant. A return to identical values is not a conflict: this command
+does not assert that no intervening edit occurred. Exact operation replay still
+uses the existing durable receipt protocol.
+
+This avoids another revision column and sync projection solely for this array.
+It does not version Item membership, cash, billing allocations or frozen Invoice
+facts, none of which this command may change. D-016/D-030/O-032 permit saving
+incomplete receipt details; exact audit mismatch remains visible rather than
+blocking Save. O-008 billability is not resolved here. The shared input parser
+is extracted from Expense editing with saved-draft compatibility tests, not a
+second parser or replacement UI. Command tests are in progress; server, offline
+queue, app/MCP integration and their risk evidence remain required.
+
+### Receipt editor local recovery implementation
+
+Descriptive and receipt-line edits share the existing Transaction local store,
+upload terminalization, access fence and watch lifecycle. An internal two-case
+`TransactionEditWork` keeps their payloads, operation namespaces, reviewed-value
+checks and result codes distinct; this is not a generic command framework.
+The existing Expense line fields are extracted without behavioral changes and
+used by both forms. Saved Expense draft encoding remains unchanged.
+
+Receipt edit readback must not depend on the current array still matching the
+submitted array: a later legitimate edit may already have replaced it. The first
+local implementation compared Transaction and Operation-result stream checkpoints.
+Review rejected that approach: subsequent result-stream progress can make an
+already-confirmed operation appear pending again. Its passing same-checkpoint
+test did not prove stable recovery; the priority-interleaving fixture also failed.
+
+Replace that provisional implementation with a receipt-specific revision on the
+Transaction and the applied revision on its immutable Operation result. Confirm
+readback only when the downloaded Transaction revision reaches or exceeds that
+validated result revision. This adds sync fields but avoids persistent checkpoint
+bookkeeping and handles later edits without array equality. It supersedes the
+earlier choice to avoid a revision column; reviewed-line value comparison remains
+the command's concurrency policy, and descriptive edits remain independent.
+Implemented by migration `20260917193630`, the existing stream projections and
+`TransactionEditWork.hasReadback`. The result revision is canonical decimal text
+at cross-language boundaries; the Transaction counter is a checked Postgres
+bigint. Missing readback metadata cannot confirm an edit. SQL proves retry,
+rejection and overflow behavior; SDK-fed tests prove result-first, later-edit and
+restart recovery. Live-runtime/UI verification remains in the workflow checklist.
+Rejected operations remain retained; no user correction policy changes.
+
+The live receipt test exposed a pre-existing operation-result projection defect:
+Postgres keys results by `operation_id`, while native PowerSync queries use `id`.
+The wildcard-only stream evaluated to an empty downloaded ID. Explicitly alias
+`operation_id AS id` after the wildcard, preserving each immutable result's
+identity and all existing fields. The service-evaluator regression exercises two
+distinct operation IDs and receipt revision evidence. The local live-runtime
+test passed after reloading this correction, including offline save, encrypted
+restart, upload and replicated readback. No product policy or UI replacement is involved.

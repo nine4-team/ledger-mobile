@@ -37,6 +37,7 @@ struct LocalOperationIdentityGuardTests {
             LedgerPowerSyncTable.itemPriceEditCommands,
             LedgerPowerSyncTable.itemDetailsEditCommands,
             LedgerPowerSyncTable.transactionDetailsEditCommands,
+            LedgerPowerSyncTable.transactionReceiptLinesEditCommands,
             LedgerPowerSyncTable.uninvoicedReturnCommands,
             LedgerPowerSyncTable.paidReturnCommands,
             LedgerPowerSyncTable.expenseCommands,
@@ -479,7 +480,7 @@ struct LocalOperationIdentityGuardTests {
                 // Account-bound command families intentionally cannot share an
                 // operation ID. Their cross-family rejection is covered by each
                 // family's identity-contract tests rather than the shared-ID race.
-                if pair.filter({ [.reviseSpaceChecklists, .archiveProject, .archiveClient, .manageCategories, .sellInventoryItems, .editUncollectedItemPrice, .editItemDetails, .editTransactionDetails, .returnUninvoicedItems, .returnPaidItems, .createExpense, .editExpense, .createInvoice, .reviseCreatedInvoice, .createFeeInstallment].contains($0) }).count > 1
+                if pair.filter({ [.reviseSpaceChecklists, .archiveProject, .archiveClient, .manageCategories, .sellInventoryItems, .editUncollectedItemPrice, .editItemDetails, .editTransactionDetails, .editTransactionReceiptLines, .returnUninvoicedItems, .returnPaidItems, .createExpense, .editExpense, .createInvoice, .reviseCreatedInvoice, .createFeeInstallment].contains($0) }).count > 1
                 {
                     pairIndex += 1
                     continue
@@ -965,9 +966,9 @@ struct LocalOperationIdentityGuardTests {
         database: any PowerSyncDatabaseProtocol
     ) async throws {
         switch family {
-        case .editTransactionDetails:
+        case .editTransactionDetails, .editTransactionReceiptLines:
             _ = try await database.execute(sql: """
-                INSERT INTO spike_transaction_details_edit_commands(id,account_id,actor_principal_id,transaction_id,contract_version,fingerprint,envelope_json)
+                INSERT INTO \(family.insertOnlyCommandTable!)(id,account_id,actor_principal_id,transaction_id,contract_version,fingerprint,envelope_json)
                 VALUES (?, 'account', 'principal', 'transaction', 'contract', ?, ?)
                 """, parameters: [id, fingerprint, envelope])
         case .editItemDetails:
@@ -1080,7 +1081,7 @@ struct LocalOperationIdentityGuardTests {
         database: any PowerSyncDatabaseProtocol
     ) async throws {
         switch family {
-        case .sellInventoryItems, .editUncollectedItemPrice, .editItemDetails, .editTransactionDetails, .returnUninvoicedItems, .returnPaidItems, .createExpense, .editExpense, .createInvoice, .reviseCreatedInvoice, .createFeeInstallment: break
+        case .sellInventoryItems, .editUncollectedItemPrice, .editItemDetails, .editTransactionDetails, .editTransactionReceiptLines, .returnUninvoicedItems, .returnPaidItems, .createExpense, .editExpense, .createInvoice, .reviseCreatedInvoice, .createFeeInstallment: break
         case .manageCategories:
             _ = try await database.execute(sql: "UPDATE spike_local_operations SET category_projection_json = '[]' WHERE id = ?", parameters: [id])
         case .createClient:
@@ -1246,7 +1247,7 @@ struct LocalOperationIdentityGuardTests {
     private static func subject(_ family: LocalOperationCommandFamily) -> String {
         switch family {
         case .editUncollectedItemPrice, .editItemDetails: "item"
-        case .editTransactionDetails: "transaction"
+        case .editTransactionDetails, .editTransactionReceiptLines: "transaction"
         case .createFeeInstallment: "fee"
         case .createInvoice, .reviseCreatedInvoice: "invoice"
         case .createExpense, .editExpense: "expense"
@@ -1829,6 +1830,9 @@ struct LocalOperationIdentityGuardTests {
         for families: [LocalOperationCommandFamily],
         index: Int
     ) throws -> OperationID {
+        if families.contains(.editTransactionReceiptLines) {
+            return try TransactionReceiptLinesEditOperationIdentity.make(accountId: guardAccountId, uuid: checkpointUUID(index: index))
+        }
         if families.contains(.editTransactionDetails) {
             return try TransactionDetailsEditOperationIdentity.make(accountId: guardAccountId, uuid: checkpointUUID(index: index))
         }
@@ -1890,8 +1894,8 @@ struct LocalOperationIdentityGuardTests {
         for families: [LocalOperationCommandFamily],
         database: any PowerSyncDatabaseProtocol
     ) async throws {
-        if families.contains(.editTransactionDetails) {
-            try await seedAuthorityIfNeeded(for: families.filter { $0 != .editTransactionDetails }, database: database)
+        if families.contains(.editTransactionDetails) || families.contains(.editTransactionReceiptLines) {
+            try await seedAuthorityIfNeeded(for: families.filter { $0 != .editTransactionDetails && $0 != .editTransactionReceiptLines }, database: database)
             _ = try await database.execute(sql: """
                 INSERT OR REPLACE INTO spike_account_memberships(id,account_id,principal_id,state,financial_access)
                 VALUES ('transaction-test-member', ?, ?, 'active', 'full')
@@ -1996,6 +2000,8 @@ struct LocalOperationIdentityGuardTests {
         switch family {
         case .editTransactionDetails:
             return try await submitTransactionDetails(operationId, changed: false, database: database)
+        case .editTransactionReceiptLines:
+            return try await submitTransactionReceiptLines(operationId, changed: false, database: database)
         case .editItemDetails:
             return try await submitDetails(operationId, changed: false, database: database)
         case .editUncollectedItemPrice:
@@ -2117,6 +2123,18 @@ struct LocalOperationIdentityGuardTests {
             capturedAt: guardAcceptedAt, payload: .init(transactionId: .init(validating: "transaction"),
                 scope: .businessInventory(accountId: guardAccountId), expectedRevision: 1,
                 changes: .init(notes: .set(changed ? "Changed" : "Original"))))
+        return try await TransactionDetailsEditPowerSyncStore(database: database, accountId: guardAccountId,
+            principalId: guardPrincipalId, accessFence: LedgerWorkspaceAccessFence(), now: { guardAcceptedAt }).submit(command)
+    }
+
+    private static func submitTransactionReceiptLines(_ operationId: OperationID, changed: Bool,
+        database: any PowerSyncDatabaseProtocol) async throws -> OperationReceipt {
+        let currency = try CurrencyCode(validating: "USD")
+        let line = try NonItemReceiptLine(id: .init(validating: "tax"), description: .init(validating: "Tax"),
+            magnitude: .init(minorUnits: changed ? 2 : 1, currency: currency), effect: .increase)
+        let command = try EditTransactionReceiptLinesCommand(operationId: operationId, actorPrincipalId: guardPrincipalId,
+            capturedAt: guardAcceptedAt, payload: .init(transactionId: .init(validating: "transaction"),
+                scope: .businessInventory(accountId: guardAccountId), currency: currency, expectedLines: [], lines: [line]))
         return try await TransactionDetailsEditPowerSyncStore(database: database, accountId: guardAccountId,
             principalId: guardPrincipalId, accessFence: LedgerWorkspaceAccessFence(), now: { guardAcceptedAt }).submit(command)
     }
@@ -3087,6 +3105,8 @@ struct LocalOperationIdentityGuardTests {
         switch family {
         case .editTransactionDetails:
             return try await submitTransactionDetails(operationId, changed: true, database: database)
+        case .editTransactionReceiptLines:
+            return try await submitTransactionReceiptLines(operationId, changed: true, database: database)
         case .editItemDetails:
             return try await submitDetails(operationId, changed: true, database: database)
         case .editUncollectedItemPrice:

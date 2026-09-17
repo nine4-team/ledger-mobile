@@ -58,24 +58,7 @@ struct ExpenseCreationView: View {
                     .accessibilityIdentifier("target-expense-category")
                     FormField(label: "Notes", text: $session.notes, placeholder: "Notes", axis: .vertical)
                     Text("Other receipt lines").font(.headline)
-                    ForEach($session.receiptLineInputs) { $line in
-                        VStack(alignment: .leading, spacing: Spacing.sm) {
-                            FormField(label: "Description", text: $line.description, placeholder: "Receipt wording")
-                            FormField(label: "Line total", text: $line.amountText, placeholder: "Line amount")
-                            Picker("Effect", selection: $line.effect) {
-                                Text("Increase").tag(NonItemReceiptLineEffect.increase)
-                                Text("Decrease").tag(NonItemReceiptLineEffect.decrease)
-                            }
-                            .pickerStyle(.segmented)
-                            .accessibilityIdentifier("target-expense-line-effect-\(line.id.uuidString.lowercased())")
-                            FormField(label: "Quantity (optional)", text: $line.quantityText, placeholder: "Quantity")
-                            Button("Remove line") {
-                                let id = line.id
-                                session.receiptLineInputs.removeAll { $0.id == id }
-                            }
-                        }
-                    }
-                    Button("Add receipt line") { session.receiptLineInputs.append(.init()) }
+                    ReceiptLineEntryFields(lines: $session.receiptLineInputs, accessibilityPrefix: "target-expense")
                     Text("Line amounts describe the receipt. They do not change the Expense amount or create Items.").font(.caption)
                     Button("Add receipt") { choosingReceipt = true }
                     if let editing, !editing.entry.receiptAttachmentIds.isEmpty {

@@ -7,6 +7,117 @@ import Testing
 @Suite(.serialized)
 struct TransactionDetailsEditQueueTests {
     @Test(arguments: [false, true])
+    func receiptLinesUseSharedAdmissionRestartAndUpload(inventory: Bool) async throws {
+        let root = FileManager.default.temporaryDirectory.appendingPathComponent("receipt-save-\(UUID())")
+        try FileManager.default.createDirectory(at: root, withIntermediateDirectories: true)
+        defer { try? FileManager.default.removeItem(at: root) }
+        let path = root.appendingPathComponent("ledger.sqlite").path
+        let key = try LedgerPowerSyncEncryptionKey(hexadecimal: String(repeating: "5a", count: 32))
+        let account = try AccountID(validating: "account"), principal = try PrincipalID(validating: "member")
+        let scope: TransactionScope = inventory ? .businessInventory(accountId: account)
+            : .project(accountId: account, projectId: try .init(validating: "project"), clientId: try .init(validating: "client"))
+        let fence = LedgerWorkspaceAccessFence()
+        var db = try LedgerPowerSyncDatabaseFactory.open(absolutePath: path, encryptionKey: key)
+        func store(_ db: any PowerSyncDatabaseProtocol, fail: Bool = false) -> TransactionDetailsEditPowerSyncStore {
+            .init(database: db, accountId: account, principalId: principal, accessFence: fence,
+                now: { Date(timeIntervalSince1970: 124) }, afterOperationWrite: { if fail { throw Injected.rollback } })
+        }
+        enum Injected: Error { case rollback }
+        func command(id: OperationID? = nil, amount: Int64 = 101) throws -> EditTransactionReceiptLinesCommand {
+            let currency = try CurrencyCode(validating: "USD")
+            return try .init(operationId: id ?? TransactionReceiptLinesEditOperationIdentity.make(accountId: account, uuid: UUID()),
+                actorPrincipalId: principal, capturedAt: Date(timeIntervalSince1970: 123),
+                payload: .init(transactionId: .init(validating: "transaction"), scope: scope, currency: currency,
+                    expectedLines: [], lines: [.init(id: .init(validating: "tax"), description: .init(validating: "Printed tax"),
+                        magnitude: .init(minorUnits: amount, currency: currency), effect: .increase, quantity: -2)]))
+        }
+        do {
+            try await seed(db, scope: scope, principal: principal)
+            let edit = try command()
+            await #expect(throws: Injected.self) { try await store(db, fail: true).submit(edit) }
+            #expect(try await db.get("SELECT count(*) FROM spike_local_operations") { try $0.getInt(index: 0) } == 0)
+            #expect(try await store(db).submit(edit).localState == .queued)
+            #expect(try await store(db).submit(edit).localState == .queued)
+            await #expect(throws: OperationContractFailure.self) { try await store(db).submit(command(id: edit.envelope.operationId, amount: 102)) }
+            await #expect(throws: TransactionDetailsEditPowerSyncStore.Failure.self) { try await store(db).submit(command()) }
+            try await db.close()
+            db = try LedgerPowerSyncDatabaseFactory.open(absolutePath: path, encryptionKey: key)
+            var reopened = store(db)
+            #expect(try await reopened.pendingReceiptLines(scope: scope, transactionId: edit.envelope.payload.transactionId)?.payload == edit.envelope.payload)
+            let queue = try #require(await db.getNextCrudTransaction())
+            #expect(queue.crud.count == 1)
+            let entry = try #require(queue.crud.first)
+            await #expect(throws: EditTransactionReceiptLinesServerResult.Failure.self) {
+                try await TransactionDetailsEditUpload.applyReceiptLines(entry, database: db, accessFence: fence,
+                    applier: ReceiptReply(rejected: inventory, wrongDigest: true))
+            }
+            #expect(try await reopened.status(edit.envelope.operationId)?.state.localState == .applying)
+            for _ in 0..<2 {
+                try await TransactionDetailsEditUpload.applyReceiptLines(entry, database: db, accessFence: fence,
+                    applier: ReceiptReply(rejected: inventory))
+            }
+            // The harness supplies the server upload checkpoint that the real
+            // connector obtains after completing its upload transaction.
+            try await queue.complete(writeCheckpoint: "10")
+            #expect(try await reopened.status(edit.envelope.operationId)?.state.localState == (inventory ? .rejected : .applied))
+            #expect(try await reopened.pendingReceiptLines(scope: scope, transactionId: edit.envelope.payload.transactionId) != nil)
+            let unchanged = try await TransactionDetailPowerSyncQuery(database: db, principalId: principal, scope: scope)
+                .read(transactionId: edit.envelope.payload.transactionId)
+            #expect(unchanged.receipt?.lines.isEmpty == true && unchanged.detailsRevision == 7)
+            #expect(unchanged.amount.minorUnits == 9_007_199_254_740_993)
+            if !inventory {
+                // Replicate a later edit and the immutable result through the SDK,
+                // not by fabricating the server result in the local write queue.
+                let result = try ReceiptReply(rejected: false).wire(edit)
+                try await seed(db, scope: scope, principal: principal, result: (edit.envelope.operationId.rawValue, result),
+                    offset: 10)
+                #expect(try await db.get("SELECT count(*) FROM spike_operation_results") { try $0.getInt(index: 0) } == 1)
+                #expect(try await reopened.pendingReceiptLines(scope: scope, transactionId: edit.envelope.payload.transactionId) != nil)
+                try await seed(db, scope: scope, principal: principal, result: (edit.envelope.operationId.rawValue, result),
+                    lineJSON: "[{\"id\":\"later-tax\",\"description\":\"Later edit\",\"amountMinorUnits\":\"999\",\"effect\":\"increase\",\"quantity\":null}]",
+                    offset: 20, receiptRevision: "3")
+                #expect(try await reopened.pendingReceiptLines(scope: scope, transactionId: edit.envelope.payload.transactionId) == nil)
+                let later = try await TransactionDetailPowerSyncQuery(database: db, principalId: principal, scope: scope)
+                    .read(transactionId: edit.envelope.payload.transactionId)
+                #expect(later.receipt?.lines.first?.magnitude.minorUnits == 999)
+                // Later result-stream progress cannot resurrect a confirmed edit.
+                _ = try await db.execute(sql: "UPDATE ps_stream_subscriptions SET last_synced_at=last_synced_at+1000000 WHERE stream_name='spike_operation_results'",
+                    parameters: nil)
+                try await db.close()
+                db = try LedgerPowerSyncDatabaseFactory.open(absolutePath: path, encryptionKey: key)
+                reopened = store(db)
+                #expect(try await reopened.pendingReceiptLines(scope: scope, transactionId: edit.envelope.payload.transactionId) == nil)
+            }
+            fence.markRemoved()
+            await #expect(throws: LedgerOfflineClientRuntimeFailure.self) { try await reopened.submit(edit) }
+            #expect(try await db.get("SELECT count(*) FROM spike_local_operations") { try $0.getInt(index: 0) } == 1)
+            try await db.close()
+        } catch { try? await db.close(); throw error }
+    }
+
+    private struct ReceiptReply: EditTransactionReceiptLinesApplying {
+        let rejected: Bool
+        var wrongDigest = false
+        func apply(_ command: EditTransactionReceiptLinesCommand) async throws -> EditTransactionReceiptLinesServerResult {
+            try JSONDecoder().decode(EditTransactionReceiptLinesServerResult.self,
+                from: JSONSerialization.data(withJSONObject: wire(command)))
+        }
+        func wire(_ command: EditTransactionReceiptLinesCommand) throws -> [String: Any] {
+            let e = command.envelope, request = try EditTransactionReceiptLinesUploadRequest(command)
+            let wire: [String: Any] = ["operation_id": e.operationId.rawValue, "account_id": e.accountId.rawValue,
+                "actor_principal_id": e.actorPrincipalId.rawValue, "command_type": "edit_transaction_receipt_lines",
+                "contract_version": e.contractVersion.rawValue, "command_fingerprint": wrongDigest ? "wrong" : request.fingerprint,
+                "envelope_sha256": request.fingerprint, "subject_id": e.payload.transactionId.rawValue,
+                "phase": rejected ? "rejected" : "applied",
+                "result_code": rejected ? NSNull() : "transaction_receipt_lines_updated",
+                "error_code": rejected ? "transaction_receipt_edit_stale" : NSNull(),
+                "receipt_lines_revision": rejected ? NSNull() : "2",
+                "client_created_at_ms": 123000, "server_received_at_ms": 125000, "completed_at_ms": 125001]
+            return wire
+        }
+    }
+
+    @Test(arguments: [false, true])
     func admissionRestartReplayAndTerminalReceipt(inventory: Bool) async throws {
         let root = FileManager.default.temporaryDirectory.appendingPathComponent("transaction-save-\(UUID())")
         try FileManager.default.createDirectory(at: root, withIntermediateDirectories: true)
@@ -121,12 +232,15 @@ struct TransactionDetailsEditQueueTests {
         }
     }
 
-    private func seed(_ db: any PowerSyncDatabaseProtocol, scope: TransactionScope, principal: PrincipalID) async throws {
+    private func seed(_ db: any PowerSyncDatabaseProtocol, scope: TransactionScope, principal: PrincipalID,
+        result: (String, [String: Any])? = nil, lineJSON: String = "[]", offset: Int = 0,
+        receiptRevision: String = "1") async throws {
         func json(_ value: Any) throws -> String {
             String(decoding: try JSONSerialization.data(withJSONObject: value, options: [.sortedKeys]), as: UTF8.self)
         }
         let identity = TransactionReceiptStreamIdentity(scope: scope)
         _ = try await db.syncStream(name: identity.name, params: identity.parameters).subscribe()
+        if result != nil { _ = try await db.syncStream(name: "spike_operation_results", params: nil).subscribe() }
         let params = try JSONSerialization.jsonObject(with: JSONEncoder().encode(identity.parameters))
         let schema = try JSONSerialization.jsonObject(with: JSONEncoder().encode(LedgerPowerSyncSchema.schema))
         let facts: [(String,String,[String:Any])] = [
@@ -140,20 +254,39 @@ struct TransactionDetailsEditQueueTests {
                 "scope_kind":scope.ownerKind == .project ? "project" : "business_inventory",
                 "origin":"vendor_payment","type":"purchase","role":"standalone",
                 "amount_minor_units":"9007199254740993","currency":"USD","category_id":"category",
-                "notes":"Original","payment_method":"Card","details_revision":"7","non_item_receipt_lines":"[]"])
+                "notes":"Original","payment_method":"Card","details_revision":"7","non_item_receipt_lines":lineJSON,
+                "receipt_lines_revision":receiptRevision])
         ]
-        let rows = try facts.enumerated().map { index, fact -> [String:Any] in
-            ["checksum":0,"op_id":String(index+1),"object_id":fact.1,"object_type":fact.0,"op":"PUT","data":try json(fact.2)]
+        let last = String(offset + facts.count + (result == nil ? 0 : 1))
+        var active: [[String: Any]] = [["name":identity.name,"params":params]]
+        var streams: [[String: Any]] = [["name":identity.name,"is_default":false,"errors":[]]]
+        var buckets: [[String: Any]] = [["bucket":"edit-bucket","priority":3,"checksum":0,"subscriptions":[["sub":0]]]]
+        if result != nil {
+            active.append(["name":"spike_operation_results","params":NSNull()])
+            streams.append(["name":"spike_operation_results","is_default":false,"errors":[]])
+            buckets.append(["bucket":"result-bucket","priority":1,"checksum":0,"subscriptions":[["sub":1]]])
         }
-        let controls: [(String,String?)] = [
+        let rows = try facts.enumerated().map { index, fact -> [String:Any] in
+            ["checksum":0,"op_id":String(offset+index+1),"object_id":fact.1,"object_type":fact.0,"op":"PUT","data":try json(fact.2)]
+        }
+        var controls: [(String,String?)] = [
             ("start",try json(["parameters":[:],"schema":schema,"include_defaults":false,
-                "active_streams":[["name":identity.name,"params":params]],"app_metadata":[:],"checkpoint_mode":"legacy"])),
+                "active_streams":active,"app_metadata":[:],"checkpoint_mode":"legacy"])),
             ("connection","established"),
-            ("line_text",try json(["checkpoint":["last_op_id":"3","buckets":[
-                ["bucket":"edit-bucket","priority":3,"checksum":0,"subscriptions":[["sub":0]]]],
-                "streams":[["name":identity.name,"is_default":false,"errors":[]]]]])),
+            ("line_text",try json(["checkpoint":["last_op_id":last,"write_checkpoint":String(offset),"buckets":buckets,
+                "streams":streams]]))
+        ]
+        if let result {
+            controls += [
+                ("line_text",try json(["data":["bucket":"result-bucket","data":[[
+                    "checksum":0,"op_id":last,"object_id":result.0,"object_type":"spike_operation_results",
+                    "op":"PUT","data":try json(result.1)]],"has_more":false]])),
+                ("line_text",try json(["partial_checkpoint_complete":["last_op_id":last,"priority":1]]))
+            ]
+        }
+        controls += [
             ("line_text",try json(["data":["bucket":"edit-bucket","data":rows,"has_more":false]])),
-            ("line_text",try json(["checkpoint_complete":["last_op_id":"3"]])), ("stop",nil)
+            ("line_text",try json(["checkpoint_complete":["last_op_id":last]])), ("stop",nil)
         ]
         for (operation, parameter) in controls {
             _ = try await db.writeTransaction { tx in

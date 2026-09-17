@@ -267,6 +267,19 @@ public final class LedgerOfflineClientRuntime:
         try await lifecycleOwner.transactionDetailsEditStatus(operationId)
     }
 
+    public func watchTransactionReceiptLinesEdit(_ operationId: OperationID) -> AsyncThrowingStream<OperationSnapshot?, Error> {
+        watchTransactionDetailsEdit(operationId)
+    }
+
+    public func pendingTransactionReceiptLinesEdit(scope: TransactionScope, transactionId: TransactionID) async throws -> PendingTransactionReceiptLinesEdit? {
+        try await lifecycleOwner.pendingTransactionReceiptLinesEdit(scope: scope, transactionId: transactionId)
+    }
+
+    public func editTransactionReceiptLines(_ payload: EditTransactionReceiptLinesCommand.Payload,
+        operationUUID: UUID, capturedAt: Date) async throws -> OperationReceipt {
+        try await lifecycleOwner.editTransactionReceiptLines(payload, operationUUID: operationUUID, capturedAt: capturedAt)
+    }
+
     public func pendingTransactionDetailsEdit(scope: TransactionScope, transactionId: TransactionID) async throws -> PendingTransactionDetailsEdit? {
         try await lifecycleOwner.pendingTransactionDetailsEdit(scope: scope, transactionId: transactionId)
     }
@@ -843,5 +856,6 @@ extension LedgerOfflineClientRuntime: InventorySaleWorkflowServing {}
 extension LedgerOfflineClientRuntime: ItemPriceEditing {}
 extension LedgerOfflineClientRuntime: ItemDetailsEditing {}
 extension LedgerOfflineClientRuntime: TransactionDetailsEditing {}
+extension LedgerOfflineClientRuntime: TransactionReceiptLinesEditing {}
 extension LedgerOfflineClientRuntime: UninvoicedReturnWorkflowServing {}
 extension LedgerOfflineClientRuntime: SpaceCoreDetailsQuerying {}

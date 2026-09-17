@@ -16,25 +16,10 @@ public final class ExpenseCreationSession {
     public var categoryId: BudgetCategoryID?
     public typealias ReceiptLineInput = ExpenseEntryRecovery.Line
     public var receiptLineInputs: [ReceiptLineInput] = []
-    public enum ReceiptLineInputFailure: Error { case invalidQuantity }
+    public typealias ReceiptLineInputFailure = ReceiptLineEntry.Failure
 
     public func receiptLines(currency: CurrencyCode) throws -> [NonItemReceiptLine] {
-        try receiptLineInputs.map { input in
-            let text = input.quantityText.trimmingCharacters(in: .whitespacesAndNewlines)
-            let quantity: Int64?
-            if text.isEmpty { quantity = nil }
-            else {
-                let digits = text.hasPrefix("-") ? text.dropFirst() : text[...]
-                guard !digits.isEmpty, digits.allSatisfy({ $0.isASCII && $0.isNumber }), let value = Int64(text) else {
-                    throw ReceiptLineInputFailure.invalidQuantity
-                }
-                quantity = value
-            }
-            return try .init(id: .init(validating: input.sourceLineId ?? input.id.uuidString.lowercased()),
-                description: .init(validating: input.description),
-                magnitude: Money.parsePositiveEntry(input.amountText, currency: currency),
-                effect: input.effect, quantity: quantity)
-        }
+        try receiptLineInputs.map { try $0.receiptLine(currency: currency) }
     }
     public private(set) var receiptCaptures: [LocalAttachmentCapture] = []
     public private(set) var unconfirmedReceiptIds: [AttachmentID] = []
@@ -62,14 +47,7 @@ public final class ExpenseCreationSession {
         guard let parsed = formatter.date(from: entry.date) else { throw Failure.invalidReceipt }
         vendor = entry.vendor; date = parsed; notes = entry.notes; categoryId = entry.categoryId
         amountText = Self.amountEntry(entry.finalAmount)
-        receiptLineInputs = entry.receiptLines.map { line in
-            var input = ReceiptLineInput()
-            input.sourceLineId = line.id.rawValue
-            input.description = line.description.rawValue
-            input.amountText = Self.amountEntry(line.magnitude)
-            input.effect = line.effect; input.quantityText = line.quantity.map(String.init) ?? ""
-            return input
-        }
+        receiptLineInputs = entry.receiptLines.map { ReceiptLineInput(line: $0) }
     }
 
     private static func amountEntry(_ value: Money) -> String {

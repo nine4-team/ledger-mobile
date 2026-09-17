@@ -16,12 +16,12 @@ const date = z.string().refine(value => {
   const parsed = new Date(`${value}T00:00:00Z`);
   return Number.isFinite(parsed.getTime()) && parsed.toISOString().slice(0, 10) === value;
 });
-const line = z.object({ id: identifier, description: z.string().refine(value => value.trim().length > 0),
+export const receiptLineInputSchema = z.object({ id: identifier, description: z.string().refine(value => value.trim().length > 0),
   magnitudeMinorUnits: integer.refine(value => /^[1-9][0-9]*$/.test(value)), currency,
   effect: z.enum(["increase", "decrease"]), quantity: integer.nullable() }).strict();
 const payloadSchema = z.object({ projectId: identifier, expenseId: identifier, vendor: z.string(), date,
   amountMinorUnits: integer, currency, categoryId: identifier, notes: z.string(),
-  receiptLines: z.array(line), receiptAttachmentIds: z.array(identifier) }).strict();
+  receiptLines: z.array(receiptLineInputSchema), receiptAttachmentIds: z.array(identifier) }).strict();
 const validReferences = (value: z.infer<typeof payloadSchema>) =>
   new Set(value.receiptAttachmentIds).size === value.receiptAttachmentIds.length
   && new Set(value.receiptLines.map(row => row.id)).size === value.receiptLines.length

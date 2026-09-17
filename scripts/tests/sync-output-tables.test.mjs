@@ -1,10 +1,25 @@
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { test } from 'node:test';
-import { SqlSyncRules } from '@powersync/service-sync-rules';
+import { SqlSyncRules, DEFAULT_HYDRATION_STATE } from '@powersync/service-sync-rules';
 import { validateSyncOutputTables } from '../sync-output-tables.mjs';
 
 const schema = 'public static let projects = "spike_projects"\npublic static let items = "spike_items"';
+test('operation results download under their stable operation identity with readback evidence', () => {
+  const yaml = readFileSync(new URL('../../powersync/sync-streams.yaml', import.meta.url), 'utf8');
+  const { config } = SqlSyncRules.fromYaml(yaml, { defaultSchema: 'public' });
+  const evaluator = config.hydrate({ hydrationState: DEFAULT_HYDRATION_STATE, sqlite: null });
+  const sourceTable = { connectionTag: 'default', schema: 'public', name: 'spike_operation_results' };
+  for (const operation_id of ['receipt-edit-first', 'receipt-edit-second']) {
+    const { results, errors } = evaluator.evaluateRowWithErrors({ sourceTable,
+      record: { operation_id, account_id: 'account-proof', receipt_lines_revision: '2' } });
+    assert.deepEqual(errors, []);
+    assert.equal(results.length, 1);
+    assert.equal(results[0].table, 'spike_operation_results');
+    assert.equal(results[0].id, operation_id);
+    assert.equal(results[0].data.receipt_lines_revision, '2');
+  }
+});
 test('primary aliases rename output, whereas joined and nested aliases do not', () => {
   const yaml = `streams:
   projects:
@@ -167,7 +182,7 @@ test('Item-linked Purchase local schema contains only canonical read facts with 
   assert.deepEqual([...columns.matchAll(/\.text\("([a-z_]+)"\)/g)].map(match => match[1]),
     ['account_id', 'project_id', 'client_id', 'type', 'role', 'amount_minor_units', 'currency', 'origin',
       'scope_kind', 'category_id', 'non_item_receipt_lines', 'source', 'transaction_date', 'created_at_ms',
-      'notes', 'payment_method', 'details_revision', 'legacy_subtotal_minor_units', 'legacy_tax_rate_pct']);
+      'notes', 'payment_method', 'details_revision', 'receipt_lines_revision', 'legacy_subtotal_minor_units', 'legacy_tax_rate_pct']);
   assert.deepEqual([...columns.matchAll(/\.integer\("([a-z_]+)"\)/g)].map(match => match[1]), ['has_email_receipt']);
 });
 

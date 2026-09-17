@@ -839,6 +839,22 @@ actor AccountWorkspacePendingWorkRuntime {
         try await withFiniteLease(.editTransactionDetails) { try await $0.transactionDetailsEditStore.status(operationId) }
     }
 
+    func pendingTransactionReceiptLinesEdit(scope: TransactionScope, transactionId: TransactionID) async throws -> PendingTransactionReceiptLinesEdit? {
+        try await withFiniteLease(.editTransactionDetails) {
+            try await $0.transactionDetailsEditStore.pendingReceiptLines(scope: scope, transactionId: transactionId)
+        }
+    }
+
+    func editTransactionReceiptLines(_ payload: EditTransactionReceiptLinesCommand.Payload, operationUUID: UUID,
+        capturedAt: Date) async throws -> OperationReceipt {
+        try await withFiniteLease(.editTransactionDetails) { resources in
+            let command = try EditTransactionReceiptLinesCommand(
+                operationId: TransactionReceiptLinesEditOperationIdentity.make(accountId: resources.accountId, uuid: operationUUID),
+                actorPrincipalId: resources.principalId, capturedAt: capturedAt, payload: payload)
+            return try await resources.transactionDetailsEditStore.submit(command)
+        }
+    }
+
     func pendingTransactionDetailsEdit(scope: TransactionScope, transactionId: TransactionID) async throws -> PendingTransactionDetailsEdit? {
         try await withFiniteLease(.editTransactionDetails) {
             try await $0.transactionDetailsEditStore.pending(scope: scope, transactionId: transactionId)
@@ -2887,6 +2903,7 @@ actor AccountWorkspacePendingWorkRuntime {
             itemPriceEditApplier: appliers.itemPriceEdit,
             itemDetailsEditApplier: appliers.itemDetailsEdit,
             transactionDetailsEditApplier: appliers.transactionDetailsEdit,
+            transactionReceiptLinesEditApplier: appliers.transactionReceiptLinesEdit,
             uninvoicedReturnApplier: appliers.uninvoicedReturn,
             paidReturnApplier: appliers.paidReturn,
             expenseCreationApplier: appliers.expenseCreation,
@@ -2957,6 +2974,7 @@ actor AccountWorkspacePendingWorkRuntime {
             itemPriceEditApplier: appliers.itemPriceEdit,
             itemDetailsEditApplier: appliers.itemDetailsEdit,
             transactionDetailsEditApplier: appliers.transactionDetailsEdit,
+            transactionReceiptLinesEditApplier: appliers.transactionReceiptLinesEdit,
             uninvoicedReturnApplier: appliers.uninvoicedReturn,
             paidReturnApplier: appliers.paidReturn,
             expenseCreationApplier: appliers.expenseCreation,

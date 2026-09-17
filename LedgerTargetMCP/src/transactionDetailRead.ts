@@ -1,4 +1,6 @@
 import { z } from "zod";
+import { validateTransactionReceiptLinesEditResult, type TransactionReceiptLinesEditRequest,
+  type TransactionReceiptLinesEditServing } from "./transactionReceiptLinesEdit.js";
 import { TargetMCPFailure, validateIdentifier, type TargetMCPRequestContext } from "./contractSupport.js";
 import { credential, validateReportConfiguration } from "./propertyManagementReportRead.js";
 import { receiptSchema, transactionReceiptAudit } from "./transactionReceiptRead.js";
@@ -108,13 +110,24 @@ export interface TransactionDetailReading {
   attachments?(input: TransactionAttachmentInput, context: TargetMCPRequestContext): Promise<TransactionAttachmentPage>;
 }
 
-export class SupabaseTransactionDetailReader implements TransactionDetailReading, TransactionDetailsEditServing {
+export class SupabaseTransactionDetailReader implements TransactionDetailReading, TransactionDetailsEditServing, TransactionReceiptLinesEditServing {
   readonly #url: URL;
   constructor(url: URL, private readonly key: string, private readonly fetcher: typeof fetch = fetch) {
     validateReportConfiguration(url, key, "transaction_detail_configuration_invalid");
     this.#url = new URL("/rest/v1/rpc/spike_read_transaction_detail", url);
   }
   async applyTransactionDetailsEdit(request: TransactionDetailsEditRequest, context: TargetMCPRequestContext): Promise<unknown> {
+    const result = await this.applyTransactionEdit("spike_edit_transaction_details", request, context);
+    validateTransactionDetailsEditResult(result, request);
+    return result;
+  }
+  async applyTransactionReceiptLinesEdit(request: TransactionReceiptLinesEditRequest, context: TargetMCPRequestContext): Promise<unknown> {
+    const result = await this.applyTransactionEdit("spike_edit_transaction_receipt_lines", request, context);
+    validateTransactionReceiptLinesEditResult(result, request);
+    return result;
+  }
+  private async applyTransactionEdit(endpoint: "spike_edit_transaction_details" | "spike_edit_transaction_receipt_lines",
+    request: TransactionDetailsEditRequest, context: TargetMCPRequestContext): Promise<unknown> {
     validateIdentifier(context.accountId, "account_not_authorized");
     validateIdentifier(context.principalId, "account_not_authorized");
     if (request.accountId !== context.accountId || request.actorPrincipalId !== context.principalId) {
@@ -123,7 +136,7 @@ export class SupabaseTransactionDetailReader implements TransactionDetailReading
     if (!credential(context.accessToken, "authenticated")) throw new TargetMCPFailure("authentication_required");
     let response: Response;
     try {
-      response = await this.fetcher(new URL("spike_edit_transaction_details", this.#url), {
+      response = await this.fetcher(new URL(endpoint, this.#url), {
         method: "POST", redirect: "error", signal: AbortSignal.timeout(30_000),
         headers: { apikey: this.key, Authorization: `Bearer ${context.accessToken}`, Accept: "application/json", "Content-Type": "application/json" },
         body: JSON.stringify({ p_command: request.commandJSON }),
@@ -133,7 +146,6 @@ export class SupabaseTransactionDetailReader implements TransactionDetailReading
       : response.status === 403 ? "transaction_edit_unavailable" : "transaction_edit_request_failed", response.status);
     let result: unknown;
     try { result = await response.json(); } catch { throw new TargetMCPFailure("transaction_edit_result_mismatch"); }
-    validateTransactionDetailsEditResult(result, request);
     return result;
   }
   async attachments(input: TransactionAttachmentInput, context: TargetMCPRequestContext): Promise<TransactionAttachmentPage> {

@@ -595,6 +595,44 @@ final class WorkspaceChecklistUITests: XCTestCase {
         XCTAssertFalse(app.staticTexts["$100.00"].exists)
     }
 
+    func testTransactionReceiptEditReusesFieldsAndRetainsPendingSave() throws {
+        continueAfterFailure = false
+        let app = XCUIApplication()
+        app.launchArguments = ["--ledger-ui-test-transaction-browser"]
+        app.launch(); defer { app.terminate() }
+        XCTAssertTrue(app.staticTexts["$100.00"].waitForExistence(timeout: 10))
+        app.staticTexts["$100.00"].coordinate(withNormalizedOffset: CGVector(dx: 1, dy: 0.5))
+            .withOffset(CGVector(dx: 8, dy: 0)).tap()
+        let edit = app.buttons["target-transaction-edit-receipt-lines"]
+        XCTAssertTrue(edit.waitForExistence(timeout: 5))
+        reveal(edit, in: app, fullyInsideScrollView: true, within: app.scrollViews["target-transaction-detail-scroll"])
+        edit.tap()
+        let save = app.buttons["Save Changes"]
+        XCTAssertTrue(save.waitForExistence(timeout: 5))
+        save.tap() // unchanged: no mutation
+        XCTAssertTrue(save.waitForNonExistence(timeout: 5))
+        reveal(edit, in: app, fullyInsideScrollView: true, within: app.scrollViews["target-transaction-detail-scroll"])
+        edit.tap()
+        let add = app.buttons["Add receipt line"]
+        XCTAssertTrue(add.waitForExistence(timeout: 5)); add.tap()
+        let wording = app.textFields["Receipt wording"], amount = app.textFields["Line amount"]
+        XCTAssertTrue(wording.waitForExistence(timeout: 5))
+        wording.tap(); wording.typeText("Printed tax")
+        amount.tap(); amount.typeText("1.01")
+        save.tap()
+        XCTAssertTrue(app.staticTexts["The receipt edit could not be confirmed. Retry saves the same edit without duplicating it."].waitForExistence(timeout: 5))
+        save.tap()
+        XCTAssertTrue(app.staticTexts["Saved on this device. Waiting to sync."].waitForExistence(timeout: 5))
+        XCTAssertFalse(save.isEnabled)
+        app.buttons.matching(NSPredicate(format: "label == %@ AND identifier != %@", "Close", "xmark.circle.fill")).element.tap()
+        reveal(edit, in: app, fullyInsideScrollView: true, within: app.scrollViews["target-transaction-detail-scroll"])
+        edit.tap()
+        XCTAssertTrue(app.staticTexts["Saved on this device. Waiting to sync."].waitForExistence(timeout: 5))
+        XCTAssertEqual(wording.value as? String, "Printed tax")
+        XCTAssertEqual(amount.value as? String, "1.01")
+        XCTAssertFalse(save.isEnabled)
+    }
+
     func testTransactionNotesSaveRetainsDraftAndRetries() throws {
         let app = XCUIApplication()
         app.launchArguments = ["--ledger-ui-test-transaction-browser"]

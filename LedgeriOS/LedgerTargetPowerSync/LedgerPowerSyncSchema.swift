@@ -61,6 +61,7 @@ public enum LedgerPowerSyncTable {
     public static let itemPriceEditCommands = "spike_item_price_edit_commands"
     public static let itemDetailsEditCommands = "spike_item_details_edit_commands"
     public static let transactionDetailsEditCommands = "spike_transaction_details_edit_commands"
+    public static let transactionReceiptLinesEditCommands = "spike_transaction_receipt_lines_edit_commands"
     public static let uninvoicedReturnCommands = "spike_uninvoiced_return_commands"
     public static let paidReturnCommands = "spike_paid_return_commands"
     public static let expenseCommands = "spike_expense_commands"
@@ -82,6 +83,7 @@ public enum LedgerPowerSyncSchema {
                       .text("source"), .text("transaction_date"), .text("created_at_ms"),
                       .text("notes"), .text("payment_method"), .integer("has_email_receipt"),
                       .text("details_revision"),
+                      .text("receipt_lines_revision"),
                       .text("legacy_subtotal_minor_units"), .text("legacy_tax_rate_pct")],
             indexes: [.ascending(name: "transaction_project", columns: ["account_id", "project_id"])]),
         Table(name: LedgerPowerSyncTable.transactionReceiptItems,
@@ -601,6 +603,14 @@ public enum LedgerPowerSyncSchema {
             insertOnly: true
         ),
         Table(
+            name: LedgerPowerSyncTable.transactionReceiptLinesEditCommands,
+            columns: [
+                .text("account_id"), .text("actor_principal_id"), .text("transaction_id"),
+                .text("contract_version"), .text("fingerprint"), .text("envelope_json")
+            ],
+            insertOnly: true
+        ),
+        Table(
             name: LedgerPowerSyncTable.itemDetailsEditCommands,
             columns: [
                 .text("account_id"), .text("actor_principal_id"), .text("item_id"),
@@ -679,6 +689,7 @@ public enum LedgerPowerSyncSchema {
         Table(
             name: LedgerPowerSyncTable.operationResults,
             columns: [
+                .text("receipt_lines_revision"),
                 .text("account_id"), .text("actor_principal_id"),
                 .text("command_type"), .text("contract_version"),
                 .text("command_fingerprint"), .text("envelope_sha256"),

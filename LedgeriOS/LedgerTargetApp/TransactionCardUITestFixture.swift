@@ -189,8 +189,26 @@ struct TransactionBrowserUITestFixture: View {
     }
 }
 
-final class TransactionBrowserFixtureReader: TransactionBrowsing, TransactionExportReading, DownloadedItemPlacementHistoryReading, DownloadedTransactionAttachmentReading, TransactionDetailsEditing, Sendable {
+final class TransactionBrowserFixtureReader: TransactionBrowsing, TransactionExportReading, DownloadedItemPlacementHistoryReading, DownloadedTransactionAttachmentReading, TransactionDetailsEditing, TransactionReceiptLinesEditing, Sendable {
     private let updates = NSLockingTransactionFixtureUpdates()
+    func editTransactionReceiptLines(_ payload: EditTransactionReceiptLinesCommand.Payload, operationUUID: UUID,
+        capturedAt: Date) async throws -> OperationReceipt {
+        guard updates.hasAccess, payload.expectedLines.isEmpty,
+              payload.lines.count == 1, payload.lines[0].description.rawValue == "Printed tax",
+              payload.lines[0].magnitude.minorUnits == 101,
+              updates.isExactReceiptEditRetry(operationUUID, date: capturedAt, payload: payload) else {
+            throw DownloadedTransactionAttachments.Failure.unavailable
+        }
+        return .init(operationId: try .init(validating: "fixture-receipt-edit"), localState: .queued)
+    }
+    func pendingTransactionReceiptLinesEdit(scope: TransactionScope, transactionId: TransactionID) async throws -> PendingTransactionReceiptLinesEdit? {
+        guard updates.hasAccess else { throw DownloadedTransactionAttachments.Failure.unavailable }
+        guard let payload = updates.pendingReceiptEdit, payload.scope == scope, payload.transactionId == transactionId else { return nil }
+        return .init(payload: payload, receipt: .init(operationId: try .init(validating: "fixture-receipt-edit"), localState: .queued))
+    }
+    func watchTransactionReceiptLinesEdit(_ operationId: OperationID) -> AsyncThrowingStream<OperationSnapshot?, Error> {
+        AsyncThrowingStream { $0.yield(nil); $0.finish() }
+    }
     func editTransactionDetails(_ payload: EditTransactionDetailsCommand.Payload, operationUUID: UUID,
                                 capturedAt: Date) async throws -> OperationReceipt {
         guard updates.hasAccess else { throw DownloadedTransactionAttachments.Failure.unavailable }
@@ -425,6 +443,19 @@ final class NSLockingTransactionFixtureUpdates: @unchecked Sendable {
     func changeInvoiceSource() { lock.withLock { changedInvoiceSource = true } }
     private var firstInvoiceAttempt: (UUID, Date, CreateInvoiceCommand.Payload)?
     private var firstTransactionEditAttempt: (UUID, Date, EditTransactionDetailsCommand.Payload)?
+    private var firstReceiptEditAttempt: (UUID, Date, EditTransactionReceiptLinesCommand.Payload)?
+    private var receiptEditAccepted = false
+    var pendingReceiptEdit: EditTransactionReceiptLinesCommand.Payload? {
+        lock.withLock { receiptEditAccepted ? firstReceiptEditAttempt?.2 : nil }
+    }
+    func isExactReceiptEditRetry(_ id: UUID, date: Date, payload: EditTransactionReceiptLinesCommand.Payload) -> Bool {
+        lock.withLock {
+            guard let firstReceiptEditAttempt else { firstReceiptEditAttempt = (id,date,payload); return false }
+            let matches = firstReceiptEditAttempt.0 == id && firstReceiptEditAttempt.1 == date && firstReceiptEditAttempt.2 == payload
+            receiptEditAccepted = matches
+            return matches
+        }
+    }
     private var transactionEditAccepted = false
     var pendingTransactionEdit: EditTransactionDetailsCommand.Payload? {
         lock.withLock { transactionEditAccepted ? firstTransactionEditAttempt?.2 : nil }

@@ -591,6 +591,38 @@ try {
       denied ? 'none' : scenario === 'competing' ? 'rejected:transaction_edit_stale' : 'applied');
   }
   console.log('PASS Transaction descriptive-edit retry, competing edit, rollback, removal and financial-visibility races');
+  for (const scenario of ['retry', 'competing', 'rollback', 'removed', 'hidden']) {
+    const id = `transaction-receipt-${scenario}`;
+    sql(`insert into public.spike_budget_categories(id,account_id,display_name,kind,visibility_class,
+      presentation_order,lifecycle,is_system,excludes_from_overall_budget,created_at_ms,updated_at_ms)
+      values('${id}','account-primary','${id}','general','ordinary',
+        (select max(presentation_order)+1 from public.spike_budget_categories where account_id='account-primary'),
+        'active',false,false,1,1);
+      insert into public.spike_transactions(id,account_id,amount_minor_units,currency,origin,scope_kind,category_id,notes)
+      values('${id}','account-primary',9007199254740993,'USD','vendor_payment','business_inventory','${id}','Original');
+      update public.spike_account_memberships set state='active' where account_id='account-primary' and principal_id='principal-restricted';`);
+    const receiptEdit = suffix => `${detailsAuth} select ledger_private.edit_transaction_receipt_lines('${JSON.stringify({
+      operationId: `${id}-${suffix}`, accountId: 'account-primary', actorPrincipalId: 'principal-restricted',
+      contractVersion: 'transaction-receipt-lines-edit-v1', createdAtMs: '1000', transactionId: id,
+      scopeKind: 'business_inventory', projectId: null, clientId: null, currency: 'USD', expectedLines: [],
+      lines: [{ id: 'printed-tax', description: suffix, amountMinorUnits: '101', effect: 'increase', quantity: null }]
+    })}');`;
+    const holder = scenario === 'removed'
+      ? "update public.spike_account_memberships set state='removed' where account_id='account-primary' and principal_id='principal-restricted';"
+      : scenario === 'hidden'
+        ? `update public.spike_budget_categories set kind='fee',revision=revision+1 where id='${id}';`
+        : receiptEdit('first');
+    const waiter = scenario === 'retry' ? 'first' : 'second';
+    const denied = ['removed', 'hidden'].includes(scenario);
+    await race(id, holder, receiptEdit(waiter), scenario === 'rollback' ? 'rollback' : 'commit', denied ? '42501' : undefined);
+    assert.equal(sql(`select coalesce(non_item_receipt_lines->0->>'description','none')||':'||notes||':'||details_revision||':'||amount_minor_units
+      from public.spike_transactions where id='${id}'`),
+      `${denied ? 'none' : scenario === 'rollback' ? 'second' : 'first'}:Original:1:9007199254740993`);
+    assert.equal(sql(`select coalesce(string_agg(phase||coalesce(':'||error_code,''),','),'none')
+      from public.spike_operation_results where operation_id='${id}-${waiter}'`),
+      denied ? 'none' : scenario === 'competing' ? 'rejected:transaction_receipt_edit_stale' : 'applied');
+  }
+  console.log('PASS Transaction receipt-line retry, competing edit, rollback, removal and financial-visibility races');
 } finally {
   for (const child of sessions) if (!child.stdin.destroyed && !child.stdin.writableEnded) child.stdin.end('rollback;\n');
   if (created) {
