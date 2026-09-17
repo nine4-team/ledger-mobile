@@ -1447,10 +1447,18 @@ final class WorkspaceChecklistUITests: XCTestCase {
 
     #if os(iOS)
     func testInvoicingClearsRowsWhenFinancialStreamsEnd() throws {
+        try exerciseInvoicingUnavailable(streamEnds: true)
+    }
+
+    func testInvoicingShowsUnavailableWhenFinancialAccessWithdraws() throws {
+        try exerciseInvoicingUnavailable(streamEnds: false)
+    }
+
+    private func exerciseInvoicingUnavailable(streamEnds: Bool) throws {
         continueAfterFailure = false
         let app = XCUIApplication()
         app.launchArguments = ["--ledger-ui-test-workspace-checklist", "--ledger-ui-test-item-credit",
-            "--ledger-ui-test-paid-expense", "--ledger-ui-test-invoicing-stream-end"]
+            "--ledger-ui-test-paid-expense", streamEnds ? "--ledger-ui-test-invoicing-stream-end" : "--ledger-ui-test-expense-withdrawal"]
         app.launch(); defer { app.terminate() }
         let project = app.buttons["target-active-project-card-project-ui-test"]
         XCTAssertTrue(project.waitForExistence(timeout: 10)); project.tap()
@@ -1469,6 +1477,7 @@ final class WorkspaceChecklistUITests: XCTestCase {
         XCTAssertFalse(expense.exists)
         XCTAssertFalse(credit.exists)
         XCTAssertTrue(app.staticTexts["Invoices are unavailable."].exists)
+        XCTAssertFalse(app.progressIndicators["Downloading Invoices"].exists)
     }
     #endif
 

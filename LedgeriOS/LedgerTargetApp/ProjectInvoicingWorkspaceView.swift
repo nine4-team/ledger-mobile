@@ -296,6 +296,7 @@ struct ProjectInvoicingWorkspaceView: View {
             do {
                 for try await value in runtime.watchInvoicingCharges(accountId: accountId, projectId: projectId) {
                     if Task.isCancelled { return }; items = value
+                    itemError = value == nil ? "Item charges are unavailable." : nil
                 }
                 if !Task.isCancelled { items = nil; itemError = "Item charges are unavailable." }
             } catch { if !Task.isCancelled { items = nil; itemError = "Item charges are unavailable." } }
@@ -305,6 +306,7 @@ struct ProjectInvoicingWorkspaceView: View {
             do {
                 for try await value in runtime.watchExpenses(accountId: accountId, projectId: projectId) {
                     if Task.isCancelled { return }; expenses = value
+                    expenseError = value == nil ? "Expenses are unavailable." : nil
                 }
                 if !Task.isCancelled { expenses = nil; expenseError = "Expenses are unavailable." }
             } catch { if !Task.isCancelled { expenses = nil; expenseError = "Expenses are unavailable." } }
@@ -314,6 +316,7 @@ struct ProjectInvoicingWorkspaceView: View {
             do {
                 for try await value in runtime.watchCollectedInvoices(accountId: accountId, projectId: projectId) {
                     if Task.isCancelled { return }; invoices = value
+                    invoiceError = value == nil ? "Invoices are unavailable." : nil
                 }
                 if !Task.isCancelled { invoices = nil; invoiceError = "Invoices are unavailable." }
             } catch { if !Task.isCancelled { invoices = nil; invoiceError = "Invoices are unavailable." } }
@@ -342,6 +345,7 @@ struct ProjectInvoicingWorkspaceView: View {
                     } catch { feeError = "Fee sources are unavailable." }
                     guard !Task.isCancelled else { return }
                     liveInvoices = value; pendingInvoices = pending; feeReview = review; pendingFees = feePending
+                    liveInvoiceError = value == nil ? "Live Invoices are unavailable." : nil
                 }
                 if !Task.isCancelled {
                     liveInvoices = nil; pendingInvoices = []; feeReview = nil; pendingFees = []
