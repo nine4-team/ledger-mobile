@@ -1408,7 +1408,7 @@ final class WorkspaceChecklistUITests: XCTestCase {
     func testInvoicingKeepsPaidChargeAndReturnCreditDistinct() throws {
         continueAfterFailure = false
         let app = XCUIApplication()
-        app.launchArguments = ["--ledger-ui-test-workspace-checklist", "--ledger-ui-test-item-credit"]
+        app.launchArguments = ["--ledger-ui-test-workspace-checklist", "--ledger-ui-test-item-credit", "--ledger-ui-test-return-history", "--ledger-ui-test-expense-withdrawal"]
         app.launch()
         defer { app.terminate() }
         let project = app.buttons["target-active-project-card-project-ui-test"]
@@ -1419,12 +1419,28 @@ final class WorkspaceChecklistUITests: XCTestCase {
         XCTAssertTrue(app.staticTexts["-$125.50"].waitForExistence(timeout: 5), app.debugDescription)
         XCTAssertTrue(app.staticTexts["$125.50"].exists)
         XCTAssertEqual(app.staticTexts.matching(identifier: "Returned chair").count, 2)
+        app.buttons["target-invoicing-item-credit:return-credit"].tap()
+        let done = app.buttons["target-item-history-done"]
+        XCTAssertTrue(done.waitForExistence(timeout: 5), app.debugDescription)
+        XCTAssertTrue(app.staticTexts["Returned chair"].exists)
+        done.tap()
         app.buttons["Filter receivables"].tap()
         app.buttons["Paid"].tap()
         app.buttons["Close menu"].tap()
         XCTAssertTrue(app.staticTexts["$125.50"].waitForExistence(timeout: 5))
         XCTAssertFalse(app.staticTexts["-$125.50"].exists)
         XCTAssertEqual(app.staticTexts.matching(identifier: "Returned chair").count, 1)
+        app.buttons["target-invoicing-item-charge:original-charge"].tap()
+        XCTAssertTrue(done.waitForExistence(timeout: 5))
+        XCTAssertTrue(app.staticTexts["Returned chair"].exists)
+        #if os(iOS)
+        XCUIDevice.shared.press(.home); app.activate()
+        XCTAssertTrue(done.waitForNonExistence(timeout: 5), app.debugDescription)
+        XCTAssertFalse(app.buttons["target-invoicing-item-charge:original-charge"].exists)
+        XCTAssertFalse(app.buttons["target-invoicing-item-credit:return-credit"].exists)
+        #else
+        done.tap()
+        #endif
     }
 
     func testInvoicingReusesSourceAndSearchControls() throws {

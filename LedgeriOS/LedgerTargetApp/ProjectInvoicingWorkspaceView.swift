@@ -12,6 +12,7 @@ struct ProjectInvoicingWorkspaceView: View {
     var projectName: String = "Project name unavailable"
     var clientName: String = ""
     @State private var items: ProjectInvoicingItems?
+    @State private var selectedItem: ProjectInvoicingItem?
     @State private var expenses: ProjectExpenses?
     @State private var invoices: [FrozenInvoiceContents]?
     @State private var liveInvoices: [LiveInvoiceContents]?
@@ -60,10 +61,15 @@ struct ProjectInvoicingWorkspaceView: View {
                         availability: InvoicingAvailability(rawValue: availabilityFilter.rawValue)) }
                     if rows.isEmpty { BillingEmptyRow("No matching Item charges in downloaded data.") }
                     ForEach(rows) { row in
+                        Button { selectedItem = row } label: {
                         BillingCandidateRowPresentation(title: row.title, metadata: row.categoryName ?? "Item",
                             amountText: amount(row.amount), statusLabel: row.availability.rawValue.capitalized,
                             statusColor: row.availability == .paid ? StatusColors.metText : BrandColors.textSecondary,
                             invoiceName: row.invoiceName)
+                        }
+                        .buttonStyle(.plain)
+                        .disabled(!(runtime is any DownloadedItemPlacementHistoryReading))
+                        .accessibilityIdentifier("target-invoicing-item-\(row.id)")
                     }
                     BillingEmptyRow("Credit and live-Invoice status coverage is not complete in this build.")
                 } else { ProgressView("Downloading Item charges") }
@@ -215,6 +221,16 @@ struct ProjectInvoicingWorkspaceView: View {
             }
         }
         .navigationTitle("Invoicing")
+        .sheet(item: $selectedItem) { selection in
+            if let reader = runtime as? any DownloadedItemPlacementHistoryReading {
+                DownloadedItemDetailView(accountId: accountId, itemId: selection.occurrence.itemId, reader: reader)
+            }
+        }
+        .onChange(of: items) { _, value in
+            if let selectedItem, value?.rows.contains(where: { $0.id == selectedItem.id }) != true {
+                self.selectedItem = nil
+            }
+        }
         .adaptivePresentation(isPresented: $creatingInvoice, style: .form) {
             if let creator = runtime as? any ProjectInvoiceCreating {
                 CreateInvoiceModal(accountId: accountId, projectId: projectId, service: creator, state: invoiceFormState) { receipt in
@@ -281,6 +297,7 @@ struct ProjectInvoicingWorkspaceView: View {
                 for try await value in runtime.watchInvoicingCharges(accountId: accountId, projectId: projectId) {
                     if Task.isCancelled { return }; items = value
                 }
+                if !Task.isCancelled { items = nil; itemError = "Item charges are unavailable." }
             } catch { if !Task.isCancelled { items = nil; itemError = "Item charges are unavailable." } }
         }
         .task(id: projectId) {

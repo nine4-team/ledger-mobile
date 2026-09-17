@@ -990,6 +990,7 @@ private struct UITestFixtureItemReader: DownloadedItemPlacementReading, Download
         return []
     }
     func readInvoicingCharges(accountId: AccountID, projectId: ProjectID) async throws -> ProjectInvoicingItems {
+        guard expenseAccess.hasAccess else { throw ProjectExpenses.Failure.invalidEvidence }
         if ProcessInfo.processInfo.arguments.contains("--ledger-ui-test-item-credit") {
             let item = try ItemID(validating: "returned-chair")
             let rows = try [false, true].map { credit in
@@ -1013,10 +1014,19 @@ private struct UITestFixtureItemReader: DownloadedItemPlacementReading, Download
     }
     func watchInvoicingCharges(accountId: AccountID, projectId: ProjectID) -> AsyncThrowingStream<ProjectInvoicingItems?, Error> {
         AsyncThrowingStream { continuation in
-            Task {
-                do { continuation.yield(try await readInvoicingCharges(accountId: accountId, projectId: projectId)) }
+            let task = Task {
+                do {
+                    // Reuse the fixture's shared financial-withdrawal event.
+                    for try await expenses in watchExpenses(accountId: accountId, projectId: projectId) {
+                        if Task.isCancelled { return }
+                        if expenses == nil { continuation.yield(nil) }
+                        else { continuation.yield(try await readInvoicingCharges(accountId: accountId, projectId: projectId)) }
+                    }
+                    continuation.finish()
+                }
                 catch { continuation.finish(throwing: error) }
             }
+            continuation.onTermination = { _ in task.cancel() }
         }
     }
     func readExpenses(accountId: AccountID, projectId: ProjectID) async throws -> ProjectExpenses {
