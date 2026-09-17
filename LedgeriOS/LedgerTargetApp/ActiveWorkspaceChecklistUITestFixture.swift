@@ -5,6 +5,8 @@ import Observation
 import SwiftUI
 import UniformTypeIdentifiers
 import CryptoKit
+import CoreText
+import ImageIO
 import LedgerTargetPowerSync
 import Security
 #if os(iOS)
@@ -1418,8 +1420,28 @@ private struct UITestFixtureItemReader: DownloadedItemPlacementReading, Download
         AsyncThrowingStream { $0.yield(nil) }
     }
     private var imageBytes: Data {
-        Data(base64Encoded: "R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7")!
+        if ProcessInfo.processInfo.arguments.contains("--ledger-ui-test-image-text") {
+            return Self.textImageBytes
+        }
+        return Data(base64Encoded: "R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7")!
     }
+    private static let textImageBytes: Data = {
+        let context = CGContext(data: nil, width: 900, height: 250,
+            bitsPerComponent: 8, bytesPerRow: 0, space: CGColorSpaceCreateDeviceRGB(),
+            bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue)!
+        context.setFillColor(CGColor(gray: 1, alpha: 1))
+        context.fill(CGRect(x: 0, y: 0, width: 900, height: 250))
+        let line = CTLineCreateWithAttributedString(NSAttributedString(string: "LEDGER RECEIPT 12345",
+            attributes: [NSAttributedString.Key(kCTFontAttributeName as String): CTFontCreateWithName("Helvetica" as CFString, 48, nil),
+                         NSAttributedString.Key(kCTForegroundColorAttributeName as String): CGColor(gray: 0, alpha: 1)]))
+        context.textPosition = CGPoint(x: 30, y: 110)
+        CTLineDraw(line, context)
+        let bytes = NSMutableData()
+        let destination = CGImageDestinationCreateWithData(bytes, UTType.png.identifier as CFString, 1, nil)!
+        CGImageDestinationAddImage(destination, context.makeImage()!, nil)
+        precondition(CGImageDestinationFinalize(destination))
+        return bytes as Data
+    }()
     func watchDownloadedItemImages(accountId: AccountID, itemId: ItemID) -> AsyncThrowingStream<DownloadedItemImageCatalog, Error> {
         AsyncThrowingStream { continuation in
             do {
@@ -1430,7 +1452,8 @@ private struct UITestFixtureItemReader: DownloadedItemPlacementReading, Download
                 let images: [DownloadedItemImage] = try (0..<count).map { index in
                     let id = "fixture-image-\(index)"
                     let object = try DownloadedImageObjectReference(accountId: accountId, attachmentId: id,
-                        sha256: hash, byteCount: String(imageBytes.count), mediaType: "image/gif",
+                        sha256: hash, byteCount: String(imageBytes.count),
+                        mediaType: ProcessInfo.processInfo.arguments.contains("--ledger-ui-test-image-text") ? "image/png" : "image/gif",
                         storagePath: "accounts/\(accountId.rawValue)/attachments/\(id)/\(hash)")
                     let generated = try ItemCardThumbnailGenerator.generate(originalBytes: imageBytes,expectedOriginal: object)
                     let smallId = "small-\(id)"

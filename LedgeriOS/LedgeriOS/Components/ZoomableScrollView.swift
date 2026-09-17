@@ -1,5 +1,10 @@
 import Foundation
 import SwiftUI
+import VisionKit
+
+// VisionKit recommends sharing the analyzer; results remain view-local and
+// are discarded with the authorized displayed image, never persisted here.
+private let galleryImageAnalyzer = ImageAnalyzer()
 
 /// A non-destructive marker rendered by the native image zoom surface.
 /// The point is normalized to the image bounds (0...1 on each axis).
@@ -123,6 +128,10 @@ struct ZoomableScrollView: UIViewRepresentable {
         imageView.clipsToBounds = true
         scrollView.addSubview(imageView)
         context.coordinator.imageView = imageView
+        if ImageAnalyzer.isSupported {
+            imageView.isUserInteractionEnabled = true
+            imageView.addInteraction(context.coordinator.textInteraction)
+        }
 
         // Loading indicator
         let spinner = UIActivityIndicatorView(style: .large)
@@ -149,6 +158,7 @@ struct ZoomableScrollView: UIViewRepresentable {
         // Single-tap gesture (requires double-tap to fail first)
         let singleTap = UITapGestureRecognizer(target: context.coordinator, action: #selector(Coordinator.handleSingleTap(_:)))
         singleTap.numberOfTapsRequired = 1
+        singleTap.cancelsTouchesInView = false
         singleTap.require(toFail: doubleTap)
         scrollView.addGestureRecognizer(singleTap)
 
@@ -192,6 +202,7 @@ struct ZoomableScrollView: UIViewRepresentable {
     static func dismantleUIView(_ scrollView: UIScrollView, coordinator: Coordinator) {
         (scrollView as? LayoutScrollView)?.onViewportLayout = nil
         coordinator.loadTask?.cancel()
+        coordinator.clearImageAnalysis()
         coordinator.currentLoadID = UUID()
         coordinator.imageView?.image = nil
         scrollView.delegate = nil
@@ -199,7 +210,7 @@ struct ZoomableScrollView: UIViewRepresentable {
 
     // MARK: - Coordinator
 
-    class Coordinator: NSObject, UIScrollViewDelegate {
+    class Coordinator: NSObject, UIScrollViewDelegate, ImageAnalysisInteractionDelegate {
         var parent: ZoomableScrollView
         var imageView: UIImageView?
         var spinner: UIActivityIndicatorView?
@@ -212,6 +223,13 @@ struct ZoomableScrollView: UIViewRepresentable {
         var annotations: [ZoomableImageAnnotation] = []
         fileprivate var annotationViews: [String: AccessibleAnnotationImageView] = [:]
         fileprivate var loadTask: Task<Void, Never>?
+        private var analysisTask: Task<Void, Never>?
+        private var analysisLoadID: UUID?
+        lazy var textInteraction: ImageAnalysisInteraction = {
+            let interaction = ImageAnalysisInteraction(self)
+            interaction.preferredInteractionTypes = .automaticTextOnly
+            return interaction
+        }()
 
         init(parent: ZoomableScrollView) {
             self.parent = parent
@@ -219,6 +237,35 @@ struct ZoomableScrollView: UIViewRepresentable {
 
         deinit {
             loadTask?.cancel()
+            analysisTask?.cancel()
+        }
+
+        func clearImageAnalysis() {
+            analysisTask?.cancel()
+            analysisTask = nil
+            analysisLoadID = nil
+            textInteraction.analysis = nil
+        }
+
+        private func analyzeDisplayedImage(_ image: UIImage) {
+            guard ImageAnalyzer.isSupported, analysisLoadID != currentLoadID else { return }
+            let loadID = currentLoadID
+            analysisLoadID = loadID
+            analysisTask = Task { @MainActor [weak self] in
+                do {
+                    let analysis = try await galleryImageAnalyzer.analyze(image, configuration: .init(.text))
+                    guard !Task.isCancelled, let self, self.currentLoadID == loadID,
+                          self.imageView?.image === image else { return }
+                    self.textInteraction.analysis = analysis
+                } catch { /* Unsupported or failed analysis leaves normal viewing intact. */ }
+            }
+        }
+
+        func interaction(_ interaction: ImageAnalysisInteraction, shouldBeginAt point: CGPoint,
+                         for interactionType: ImageAnalysisInteraction.InteractionTypes) -> Bool {
+            guard let imageView, let scrollView = imageView.superview as? UIScrollView else { return false }
+            return !parent.annotationSelectionEnabled ||
+                nearestAnnotation(to: imageView.convert(point, to: scrollView), in: scrollView) == nil
         }
 
         // MARK: UIScrollViewDelegate
@@ -275,6 +322,7 @@ struct ZoomableScrollView: UIViewRepresentable {
         // MARK: Double-Tap
 
         @objc func handleDoubleTap(_ recognizer: UITapGestureRecognizer) {
+            guard !textInteraction.hasActiveTextSelection else { return }
             guard let scrollView = recognizer.view as? UIScrollView else { return }
 
             if scrollView.zoomScale > scrollView.minimumZoomScale + 0.01 {
@@ -322,6 +370,7 @@ struct ZoomableScrollView: UIViewRepresentable {
             }
 
             let tapInImage = recognizer.location(in: imageView)
+            if textInteraction.hasActiveTextSelection || textInteraction.hasSupplementaryInterface(at: tapInImage) { return }
             guard imageView.bounds.contains(tapInImage),
                   imageView.bounds.width > 0,
                   imageView.bounds.height > 0 else {
@@ -451,6 +500,7 @@ struct ZoomableScrollView: UIViewRepresentable {
         @MainActor
         func loadImage(source: GalleryImageSource) {
             loadTask?.cancel()
+            clearImageAnalysis()
             currentImageIdentity = source.identity
             lastFitSize = .zero
             let loadID = UUID()
@@ -492,6 +542,7 @@ struct ZoomableScrollView: UIViewRepresentable {
             scrollView.minimumZoomScale = min(1, scrollView.minimumZoomScale)
             scrollView.setZoomScale(1, animated: false)
             imageView.image = image
+            analyzeDisplayedImage(image)
             let imageSize = image.size
             imageView.frame = CGRect(origin: .zero, size: imageSize)
             scrollView.contentSize = imageSize
@@ -615,6 +666,13 @@ struct ZoomableScrollView: NSViewRepresentable {
         imageView.imageAlignment = .alignCenter
         scrollView.documentView = imageView
         context.coordinator.imageView = imageView
+        if ImageAnalyzer.isSupported {
+            let overlay = context.coordinator.textOverlay
+            overlay.autoresizingMask = [.width, .height]
+            overlay.frame = imageView.bounds
+            overlay.trackingImageView = imageView
+            imageView.addSubview(overlay)
+        }
 
         // Loading spinner
         let spinner = NSProgressIndicator()
@@ -717,6 +775,7 @@ struct ZoomableScrollView: NSViewRepresentable {
     static func dismantleNSView(_ scrollView: NSScrollView, coordinator: Coordinator) {
         (scrollView as? LayoutScrollView)?.onViewportLayout = nil
         coordinator.loadTask?.cancel()
+        coordinator.clearImageAnalysis()
         coordinator.currentLoadID = UUID()
         coordinator.imageView?.image = nil
         coordinator.magnificationObservation = nil
@@ -743,7 +802,7 @@ struct ZoomableScrollView: NSViewRepresentable {
 
     // MARK: - Coordinator
 
-    class Coordinator: NSObject, @unchecked Sendable {
+    class Coordinator: NSObject, ImageAnalysisOverlayViewDelegate, @unchecked Sendable {
         var parent: ZoomableScrollView
         var imageView: NSImageView?
         var spinner: NSProgressIndicator?
@@ -758,6 +817,13 @@ struct ZoomableScrollView: NSViewRepresentable {
         var annotations: [ZoomableImageAnnotation] = []
         fileprivate var annotationViews: [String: AccessibleAnnotationNSImageView] = [:]
         fileprivate var loadTask: Task<Void, Never>?
+        private var analysisTask: Task<Void, Never>?
+        private var analysisLoadID: UUID?
+        @MainActor lazy var textOverlay: ImageAnalysisOverlayView = {
+            let overlay = ImageAnalysisOverlayView(self)
+            overlay.preferredInteractionTypes = .automaticTextOnly
+            return overlay
+        }()
 
         init(parent: ZoomableScrollView) {
             self.parent = parent
@@ -765,13 +831,44 @@ struct ZoomableScrollView: NSViewRepresentable {
 
         deinit {
             loadTask?.cancel()
+            analysisTask?.cancel()
             magnificationObservation = nil
+        }
+
+        @MainActor func clearImageAnalysis() {
+            analysisTask?.cancel()
+            analysisTask = nil
+            analysisLoadID = nil
+            textOverlay.analysis = nil
+        }
+
+        @MainActor private func analyzeDisplayedImage(_ image: NSImage) {
+            guard ImageAnalyzer.isSupported, analysisLoadID != currentLoadID else { return }
+            let loadID = currentLoadID
+            analysisLoadID = loadID
+            analysisTask = Task { @MainActor [weak self] in
+                do {
+                    let analysis = try await galleryImageAnalyzer.analyze(image, orientation: .up, configuration: .init(.text))
+                    guard !Task.isCancelled, let self, self.currentLoadID == loadID,
+                          self.imageView?.image === image else { return }
+                    self.textOverlay.analysis = analysis
+                } catch { /* Unsupported or failed analysis leaves normal viewing intact. */ }
+            }
+        }
+
+        @MainActor func overlayView(_ overlayView: ImageAnalysisOverlayView, shouldBeginAt point: CGPoint,
+                                   forAnalysisType analysisType: ImageAnalysisOverlayView.InteractionTypes) -> Bool {
+            guard let imageView, let scrollView = imageView.enclosingScrollView else { return false }
+            let annotation = nearestAnnotation(to: overlayView.convert(point, to: scrollView), in: scrollView)
+            return (!parent.annotationSelectionEnabled || annotation == nil) &&
+                (overlayView.hasInteractiveItem(at: point) || overlayView.hasActiveTextSelection)
         }
 
         // MARK: Double-Click
 
         @MainActor
         @objc func handleDoubleClick(_ recognizer: NSClickGestureRecognizer) {
+            guard !textOverlay.hasActiveTextSelection else { return }
             guard let scrollView = recognizer.view as? NSScrollView else { return }
 
             if scrollView.magnification > scrollView.minMagnification + 0.01 {
@@ -807,6 +904,7 @@ struct ZoomableScrollView: NSViewRepresentable {
             }
 
             let tapInImage = recognizer.location(in: imageView)
+            if textOverlay.hasActiveTextSelection || textOverlay.hasSupplementaryInterface(at: tapInImage) { return }
             guard imageView.bounds.contains(tapInImage),
                   imageView.bounds.width > 0,
                   imageView.bounds.height > 0 else {
@@ -949,6 +1047,7 @@ struct ZoomableScrollView: NSViewRepresentable {
         @MainActor
         func loadImage(source: GalleryImageSource) {
             loadTask?.cancel()
+            clearImageAnalysis()
             currentImageIdentity = source.identity
             lastFitSize = .zero
             let loadID = UUID()
@@ -986,6 +1085,7 @@ struct ZoomableScrollView: NSViewRepresentable {
             errorView?.isHidden = true
 
             imageView.image = image
+            analyzeDisplayedImage(image)
             let imageSize = image.size
             imageView.frame = CGRect(origin: .zero, size: imageSize)
 

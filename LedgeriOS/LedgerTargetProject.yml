@@ -153,6 +153,9 @@ targets:
       - macOS
     sources:
       - path: LedgerTargetSharedLogicTests
+      - path: LedgeriOS/Components/ZoomableScrollView.swift
+      - path: LedgeriOS/Logic/MediaGalleryPresentationCalculations.swift
+      - path: LedgeriOS/Logic/PinnedImageGeometry.swift
       - path: LedgeriOS/Logic/BudgetDisplayCalculations.swift
       - path: LedgerTargetPowerSync/ReportScratchStore.swift
       - path: LedgeriOS/Logic/InvoiceReportData.swift

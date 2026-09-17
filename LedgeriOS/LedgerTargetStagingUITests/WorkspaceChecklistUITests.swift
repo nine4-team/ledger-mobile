@@ -4243,6 +4243,58 @@ final class WorkspaceChecklistUITests: XCTestCase {
         XCTAssertTrue(item.waitForExistence(timeout: 5))
     }
 
+    #if os(iOS)
+    func testDownloadedItemImageTextCopy() throws {
+        guard ProcessInfo.processInfo.environment["LEDGER_ISOLATED_CI_CLIPBOARD"] == "true" else {
+            throw XCTSkip("Copy checks require the isolated simulator")
+        }
+        continueAfterFailure = false
+        let app = XCUIApplication()
+        app.launchArguments = ["--ledger-ui-test-workspace-checklist", "--ledger-ui-test-item-images", "--ledger-ui-test-image-text", "--ledger-ui-test-item-detail-copy"]
+        app.launch()
+        defer { app.terminate() }
+        let project = app.buttons["target-active-project-card-project-ui-test"]
+        XCTAssertTrue(project.waitForExistence(timeout: 10))
+        project.tap()
+        let item = app.buttons["target-physical-item-physical-ui-chair"]
+        reveal(item, in: app, fullyInsideScrollView: true)
+        item.tap()
+        openItemImages(in: app)
+        let rendered = app.images["target-item-image-rendered"]
+        XCTAssertTrue(rendered.waitForExistence(timeout: 10), app.debugDescription)
+        // Automatic text interaction does not promise a named Live Text button.
+        rendered.pinch(withScale: 1.5, velocity: 1)
+        XCTAssertTrue(waitUntil { (rendered.value as? String) != "1.0× zoom" })
+        let beforePan = rendered.frame
+        rendered.coordinate(withNormalizedOffset: CGVector(dx: 0.65, dy: 0.85))
+            .press(forDuration: 0.05, thenDragTo: rendered.coordinate(withNormalizedOffset: CGVector(dx: 0.75, dy: 0.85)))
+        XCTAssertTrue(waitUntil { abs(rendered.frame.minX - beforePan.minX) > 5 })
+        rendered.coordinate(withNormalizedOffset: CGVector(dx: 0.20, dy: 0.49)).press(forDuration: 1)
+        let copy = app.menuItems["Copy"]
+        XCTAssertTrue(copy.waitForExistence(timeout: 5), app.debugDescription)
+        copy.tap()
+        // Zoom keeps controls visible; do not tap recognized text merely to
+        // toggle controls, since native text selection takes that interaction.
+        app.buttons["target-item-image-zoom-reset"].tap()
+        XCTAssertTrue(waitUntil { (rendered.value as? String) == "1.0× zoom" })
+        app.buttons["target-item-images-done"].tap()
+        app.buttons["target-item-history-done"].tap()
+        assertPastedItemIDs("LEDGER", in: app)
+        item.tap()
+        openItemImages(in: app)
+        app.buttons["target-item-image-pin"].tap()
+        let unpin = app.buttons["target-item-image-unpin"]
+        XCTAssertTrue(unpin.waitForExistence(timeout: 5))
+        XCTAssertTrue(rendered.waitForExistence(timeout: 5))
+        rendered.coordinate(withNormalizedOffset: CGVector(dx: 0.20, dy: 0.49)).press(forDuration: 1)
+        XCTAssertTrue(copy.waitForExistence(timeout: 5), app.debugDescription)
+        copy.tap()
+        unpin.tap()
+        app.buttons["target-item-history-done"].tap()
+        assertPastedItemIDs("LEDGER", in: app)
+    }
+    #endif
+
     func testDownloadedItemImageGallery() throws {
         continueAfterFailure = false
         let app = XCUIApplication()
