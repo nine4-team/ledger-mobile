@@ -1,6 +1,6 @@
 {
   "schemaVersion": 2,
-  "stateVersion": 1514,
+  "stateVersion": 1517,
   "userRequestedPause": {
     "date": "2026-09-15",
     "status": "resumed",
@@ -62,6 +62,6 @@
     "lastResult": "Revision migration20260917193630 APPLIED LOCAL once. SQL34828 PASS2344assertions70files6s +fresh races; MCP55679 PASS5tests/types; HTTP49058PASS; guard50998 PASS28tests44.5s; native91235 PASS5tests1.396s incl result-first/later-edit/restart;165projection captures and security advisors PASS. MacUI44434FAILED before app launch: automation-mode timeout; DevToolsSecurity disabled. Existing runtime live-sync test extended; no hosted change.",
     "activeProcesses": {},
     "integrationCI": {"run":35218414703,"attempt":1,"commit":"7ed45e59b406ca9e599eeefa75704abbaee9e559","status":"failed","meaning":"Completed13:01:47UTC. Provider/conversion PASS; Mac boundary failed (local fix). iOS1hour timeout:73passed,3failed of76finished, remaining unexecuted. Full log /tmp/ledger-ci-35218414703-ios-latest.log: capture first Photos picker still Loading; category reorder order assertion; Invoice cancel picker appears in final AX dump after15s wait failed. Diagnose targeted readiness/drag, no UI rebuild or blanket retry. Live log was incomplete; tests began12:13, not compile hang."},
-    "nextWorkflowDecision": "Receipt sync fixed: explicit operation_id AS id;15projection tests PASS;local reload95844PASS;live36208PASS /tmp/ledger-receipt-live-operation-id-fixed.log. Shared Expense iPhone16073 PASS1test36.605s /tmp/ledger-receipt-shared-expense-ui.log;receipt iPhone47480PASS29.903s. ConversionPASS -operation-id-conversion.log. No running tests. Next integrated diff review/checkpoint; MacUI initialization failure remains external verification gap. Three migrations already LOCAL; no replay/hosted/duplicate CI."
+    "nextWorkflowDecision": "CI35268438664 FAILED provider parity artifact13 vs14queries; conversionPASS/native skipped. Updated script/native allowlist for existing item_placement_versions; actual MCP15577PASS;native23875 PASS1test0.174s;conversionPASS. Checkpoint repair then one corrected integration run. Invoice collection next candidate: reuse LiveInvoiceContents/store_collected_invoice/existing Purchase guards. O033 exact-payment equality question awaits reply; no policy inferred. Three receipt migrations already LOCAL; no replay/hosted."
   }
 }
