@@ -13,6 +13,17 @@ import CoreGraphics
 
 @testable import LedgerTargetPowerSync
 
+private final class RemovalUploadURLProtocol: URLProtocol, @unchecked Sendable {
+    nonisolated(unsafe) static var events: AsyncStream<String>.Continuation?
+    override class func canInit(with request: URLRequest) -> Bool { true }
+    override class func canonicalRequest(for request: URLRequest) -> URLRequest { request }
+    override func startLoading() {
+        Self.events?.yield(request.url?.path ?? "missing-url")
+        // Hold the real URLSession request until runtime removal cancels it.
+    }
+    override func stopLoading() { Self.events?.yield("cancelled") }
+}
+
 @Suite("Account workspace pending-work runtime", .serialized)
 struct AccountWorkspacePendingWorkRuntimeTests {
     @Test("New local identity creates, selects, downloads and reopens its Account",
@@ -1795,7 +1806,7 @@ struct AccountWorkspacePendingWorkRuntimeTests {
     }
 
     @Test("Transaction capture uses live member/financial scope and survives encrypted runtime reopen",
-        arguments: ["allowed", "foreign-account", "foreign-principal", "removed", "hidden-fee", "unknown-section"])
+        arguments: ["allowed", "upload-removal", "foreign-account", "foreign-principal", "removed", "hidden-fee", "unknown-section"])
     func transactionCaptureAdmission(scenario: String) async throws {
         let context = try RuntimeTestContext(suffix: "transaction-capture-\(scenario)")
         defer { context.remove() }
@@ -1847,7 +1858,7 @@ struct AccountWorkspacePendingWorkRuntimeTests {
             capturedAt: original.capturedAt, bytes: original.bytes,
             metadata: AttachmentCaptureMetadata(mediaType: "image/png", fileName: "Original.png", transactionSection: .receipts))
         let scope = TransactionScope.businessInventory(accountId: context.accountId)
-        if scenario == "allowed" {
+        if scenario == "allowed" || scenario == "upload-removal" {
             let observations = LockedRecorder<DownloadedTransactionAttachments?>()
             let transactionId = try TransactionID(validating: "capture-parent")
             #expect(try await runtime.transactionAttachmentCaptureScope(scope: scope,
@@ -1865,6 +1876,46 @@ struct AccountWorkspacePendingWorkRuntimeTests {
             }
             #expect(observations.values.contains(where: { $0?.isComplete == true && $0?.attachments.isEmpty == true }))
             let receipt = try await runtime.captureTransactionAttachment(capture, scope: scope)
+            if scenario == "upload-removal" {
+                let network = AsyncStream<String>.makeStream()
+                let deadline = Task {
+                    do { try await Task.sleep(for: .seconds(5)); network.continuation.finish() }
+                    catch { }
+                }
+                defer { deadline.cancel() }
+                RemovalUploadURLProtocol.events = network.continuation
+                defer { network.continuation.finish(); RemovalUploadURLProtocol.events = nil }
+                let configuration = URLSessionConfiguration.ephemeral
+                configuration.protocolClasses = [RemovalUploadURLProtocol.self]
+                let session = URLSession(configuration: configuration)
+                defer { session.invalidateAndCancel() }
+                let client = try SupabaseTransactionAttachmentUpload(
+                    supabaseURL: URL(string: "https://upload-removal.invalid")!,
+                    publishableKey: "sb_publishable_test", accessToken: {
+                        "header.\(Data("{\"role\":\"authenticated\"}".utf8).base64EncodedString()).signature"
+                    }, session: session)
+                try await runtime.lifecycleOwner.startTransactionAttachmentUploads(using: client)
+                var events = network.stream.makeAsyncIterator()
+                #expect(await events.next() == "/rest/v1/rpc/spike_begin_transaction_attachment_upload")
+                let removal = Task { try await runtime.lockAccessPreservingPendingWork() }
+                #expect(await events.next() == "cancelled")
+                try await removal.value
+                await #expect(throws: LedgerOfflineClientRuntimeFailure.runtimeClosed) {
+                    try await runtime.lifecycleOwner.startTransactionAttachmentUploads(using: client)
+                }
+                await #expect(throws: LedgerPowerSyncLocalBootstrapFailure(stage: .workspaceAccessRemoved)) {
+                    _ = try await context.openRuntime()
+                }
+                try await consumer.value
+                // Inspection does not authorize application recovery or upload.
+                var inspection = context.dependencies()
+                inspection.accessCoordinator = LedgerWorkspaceAccessCoordinator()
+                let retained = try await context.openRuntime(dependencies: inspection)
+                #expect(try await retained.resolveLocalAttachmentBytes(for: receipt) == capture.bytes)
+                #expect(try await retained.pendingWorkSummary().unverifiedAttachmentCount == 1)
+                try await retained.close()
+                return
+            }
             #expect(receipt.metadata?.mediaType == capture.metadata?.mediaType)
             #expect(receipt.metadata?.fileName == capture.metadata?.fileName)
             #expect(receipt.metadata?.placement == .init(localPosition: 0, makePrimaryIfEmpty: true))
