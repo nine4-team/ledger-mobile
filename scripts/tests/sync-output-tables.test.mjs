@@ -167,7 +167,7 @@ test('Item-linked Purchase local schema contains only canonical read facts with 
   assert.deepEqual([...columns.matchAll(/\.text\("([a-z_]+)"\)/g)].map(match => match[1]),
     ['account_id', 'project_id', 'client_id', 'type', 'role', 'amount_minor_units', 'currency', 'origin',
       'scope_kind', 'category_id', 'non_item_receipt_lines', 'source', 'transaction_date', 'created_at_ms',
-      'notes', 'payment_method', 'legacy_subtotal_minor_units', 'legacy_tax_rate_pct']);
+      'notes', 'payment_method', 'details_revision', 'legacy_subtotal_minor_units', 'legacy_tax_rate_pct']);
   assert.deepEqual([...columns.matchAll(/\.integer\("([a-z_]+)"\)/g)].map(match => match[1]), ['has_email_receipt']);
 });
 
@@ -182,4 +182,5 @@ test('overlapping Transaction streams preserve the same exact metadata projectio
   assert.equal(projections[2].replace('spike_transactions.category_id, spike_transactions.non_item_receipt_lines, ', ''), projections[0]);
   assert.match(projections[0], /legacy_subtotal_minor_units::text AS legacy_subtotal_minor_units/);
   assert.match(projections[0], /legacy_tax_rate_pct::text AS legacy_tax_rate_pct/);
+  assert.match(projections[0], /details_revision::text AS details_revision/);
 });

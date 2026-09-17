@@ -3884,6 +3884,7 @@ struct AccountWorkspacePendingWorkRuntimeTests {
         let project = try ProjectID(validating: "project"), item = try ItemID(validating: "item")
         let operation = try ItemPriceEditOperationIdentity.make(accountId: context.accountId, uuid: UUID())
         let detailsOperation = try ItemDetailsEditOperationIdentity.make(accountId: context.accountId, uuid: UUID())
+        let transactionOperation = try TransactionDetailsEditOperationIdentity.make(accountId: context.accountId, uuid: UUID())
         let ready = AsyncStream<Void>.makeStream()
         let review = Task {
             do {
@@ -3915,7 +3916,18 @@ struct AccountWorkspacePendingWorkRuntimeTests {
                 #expect(failure == .runtimeClosed)
             } catch { Issue.record("Unexpected Item details status failure: \(error)") }
         }
+        let transactionStatus = Task {
+            do {
+                for try await value in runtime.watchTransactionDetailsEdit(transactionOperation) {
+                    #expect(value == nil)
+                    ready.continuation.yield(())
+                }
+            } catch is CancellationError {} catch let failure as LedgerOfflineClientRuntimeFailure {
+                #expect(failure == .runtimeClosed)
+            } catch { Issue.record("Unexpected Transaction details status failure: \(error)") }
+        }
         var signals = ready.stream.makeAsyncIterator()
+        #expect(await signals.next() != nil)
         #expect(await signals.next() != nil)
         #expect(await signals.next() != nil)
         #expect(await signals.next() != nil)
@@ -3924,9 +3936,11 @@ struct AccountWorkspacePendingWorkRuntimeTests {
         await review.value
         await status.value
         await detailsStatus.value
+        await transactionStatus.value
         try await Self.expectClosed(runtime.watchItemPriceReview(project: project, item: item))
         try await Self.expectClosed(runtime.watchItemPriceEdit(operation))
         try await Self.expectClosed(runtime.watchItemDetailsEdit(detailsOperation))
+        try await Self.expectClosed(runtime.watchTransactionDetailsEdit(transactionOperation))
         ready.continuation.finish()
     }
 
@@ -4774,6 +4788,7 @@ struct AccountWorkspacePendingWorkRuntimeTests {
                 if case .ready = update { throw RuntimeInjectedFailure() }
                 if case .partial(let rows) = update, rows.count == 3 {
                     #expect(rows.map(\.transactionId.rawValue) == ["\(receiptId)-linked-payment", "\(receiptId)-payment", "\(receiptId)-project"])
+                    #expect(rows.allSatisfy { $0.detailsRevision == 1 })
                     #expect(rows[1].amount.minorUnits == 9007199254740993 && rows[1].category == nil)
                     #expect(rows[0].currentItemCategories?.first?.itemId.rawValue == "\(account)-item")
                     #expect(rows[0].currentItemCategories?.first?.placementId.rawValue == "\(account)-item-project")
@@ -4845,12 +4860,13 @@ struct AccountWorkspacePendingWorkRuntimeTests {
             throw RuntimeInjectedFailure()
         }
         func browser(_ runtime: LedgerOfflineClientRuntime, kind: BudgetCategoryKind,
-                     revision: Int64? = nil) async throws -> TransactionDetailSnapshot {
+                     revision: Int64? = nil, detailsRevision: Int64? = nil) async throws -> TransactionDetailSnapshot {
             for try await update in runtime.watchTransactions(scope: scope) {
                 if case .ready = update { throw RuntimeInjectedFailure() } // Vendor coverage must remain explicitly partial.
                 if case .partial(let rows) = update,
                    let row = rows.first(where: { $0.transactionId == transactionId }),
-                   row.category?.kind == kind, revision == nil || row.category?.revision == revision {
+                   row.category?.kind == kind, revision == nil || row.category?.revision == revision,
+                   detailsRevision == nil || row.detailsRevision == detailsRevision {
                     #expect(rows.count == 1, "Inventory browser excludes Project and foreign Account Transactions")
                     #expect(rows.allSatisfy { $0.classification.scope == scope && $0.principalId == context.principalId })
                     return row
@@ -4983,6 +4999,45 @@ struct AccountWorkspacePendingWorkRuntimeTests {
             try await applied(runtime, operationId: restore.envelope.operationId)
             let restored = try await receipt(runtime, kind: .general, revision: replicated.categoryRevision + 1)
             #expect(restored.items == original.items && restored.auditStatus == .notApplicable)
+            let beforeDetailsEdit = try await browser(runtime, kind: .general, revision: restored.categoryRevision)
+            try await runtime.close()
+            runtime = try await context.openRuntime(dependencies: dependencies)
+            // Reopen without network, save, then kill/reopen again before upload.
+            _ = try await browser(runtime, kind: .general)
+            let detailsRevision = try #require(beforeDetailsEdit.detailsRevision)
+            let detailsPayload = try EditTransactionDetailsCommand.Payload(transactionId: transactionId,
+                scope: scope, expectedRevision: detailsRevision,
+                changes: .init(notes: .set("Native offline edit — café"), paymentMethod: .clear))
+            let detailsUUID = UUID(), detailsTime = Date()
+            let detailsReceipt = try await runtime.editTransactionDetails(detailsPayload,
+                operationUUID: detailsUUID, capturedAt: detailsTime)
+            #expect(detailsReceipt.localState == .queued)
+            #expect(try await runtime.editTransactionDetails(detailsPayload,
+                operationUUID: detailsUUID, capturedAt: detailsTime) == detailsReceipt)
+            try await runtime.close()
+            runtime = try await context.openRuntime(dependencies: dependencies)
+            #expect(try await runtime.pendingUploadCount() == 1)
+            #expect(try await runtime.transactionDetailsEditStatus(detailsReceipt.operationId)?.state.localState == .queued)
+            #expect(try await runtime.pendingTransactionDetailsEdit(scope: scope, transactionId: transactionId)?.payload == detailsPayload)
+            _ = try await browser(runtime, kind: .general)
+            try await entry.startWorkspaceSync(runtime, authorization: authorization, powerSyncURL: syncURL)
+            var detailsApplied = false
+            for try await snapshot in runtime.watchTransactionDetailsEdit(detailsReceipt.operationId) {
+                if snapshot?.state.localState == .rejected { throw RuntimeInjectedFailure() }
+                if snapshot?.state.localState == .applied { detailsApplied = true; break }
+            }
+            #expect(detailsApplied)
+            let afterDetailsEdit = try await browser(runtime, kind: .general, detailsRevision: detailsRevision + 1)
+            #expect(try await runtime.pendingTransactionDetailsEdit(scope: scope, transactionId: transactionId) == nil)
+            #expect(afterDetailsEdit.notes == "Native offline edit — café" && afterDetailsEdit.paymentMethod == nil)
+            var beforeWire = try #require(JSONSerialization.jsonObject(with: JSONEncoder().encode(beforeDetailsEdit)) as? [String: Any])
+            var afterWire = try #require(JSONSerialization.jsonObject(with: JSONEncoder().encode(afterDetailsEdit)) as? [String: Any])
+            for key in ["notes", "paymentMethod", "detailsRevision"] {
+                beforeWire.removeValue(forKey: key); afterWire.removeValue(forKey: key)
+            }
+            #expect(NSDictionary(dictionary: beforeWire).isEqual(to: afterWire))
+            #expect(try await runtime.editTransactionDetails(detailsPayload,
+                operationUUID: detailsUUID, capturedAt: detailsTime).localState == .applied)
             func changeReviewVisibility(_ mode: String) async throws {
                 var parts = try #require(URLComponents(url: revokeURL, resolvingAgainstBaseURL: false))
                 parts.queryItems = [URLQueryItem(name: "review",value: mode)]

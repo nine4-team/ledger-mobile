@@ -595,6 +595,85 @@ final class WorkspaceChecklistUITests: XCTestCase {
         XCTAssertFalse(app.staticTexts["$100.00"].exists)
     }
 
+    func testTransactionNotesSaveRetainsDraftAndRetries() throws {
+        let app = XCUIApplication()
+        app.launchArguments = ["--ledger-ui-test-transaction-browser"]
+        app.launch()
+        defer { app.terminate() }
+        XCTAssertTrue(app.staticTexts["$100.00"].waitForExistence(timeout: 10))
+        app.staticTexts["$100.00"].coordinate(withNormalizedOffset: CGVector(dx: 1, dy: 0.5))
+            .withOffset(CGVector(dx: 8, dy: 0)).tap()
+        XCTAssertTrue(app.buttons["Edit Notes"].waitForExistence(timeout: 5))
+        app.buttons["Edit Notes"].tap()
+        XCTAssertTrue(app.buttons["Save Changes"].waitForExistence(timeout: 5))
+        app.buttons["Save Changes"].tap() // unchanged: closes without calling writer
+        XCTAssertTrue(app.buttons["Edit Notes"].waitForExistence(timeout: 5))
+        app.buttons["Edit Notes"].tap()
+        let notes = app.textViews["target-transaction-notes-entry"]
+        XCTAssertTrue(notes.waitForExistence(timeout: 5))
+        notes.tap(); notes.typeText(" offline edit")
+        app.buttons["Save Changes"].tap()
+        XCTAssertTrue(app.staticTexts["The edit could not be confirmed. Retry saves the same edit without duplicating it."].waitForExistence(timeout: 5))
+        XCTAssertTrue((notes.value as? String)?.contains("offline edit") == true)
+        app.buttons["Save Changes"].tap()
+        XCTAssertTrue(app.staticTexts["Saved on this device. Waiting to sync."].waitForExistence(timeout: 5))
+        XCTAssertFalse(app.buttons["Save Changes"].isEnabled)
+        app.buttons.matching(NSPredicate(format: "label == %@ AND identifier != %@", "Close", "xmark.circle.fill")).element.tap()
+        XCTAssertTrue(app.buttons["Edit Notes"].waitForExistence(timeout: 5))
+        app.buttons["Edit Notes"].tap()
+        XCTAssertTrue(app.staticTexts["Saved on this device. Waiting to sync."].waitForExistence(timeout: 5))
+        XCTAssertTrue((app.textViews["target-transaction-notes-entry"].value as? String)?.contains("offline edit") == true)
+        XCTAssertFalse(app.buttons["Save Changes"].isEnabled)
+    }
+
+    func testTransactionDetailsCancelClearAndRejectedEdit() throws {
+        continueAfterFailure = false
+        let app = XCUIApplication()
+        app.launchArguments = ["--ledger-ui-test-transaction-browser", "--transaction-edit-rejected"]
+        app.launch(); defer { app.terminate() }
+        XCTAssertTrue(app.staticTexts["$100.00"].waitForExistence(timeout: 10))
+        app.staticTexts["$100.00"].coordinate(withNormalizedOffset: CGVector(dx: 1, dy: 0.5))
+            .withOffset(CGVector(dx: 8, dy: 0)).tap()
+        XCTAssertTrue(app.buttons["Edit Details"].waitForExistence(timeout: 5))
+        app.buttons["Edit Details"].tap()
+        let source = app.textFields["target-transaction-source-entry"]
+        XCTAssertTrue(source.waitForExistence(timeout: 5))
+        source.tap(); source.typeText(" discarded")
+        app.buttons["Cancel"].tap()
+        XCTAssertTrue(app.buttons["Save Changes"].waitForNonExistence(timeout: 5))
+        app.buttons["Edit Details"].tap()
+        XCTAssertTrue(source.waitForExistence(timeout: 5))
+        XCTAssertEqual(source.value as? String, "Fixture vendor")
+        source.tap()
+        #if os(macOS)
+        source.typeKey("a", modifierFlags: .command)
+        #else
+        source.typeText(String(repeating: XCUIKeyboardKey.delete.rawValue, count: "Fixture vendor".count))
+        #endif
+        source.typeText("Renamed vendor")
+        let method = app.textFields["target-transaction-payment-method-entry"]
+        method.tap()
+        #if os(macOS)
+        method.typeKey("a", modifierFlags: .command)
+        method.typeKey(.delete, modifierFlags: [])
+        #else
+        method.typeText(String(repeating: XCUIKeyboardKey.delete.rawValue, count: "Company card".count))
+        #endif
+        app.buttons["Email Receipt"].tap()
+        #if os(macOS)
+        app.menuItems["No"].tap()
+        #else
+        app.buttons["No"].tap()
+        #endif
+        app.buttons["Save Changes"].tap()
+        XCTAssertTrue(app.staticTexts["The edit could not be confirmed. Retry saves the same edit without duplicating it."].waitForExistence(timeout: 5))
+        app.buttons["Save Changes"].tap()
+        XCTAssertTrue(app.staticTexts["The edit was not applied. Your saved operation is retained for review."].waitForExistence(timeout: 5))
+        XCTAssertFalse(app.buttons["Save Changes"].isEnabled)
+        XCTAssertEqual(source.value as? String, "Renamed vendor")
+        XCTAssertFalse(source.isEnabled)
+    }
+
     func testTransactionBrowserProjectPaymentUsesExistingDetailWithoutVendorAudit() throws {
         let app = XCUIApplication()
         app.launchArguments = ["--ledger-ui-test-transaction-browser", "--project-payment"]

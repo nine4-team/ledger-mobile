@@ -32,6 +32,7 @@ struct FormSelect: View {
                 .formInputStyle()
                 .contentShape(Rectangle())
             }
+            .accessibilityLabel(label)
         }
     }
 }

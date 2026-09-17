@@ -610,8 +610,12 @@ if (
   const expectedPublicRuntimeFunctions = [
     "withProtectedReportActivity",
     "itemDetailsEditStatus", "editItemDetails", "watchItemDetailsEdit",
+    "transactionDetailsEditStatus", "editTransactionDetails", "watchTransactionDetailsEdit",
+    "pendingTransactionDetailsEdit",
     "itemPriceEditStatus", "reviewItemPrice", "editItemPrice", "watchItemPriceEdit", "watchItemPriceReview",
     "readInvoicingCharges", "watchInvoicingCharges",
+    "readProjectBudget", "watchProjectBudget",
+    "readPaidReturnReview", "watchPaidReturnReview", "returnPaidItems", "paidReturnStatus", "watchPaidReturn",
     "watchDownloadedTransactionAttachments", "readDownloadedTransactionAttachments",
     "loadDownloadedTransactionAttachment", "readTransactionExport",
     "readDownloadedTransactionReceipt", "watchTransactionReceipt", "watchTransactions",
@@ -2680,6 +2684,7 @@ const localOperationAcceptingStores = [
   ["InventorySalePowerSyncStore", "InventorySalePowerSyncStore.swift", "sellInventoryItems"],
   ["ItemPriceEditPowerSyncStore", "ItemPriceEditPowerSyncStore.swift", "editUncollectedItemPrice"],
   ["ItemDetailsEditPowerSyncStore", "ItemDetailsEditPowerSyncStore.swift", "editItemDetails"],
+  ["TransactionDetailsEditPowerSyncStore", "TransactionDetailsEditPowerSyncStore.swift", "editTransactionDetails"],
   ["ReturnUninvoicedItemsPowerSyncStore", "ReturnUninvoicedItemsPowerSyncStore.swift", "returnUninvoicedItems"],
   ["ExpenseCreationPowerSyncStore", "ExpenseCreationPowerSyncStore.swift", "createExpense"],
   ["InvoiceCreationPowerSyncStore", "InvoiceCreationPowerSyncStore.swift", "createInvoice"],
@@ -2723,7 +2728,7 @@ if (!fs.existsSync(localOperationGuardPath) || !fs.existsSync(localOperationGuar
   }
   const expectedInsertOnly = [
     "clientCommands", "projectCommands", "projectArchiveCommands", "clientArchiveCommands",
-    "spaceChecklistRevisionCommands", "categoryCommands", "inventorySaleCommands", "itemPriceEditCommands", "itemDetailsEditCommands", "uninvoicedReturnCommands", "expenseCommands", "invoiceCommands", "feeCommands",
+    "spaceChecklistRevisionCommands", "categoryCommands", "inventorySaleCommands", "itemPriceEditCommands", "itemDetailsEditCommands", "transactionDetailsEditCommands", "uninvoicedReturnCommands", "paidReturnCommands", "expenseCommands", "invoiceCommands", "feeCommands",
   ];
   const insertOnlyBlock = guardCompact.match(
     /staticletinsertOnlyCommandTables=\[([^\]]*)\]/,

@@ -59,6 +59,7 @@ public enum LedgerPowerSyncTable {
     public static let inventorySaleCommands = "spike_inventory_sale_commands"
     public static let itemPriceEditCommands = "spike_item_price_edit_commands"
     public static let itemDetailsEditCommands = "spike_item_details_edit_commands"
+    public static let transactionDetailsEditCommands = "spike_transaction_details_edit_commands"
     public static let uninvoicedReturnCommands = "spike_uninvoiced_return_commands"
     public static let paidReturnCommands = "spike_paid_return_commands"
     public static let expenseCommands = "spike_expense_commands"
@@ -79,6 +80,7 @@ public enum LedgerPowerSyncSchema {
                       .text("category_id"), .text("non_item_receipt_lines"),
                       .text("source"), .text("transaction_date"), .text("created_at_ms"),
                       .text("notes"), .text("payment_method"), .integer("has_email_receipt"),
+                      .text("details_revision"),
                       .text("legacy_subtotal_minor_units"), .text("legacy_tax_rate_pct")],
             indexes: [.ascending(name: "transaction_project", columns: ["account_id", "project_id"])]),
         Table(name: LedgerPowerSyncTable.transactionReceiptItems,
@@ -583,6 +585,14 @@ public enum LedgerPowerSyncSchema {
             name: LedgerPowerSyncTable.categoryCommands,
             columns: [
                 .text("account_id"), .text("actor_principal_id"),
+                .text("contract_version"), .text("fingerprint"), .text("envelope_json")
+            ],
+            insertOnly: true
+        ),
+        Table(
+            name: LedgerPowerSyncTable.transactionDetailsEditCommands,
+            columns: [
+                .text("account_id"), .text("actor_principal_id"), .text("transaction_id"),
                 .text("contract_version"), .text("fingerprint"), .text("envelope_json")
             ],
             insertOnly: true

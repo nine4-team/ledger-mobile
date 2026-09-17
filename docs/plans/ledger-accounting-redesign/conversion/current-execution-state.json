@@ -1,6 +1,6 @@
 {
   "schemaVersion": 2,
-  "stateVersion": 1417,
+  "stateVersion": 1489,
   "userRequestedPause": {
     "date": "2026-09-15",
     "status": "resumed",
@@ -21,20 +21,21 @@
     "meaning": "Historical attempt1 passed all five jobs including1086native tests/156suites and25Mac/30iPhoneUI tests. Attempt2 failed iOS UI. Not a currently clean full-UI baseline or broad Item/Purchase/hosted/migration/cutover proof."
   },
   "activeWorkflow": {
-    "id": "item-credit-after-payment",
-    "integrationWorkflowIds": ["project-budget-progress", "item-credit-after-payment", "invoice-report-readback", "downloaded-item-browsing-and-detail", "project-invoicing-workspace", "account-profile-readback", "item-history-source-reconciliation"],
+    "id": "transaction-browser-and-detail",
     "kind": "product_ui",
     "status": "implementation",
     "recordPath": "docs/plans/ledger-accounting-redesign/conversion/product-behavior-checklist.json",
-    "outcome": "Return a paid Item to Inventory, preserving its paid Invoice, line, Transaction and historical membership. Create one retry-safe credit linked to the original paid line and return, using frozen amount/category and immediately reducing Furnishings progress. No cash refund or settlement is implied.",
-    "baseCommit": "e58ebbcb000000c3e53c1027cb24e26b230ae803",
+    "outcome": "Preserve shared Project/Inventory search/sort/filter, cards/detail, selection/copy and honest readiness/financial visibility. Keep Project-only Add/select-all/export and Inventory-only planning distinct. Compose Item, receipt, media/history and owning mutation routes; a visible tab alone is not completion.",
+    "baseCommit": "7ed45e59b406ca9e599eeefa75704abbaee9e559",
+    "integrationWorkflowIds": ["downloaded-item-browsing-and-detail", "account-profile-readback", "inventory-return-to-source-project", "item-history-source-reconciliation", "item-space-assignment", "project-invoicing-workspace", "learned-account-removal-enforcement", "transaction-browser-and-detail"],
     "nextActions": [
-      "CI35217559458 failed in property-report stream assertion before native jobs. Corrected test-only overlap/category assumptions;156 SQL captures and remaining real MCP/HTTP report check pass locally. No duplicate CI dispatched; native integration remains unverified.",
-      "Additional Requests storage/tag edits absent; excluded categories are NOT this overlay. Async question pending: changing tag recomputes past Project activity vs frozen billing-time tag. Do not choose silently. O011 separately gates Transfer carry. Continue independent budget/MCP or accounting work. UI tests await unlock; failed CI35189334761 stays failed.",
-      "Credit settlement and cash refunds are excluded; preserve original paid source and history."
+      "Checkpoint Transaction descriptive editing: reused controls, pending/rejected recovery, unchanged Save/Cancel, native offline/restart/upload/readback and focused iPhone checks passed. Keep Mac interaction and exact-commit integration acceptance outstanding. Review shared Space dependencies before partial staging; no viewer reconstruction.",
+      "Prior CI failed; preserve integrationCI evidence. No broad context-recovery rerun. Desktop was locked at last check; do not launch waiting Mac UI tests."
     ]
   },
   "blockers": [
+    "O031 acquisition cost basis and O053 Space assignment/clear/checklist/photo permissions remain unanswered after Sept17 async questions. Space SQL writer remains private; independent Transaction descriptive edits are not blocked.",
+    "Sept17 async questions sent for O027 (name OR photo OR note minimum) and O016 (save Business-paid Link with explicitly missing purchase evidence). No answers yet; proposals are not approval.",
     "O-051 rejected-operation correction/replacement/resolution remains unapproved; preserve pending work and continue independent outcomes.",
     "2026-09-15: manual collection prompts for amount; no partial-payment feature; Expenses editable until collected. Saved in specs/log. Full O-006/O-033 packet not approved; no mandatory resend gate (O-034 open).",
     "O-023 attachment removal/retention, O-032 payment evidence, O-034 sent revisions, O-009 adjustments and O-060 mixed visibility remain unresolved in the decision log.",
@@ -53,17 +54,14 @@
     "instruction": "Follow the active checklist record and nextActions. Preserve failures; no full-suite context recovery."
   },
   "currentTask": {
-    "id": "item-credit-after-payment",
+    "id": "transaction-browser-and-detail",
     "status": "implementation",
-    "acceptanceCheckIds": ["PAID-RETURN-OFFLINE","PAID-RETURN-REPLAY"],
-    "meaning": "Verify paid-return offline acceptance, encrypted restart, exact replay and real service readback; Budget retains its separate remaining gaps.",
-    "verificationCommands": ["Node24 --import ./LedgerTargetMCP/node_modules/tsx/dist/loader.mjs scripts/test-local-inventory-sale-http.mjs --mixed --mcp --financial --native-paid-return"],
-    "lastResult": "CI35217559458 failed: test assumed all Invoicing tables overlap property report. Test now explicitly checks four shared tables and separate return-credit absence;156 actual SQL captures pass locally. Also validates account-wide category IDs instead of assuming one seeded category. No product/stream changes. Failed log /tmp/ledger-integration-ci-35217559458-failed.log. Native CI skipped, not passed.",
+    "acceptanceCheckIds": ["TX-DETAIL-EDIT"],
+    "meaning": "Transaction descriptive editing is connected through offline Save and reused controls, with local native/MCP/database and focused iPhone evidence. Mac interaction and exact-commit integrated verification remain; broader Transaction financial editing is not claimed complete.",
+    "verificationCommands": ["npm run conversion:check","swift test --package-path LedgeriOS --no-parallel --filter EditTransactionDetailsCommandTests"],
+    "lastResult": "iPhone22689 Details Cancel/source/payment clear/No/rejected retention PASS24.809s /tmp/ledger-transaction-edit-details-iphone.log. Prior notes/reopen, actual native sync, queue/MCP/SQL checks passed. Environment85813/conversion/diffPASS. Path review recorded. Desktop locked (ioreg), no Mac UI launched. No active processes/hosted/push/CI.",
     "activeProcesses": {},
-    "integrationCI": {"run":35217559458,"attempt":1,"commit":"3e1e055ac1a23ab3c63fc5bd39a2638e0d9e8ca0","status":"failed","meaning":"Conversion passed; provider failed in report stream test; native jobs skipped. Local test correction passed156 captures, uncommitted. Previous35189334761 remains failed. No duplicate dispatch."},
-    "desktopPrerequisite": "30132 exit65: buildPASS, zeroUI tests; automation mode timed out. CUA confirmed Mac locked; user asked to unlock. /tmp/ledger-mac-sheet-scroll-20260917.log. Dirty reveal helper fixes background-scroll selection from CI evidence; verify ArchivedFees/CreateInvoice after unlock. No unchanged retry.",
-    "resaleBatchCI": {"run":35094251669,"attempt":1,"commit":"7836695f2a766960a1bd7de2644bc255d6bc63f0","status":"failed","url":"https://github.com/nine4-team/ledger-mobile/actions/runs/35094251669"},
-    "returnBatchCI": {"run":35093201085,"attempt":1,"commit":"726431917f3acdd3091e7ca369222c5225c00754","status":"failed"},
-    "nextWorkflowDecision": "Focused CI failure follow-up finished:156 stream captures pass; remaining MCP/HTTP report check passes under Node24 (/tmp/ledger-resume-report-mcp.log); conversion check passes. Test-only fix remains uncommitted. Continue approved workflow selection; O033 still explicitly requires decision on payment mismatch, not resolved by manual collection confirmation. Preserve failed exact3e1e055a evidence; seven iPhone scenarios passed, do not repeat. Mac lock does not block simulator."
+    "integrationCI": {"run":35218414703,"attempt":1,"commit":"7ed45e59b406ca9e599eeefa75704abbaee9e559","status":"failed","meaning":"Completed13:01:47UTC. Provider/conversion PASS; Mac boundary failed (local fix). iOS1hour timeout:73passed,3failed of76finished, remaining unexecuted. Full log /tmp/ledger-ci-35218414703-ios-latest.log: capture first Photos picker still Loading; category reorder order assertion; Invoice cancel picker appears in final AX dump after15s wait failed. Diagnose targeted readiness/drag, no UI rebuild or blanket retry. Live log was incomplete; tests began12:13, not compile hang."},
+    "nextWorkflowDecision": "Prepare coherent checkpoint/integrated verification; retain Mac interaction gap while desktop locked. Transaction descriptive path has local end-to-end/iPhone evidence, not whole Transaction completion: cash/date/type/audit writes remain. Preserve dirty Space work; shared schema/sync/checker/docs contain both scopes, do not blindly stage unrelated hunks. Three Transaction migrations already LOCAL; no replay or blanket context-recovery tests."
   }
 }

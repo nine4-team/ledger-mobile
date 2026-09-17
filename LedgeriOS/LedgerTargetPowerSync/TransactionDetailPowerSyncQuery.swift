@@ -131,7 +131,7 @@ struct TransactionDetailPowerSyncQuery: TransactionDetailReading, TransactionExp
             let rows = try transaction.getAll(sql: """
                 SELECT id,account_id,project_id,client_id,scope_kind,type,role,origin,
                     amount_minor_units,currency,category_id,source,transaction_date,created_at_ms,
-                    notes,payment_method,has_email_receipt,non_item_receipt_lines,
+                    notes,payment_method,has_email_receipt,details_revision,non_item_receipt_lines,
                     legacy_subtotal_minor_units,legacy_tax_rate_pct
                 FROM spike_transactions WHERE account_id=? AND (? IS NULL OR id=?)
                     AND scope_kind=? AND project_id IS ? AND client_id IS ?
@@ -189,6 +189,7 @@ struct TransactionDetailPowerSyncQuery: TransactionDetailReading, TransactionExp
                     for (field, column) in [("projectId", "project_id"), ("clientId", "client_id"),
                         ("source", "source"), ("transactionDate", "transaction_date"),
                         ("createdAtMilliseconds", "created_at_ms"), ("notes", "notes"), ("paymentMethod", "payment_method"),
+                        ("detailsRevision", "details_revision"),
                         ("legacySubtotalMinorUnits", "legacy_subtotal_minor_units"), ("legacyTaxRatePct", "legacy_tax_rate_pct")] {
                         wire[field] = try cursor.getStringOptional(name: column) as Any? ?? NSNull()
                     }

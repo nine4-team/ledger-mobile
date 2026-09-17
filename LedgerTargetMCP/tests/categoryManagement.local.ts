@@ -10,6 +10,7 @@ import { realpathSync, readFileSync } from "node:fs";
 import { manageCategoriesTool, SupabaseCategoryManagementApplier, type CategoryManagementInput } from "../src/categoryManagement.js";
 import { SupabaseTransactionReceiptReader } from "../src/transactionReceiptRead.js";
 import { SupabaseTransactionDetailReader } from "../src/transactionDetailRead.js";
+import { transactionDetailsEditTool } from "../src/transactionDetailsEdit.js";
 
 const root = fileURLToPath(new URL("../../", import.meta.url));
 assert.ok(!process.env.DOCKER_HOST && !process.env.DOCKER_CONTEXT, "Local tests refuse Docker endpoint overrides");
@@ -358,6 +359,7 @@ try {
   assert.equal(visibleDetail.notes, "Preserved notes");
   assert.equal(visibleDetail.paymentMethod, "Company card");
   assert.equal(visibleDetail.hasEmailReceipt, false);
+  assert.equal(visibleDetail.detailsRevision, "2");
   assert.equal(visibleDetail.legacySubtotalMinorUnits, "9007199254740993");
   assert.equal(visibleDetail.legacyTaxRatePct, "8.12345678901234567890");
   assert.equal(visibleReceipt.category.kind, "general");
@@ -375,6 +377,7 @@ try {
   assert.equal(streamedDetail.notes, visibleDetail.notes);
   assert.equal(streamedDetail.payment_method, visibleDetail.paymentMethod);
   assert.equal(streamedDetail.has_email_receipt, visibleDetail.hasEmailReceipt);
+  assert.equal(streamedDetail.details_revision, visibleDetail.detailsRevision);
   assert.equal(streamedDetail.legacy_subtotal_minor_units, visibleDetail.legacySubtotalMinorUnits);
   assert.equal(streamedDetail.legacy_tax_rate_pct, visibleDetail.legacyTaxRatePct);
   assert.equal(memberStream.spike_budget_categories.find(row => row.id === a)?.kind, "general");
@@ -780,6 +783,7 @@ try {
     assert.equal(native.status, 0, `Native test output:\n${native.stdout.slice(-6000)}\nBuild diagnostics:\n${native.stderr.slice(-2000)}`);
     assert.match(output, /Test run with 1 test.*passed/,
       "Selected native integration tests must execute");
+    if (liveReplication) console.log("PASS: native Transaction edit saves offline, survives encrypted restart, uploads, replicates exact readback and preserves other fields");
     if (liveReplication) console.log("PASS: actual local PowerSync download, offline category edit, encrypted reopen, upload and replicated receipt readback");
     if (liveReplication) console.log("PASS: real downloaded Transaction browser metadata, explicit partial scope, offline reopen, optimistic/reconciled category changes and post-removal denial");
     if (liveReplication) console.log("PASS: Project export uses complete authorized current-origin rows and processed order online/offline; removal denies export");
@@ -800,6 +804,36 @@ try {
         console.log("PASS: native Supabase Auth receipt/history read and app connection upload Client, inline category and linked Project after encrypted restart");
       }
     }
+  }
+  if (process.argv.includes('--transaction-edit')) {
+    const before = await details.read({ transactionId: receiptId }, owner);
+    assert.ok(before.detailsRevision);
+    const edit = { operationUUID: randomUUID(), clientCreatedAtMilliseconds: 123000, payload: {
+      transactionId: receiptId, scopeKind: before.scopeKind, projectId: before.projectId, clientId: before.clientId,
+      expectedRevision: before.detailsRevision, changes: { notes: 'Edited via MCP 🪑', paymentMethod: null }
+    } };
+    const result = await transactionDetailsEditTool(edit, owner, details);
+    assert.equal(result.phase, 'applied');
+    assert.deepEqual(await transactionDetailsEditTool(edit, owner, details), result);
+    const after = await details.read({ transactionId: receiptId }, owner);
+    assert.deepEqual(after, { ...before, notes: 'Edited via MCP 🪑', paymentMethod: null,
+      detailsRevision: String(BigInt(before.detailsRevision) + 1n) });
+    const stale = await transactionDetailsEditTool({ ...edit, operationUUID: randomUUID() }, owner, details);
+    assert.equal(stale.errorCode, 'transaction_edit_stale');
+    await assert.rejects(transactionDetailsEditTool({ ...edit, payload: { ...edit.payload,
+      changes: { notes: 'Changed retry' } } }, owner, details), { code: 'transaction_edit_request_failed' });
+    await assert.rejects(transactionDetailsEditTool({ ...edit, operationUUID: randomUUID() }, member, details),
+      { code: 'transaction_edit_unavailable' });
+    await assert.rejects(transactionDetailsEditTool({ ...edit, operationUUID: randomUUID() },
+      { ...owner, accountId: foreignAccountId }, details), { code: 'transaction_edit_unavailable' });
+    const paid = await details.read({ transactionId: `${receiptId}-payment` }, owner);
+    await assert.rejects(transactionDetailsEditTool({ ...edit, operationUUID: randomUUID(), payload: {
+      ...edit.payload, transactionId: paid.transactionId, scopeKind: paid.scopeKind,
+      projectId: paid.projectId, clientId: paid.clientId, expectedRevision: paid.detailsRevision!
+    } }, owner, details), { code: 'transaction_edit_unavailable' });
+    assert.deepEqual(await details.read({ transactionId: paid.transactionId }, owner), paid);
+    assert.deepEqual(await details.read({ transactionId: receiptId }, owner), after);
+    console.log('PASS: real HTTP Transaction descriptive edit/readback, exact retry, stale/conflicting edit and removed/foreign/imported-payment denial; cash/history unchanged');
   }
 } finally {
   // The local test owns these exact synthetic Accounts. Bypass immutable-history

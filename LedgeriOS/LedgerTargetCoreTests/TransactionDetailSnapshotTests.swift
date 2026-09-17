@@ -41,6 +41,21 @@ struct TransactionDetailSnapshotTests {
         }
     }
 
+    @Test func descriptiveRevisionIsExactAndMissingIsNotInvented() throws {
+        var wire = try Self.fixture()
+        #expect(try Self.decode(wire).detailsRevision == nil)
+        wire["detailsRevision"] = NSNull()
+        #expect(try Self.decode(wire).detailsRevision == nil)
+        wire["detailsRevision"] = "9007199254740993"
+        let row = try Self.decode(wire)
+        #expect(row.detailsRevision == 9_007_199_254_740_993)
+        #expect(try JSONDecoder().decode(TransactionDetailSnapshot.self, from: JSONEncoder().encode(row)) == row)
+        for invalid in ["0", "-1", "01", "1.0", "9223372036854775808"] {
+            wire["detailsRevision"] = invalid
+            #expect(throws: TransactionDetailSnapshot.Failure.invalidEvidence) { try Self.decode(wire) }
+        }
+    }
+
     @Test func legacyAmountsAreExactOptionalAndNotReceiptInputs() throws {
         var wire = try Self.fixture()
         wire["legacySubtotalMinorUnits"] = "9007199254740993"

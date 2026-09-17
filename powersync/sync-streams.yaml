@@ -183,6 +183,7 @@ streams:
                spike_transactions.source, spike_transactions.transaction_date::text AS transaction_date,
                spike_transactions.created_at_ms::text AS created_at_ms, spike_transactions.notes,
                spike_transactions.payment_method, spike_transactions.has_email_receipt,
+               spike_transactions.details_revision::text AS details_revision,
                spike_transactions.legacy_subtotal_minor_units::text AS legacy_subtotal_minor_units,
                spike_transactions.legacy_tax_rate_pct::text AS legacy_tax_rate_pct
         FROM spike_transactions
@@ -526,6 +527,7 @@ streams:
           spike_transactions.source, spike_transactions.transaction_date::text AS transaction_date,
           spike_transactions.created_at_ms::text AS created_at_ms, spike_transactions.notes,
           spike_transactions.payment_method, spike_transactions.has_email_receipt,
+          spike_transactions.details_revision::text AS details_revision,
           spike_transactions.legacy_subtotal_minor_units::text AS legacy_subtotal_minor_units,
           spike_transactions.legacy_tax_rate_pct::text AS legacy_tax_rate_pct
         FROM spike_transactions
@@ -548,6 +550,7 @@ streams:
           spike_transactions.source, spike_transactions.transaction_date::text AS transaction_date,
           spike_transactions.created_at_ms::text AS created_at_ms, spike_transactions.notes,
           spike_transactions.payment_method, spike_transactions.has_email_receipt,
+          spike_transactions.details_revision::text AS details_revision,
           spike_transactions.legacy_subtotal_minor_units::text AS legacy_subtotal_minor_units,
           spike_transactions.legacy_tax_rate_pct::text AS legacy_tax_rate_pct
         FROM spike_transactions

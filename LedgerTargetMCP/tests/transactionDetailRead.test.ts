@@ -9,6 +9,17 @@ import { SupabaseTransactionDetailReader, transactionDetail, transactionList } f
 const context = { accountId: "account-primary", principalId: "principal-restricted",
   accessToken: `e30.${Buffer.from(JSON.stringify({ role: "authenticated" })).toString("base64url")}.signature` };
 const fixture = () => JSON.parse(readFileSync(new URL("./fixtures/transaction-detail.json", import.meta.url), "utf8"));
+test("descriptive revision is exact and older downloads do not invent an edit token", () => {
+  const input = fixture();
+  assert.equal(transactionDetail(input, input.transactionId, context).detailsRevision, undefined);
+  for (const value of [null, "1", "9007199254740993", "9223372036854775807"]) {
+    assert.equal(transactionDetail({ ...input, detailsRevision: value }, input.transactionId, context).detailsRevision, value);
+  }
+  for (const value of [0, 1, "0", "-1", "01", "1.0", "1\n", "9223372036854775808"]) {
+    assert.throws(() => transactionDetail({ ...input, detailsRevision: value }, input.transactionId, context),
+      { code: "transaction_detail_server_result_mismatch" });
+  }
+});
 test("current Item categories are explicit Project evidence, not receipt-category inference", () => {
   const item = { itemId: "item", placementId: "placement", categoryId: "different-category" };
   const input = { ...fixture(), scopeKind: "project", projectId: "project", clientId: "client",

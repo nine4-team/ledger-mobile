@@ -96,6 +96,7 @@ targets:
       - path: LedgeriOS/Components/FormDateField.swift
       - path: LedgeriOS/Models/Shared/FormSheetAction.swift
       - path: LedgeriOS/Components/FormField.swift
+      - path: LedgeriOS/Components/FormSelect.swift
       - path: LedgeriOS/Components/FeeInstallmentFormPresentation.swift
       - path: LedgeriOS/Components/InlineOptionPicker.swift
       - path: LedgeriOS/Components/AppButton.swift

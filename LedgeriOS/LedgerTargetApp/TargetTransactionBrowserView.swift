@@ -108,7 +108,8 @@ private struct BoundTransactionBrowserView: View {
                         watch: { [browser, scope = session.scope] in browser.watchTransactions(scope: scope) }),
                     transactionId: selectedDetailId, scopeName: scopeName, itemReader: itemReader,
                     spaceNavigation: spaceNavigation,
-                    attachmentReader: browser as? any DownloadedTransactionAttachmentReading)
+                    attachmentReader: browser as? any DownloadedTransactionAttachmentReading,
+                    editor: browser as? any TransactionDetailsEditing)
                     .environment(find)
                     .navigationTitle("Transaction")
                     .toolbar { ToolbarItem(placement: .confirmationAction) { Button("Done") { self.selectedDetailId = nil } } }
@@ -181,12 +182,13 @@ private struct TransactionNavigationDetail: View {
     let itemReader: (any DownloadedItemPlacementHistoryReading)?
     let spaceNavigation: ItemSpaceNavigation?
     let attachmentReader: (any DownloadedTransactionAttachmentReading)?
+    let editor: (any TransactionDetailsEditing)?
 
     var body: some View {
         Group {
             if let row = session.rows.first(where: { $0.transactionId == transactionId }) {
                 TransactionReadDetail(row: row, scopeName: scopeName, itemReader: itemReader,
-                    spaceNavigation: spaceNavigation, attachmentReader: attachmentReader)
+                    spaceNavigation: spaceNavigation, attachmentReader: attachmentReader, editor: editor)
                     .id(row.transactionId)
             } else if session.state == .loading {
                 ProgressView("Loading Transaction…")
@@ -205,6 +207,14 @@ private struct TransactionReadDetail: View {
     let itemReader: (any DownloadedItemPlacementHistoryReading)?
     let spaceNavigation: ItemSpaceNavigation?
     let attachmentReader: (any DownloadedTransactionAttachmentReading)?
+    let editor: (any TransactionDetailsEditing)?
+    @State private var editSelection: EditSelection?
+    private struct EditSelection: Identifiable {
+        let id = UUID()
+        let row: TransactionDetailSnapshot
+        let notesOnly: Bool
+    }
+    private var canEdit: Bool { editor != nil && row.origin == .vendorPayment && row.detailsRevision != nil }
     @State private var notesExpanded = true
     @State private var detailsExpanded = true
     @State private var expandedItemSections: Set<String> = ["linked", "payment"]
@@ -228,6 +238,11 @@ private struct TransactionReadDetail: View {
                 .itemThumbnailViewport()
                 .accessibilityIdentifier("target-transaction-detail-scroll")
         }
+        .sheet(item: $editSelection) { selection in
+            if let editor {
+                TransactionDetailsEditForm(session: .init(original: selection.row, service: editor), notesOnly: selection.notesOnly)
+            }
+        }
         #if DEBUG
         .toolbar {
             if ProcessInfo.processInfo.arguments.contains("--ledger-ui-test-transaction-attachments"),
@@ -250,10 +265,12 @@ private struct TransactionReadDetail: View {
                             section: section, reader: attachmentReader, onPin: { pinnedAttachment = $0 })
                     }
                 }
-                CollapsibleSection(title: "Notes", isExpanded: $notesExpanded) {
+                CollapsibleSection(title: "Notes", isExpanded: $notesExpanded,
+                    onEdit: canEdit ? { editSelection = .init(row: row, notesOnly: true) } : nil) {
                     NotesContent(notes: row.notes).padding(.top, Spacing.xs)
                 }
-                CollapsibleSection(title: "Details", isExpanded: $detailsExpanded) {
+                CollapsibleSection(title: "Details", isExpanded: $detailsExpanded,
+                    onEdit: canEdit ? { editSelection = .init(row: row, notesOnly: false) } : nil) {
                     VStack(spacing: 0) {
                         DetailRow(label: "Vendor / Source", value: row.source ?? "Unknown")
                         DetailRow(label: "Amount", value: TransactionBrowserSession.amountText(row))
@@ -310,7 +327,7 @@ private struct TransactionReadDetail: View {
                         }.accessibilityIdentifier("target-transaction-collected-invoice")
                     }
                 }
-                Text("Editing, attachment mutation and Item mutation actions are still being connected.").font(.caption)
+                Text("Accounting, attachment mutation and Item mutation actions are still being connected.").font(.caption)
             }.padding(Spacing.screenPadding)
         }.findEntity(id: row.transactionId.rawValue)
         .sheet(item: $selectedItem) { selected in

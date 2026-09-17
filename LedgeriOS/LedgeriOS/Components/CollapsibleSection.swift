@@ -57,6 +57,7 @@ struct CollapsibleSection<Content: View>: View {
                             .contentShape(Rectangle())
                     }
                     .buttonStyle(.plain)
+                    .accessibilityLabel("Edit \(title)")
                 }
 
                 if let onAdd {

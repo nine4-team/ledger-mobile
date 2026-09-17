@@ -4287,3 +4287,68 @@ conflicting retries fail. Imported prices retain `imported_invoice_amount`, not
 invented custody or return eligibility. This is a local operator boundary, not
 authorization to migrate data; Swift mapping input and imported paid-return
 end-to-end verification remain unfinished.
+
+## 2026-09-17 — Space assignment is not a new billing/custody cycle
+
+The existing physical placement guard allowed only closing an interval. Reusing
+that interval model by closing/reopening on every Space edit would incorrectly
+separate current Items from charge/Invoice links attached to the Project cycle.
+Set Space instead changes only the open interval's Space, retaining the physical
+Item, Project/Inventory interval identity, start evidence and accounting links.
+Closed intervals remain immutable; Project/Inventory movement still creates a
+successor. A private immutable `item_space_changes` fact records old/new Space,
+actor, server time and placement revision. This is Space-change provenance, not
+a competing purchase/payment history or a fabricated prior assignment timeline.
+
+`item_placement_versions` provides a per-Item optimistic concurrency token,
+separate from descriptive Item revision. Inserts, closures and Space changes
+advance it, so leaving and returning to the same Project cannot revive a stale
+assignment intent. Existing Items start with token1; that value is not a claim
+about the number of historical moves. Derived Space counts use old/new net
+membership changes rather than assuming every placement update is a closure.
+
+The internal atomic handler reuses operation receipts and exact-byte replay;
+it checks actor, active membership, scope, destination revision and each selected
+placement revision. Clear also checks each old Space. Neither the handler nor
+its tables permit direct app writes. Local tests cover assignment/clear/history,
+rollback, replay and denied input. Pending before exposure: concurrent races,
+photo-checkmark closure, app/MCP transport and reused-picker interactions.
+O-053 also gates the final role/capability policy; internal active-membership
+checks are not approval to expose these commands to every Employee.
+No hosted deployment or cutover is implied.
+
+The token includes its current placement/Space and derived Project routing.
+The local reader only offers it when the downloaded placement and Space match;
+partial replication cannot pair a fresh token with an older location. Missing,
+malformed or out-of-range tokens remain unavailable, not a guessed revision.
+Existing Project and Inventory subscriptions carry the same projection, without
+per-Item subscription fan-out. Encrypted local reopen and actual local
+Auth/PowerSync Inventory→Project movement tests pass; assignment upload itself
+is not yet integrated.
+
+## 2026-09-17 — Transaction descriptive edits have a separate revision
+
+Preserved source/notes/payment-method/email-receipt edits use the existing
+operation/result protocol, not a new Transaction entity or accounting writer.
+`spike_transactions.details_revision` advances when these fields change; it
+does not claim to version cash, placement or the entire receipt. This avoids
+silently overwriting another descriptive edit without conflating category or
+attachment revisions. Unchanged values do not manufacture a revision.
+
+The private handler locks current membership, the Transaction and its category,
+checks exact scope and visibility before replay, and retains the imported-payment
+immutable guard. No amount/date/type, receipt-line, Item or frozen-Invoice field
+is writable through this command. Existing imported payments remain outside
+this edit route; this does not settle their correction workflow.
+
+Local SQL tests and observed competing-edit/retry/rollback/revocation races pass;
+the workflow checklist owns the exact evidence. The existing read projection
+now carries the revision, and an authenticated invoker RPC exposes the checked
+handler for local integration. Native/MCP wire fingerprints agree; actual MCP
+HTTP edits and immutable-payment denial pass. The native offline queue and reused
+Notes/Details controls are now connected. Encrypted restart, exact retry, real
+local upload/readback and focused iPhone interactions pass. Reopening an edit
+recovers its pending or rejected values; applied work is released after a newer
+authoritative revision arrives. Rejected-operation resolution policy is unchanged.
+Mac interaction and exact-commit integration acceptance remain outstanding; the
+workflow checklist owns those gaps. No hosted deployment is implied.

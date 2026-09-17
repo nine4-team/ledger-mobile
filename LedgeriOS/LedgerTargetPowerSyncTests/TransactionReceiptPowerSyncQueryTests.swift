@@ -61,6 +61,7 @@ struct TransactionReceiptPowerSyncQueryTests {
                     "amount_minor_units": "3050", "currency": "USD", "category_id": "category",
                     "source": "Café vendor", "transaction_date": "2024-02-29", "created_at_ms": "1709251200123",
                     "notes": "Preserved notes", "payment_method": "Company card", "has_email_receipt": 0,
+                    "details_revision": "9007199254740993",
                     "legacy_subtotal_minor_units": "9007199254740993", "legacy_tax_rate_pct": "8.12345678901234567890",
                     "non_item_receipt_lines": try json([
                         ["id": "tax", "description": "Tax", "amountMinorUnits": "100", "effect": "increase", "quantity": "10"],
@@ -121,6 +122,7 @@ struct TransactionReceiptPowerSyncQueryTests {
             }
             let original = try await read(db)
             let originalDetail = try await detail(db)
+            #expect(originalDetail.detailsRevision == 9_007_199_254_740_993)
             #expect(try await attachments(db).isComplete == false)
             _ = try await db.execute(sql: "INSERT INTO transaction_attachment_sets(id,account_id,transaction_id,section,revision,expected_count) VALUES('receipt-set',?,'receipt','receipts','1',0)", parameters: [account.rawValue])
             #expect(try await attachments(db).isComplete)
@@ -241,6 +243,7 @@ struct TransactionReceiptPowerSyncQueryTests {
             let reopenedProjects = try await db.syncStream(name: "spike_projects", params: nil).subscribe()
             let reopened = try await read(db)
             let reopenedDetail = try await detail(db)
+            #expect(reopenedDetail.detailsRevision == originalDetail.detailsRevision)
             #expect(try await attachments(db) == currentAttachments)
             #expect(reopenedDetail.source == originalDetail.source && reopenedDetail.notes == originalDetail.notes)
             #expect(reopenedDetail.transactionDate == originalDetail.transactionDate)

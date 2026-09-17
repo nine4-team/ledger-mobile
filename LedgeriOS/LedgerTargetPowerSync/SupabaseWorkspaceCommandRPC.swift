@@ -4,6 +4,7 @@ import LedgerTargetCore
 /// Transport mappings for the existing Client/Project/category command ports.
 /// Business validation and terminal-result checks stay in their existing owners.
 struct SupabaseWorkspaceCommandRPC: ClientCreationCommandApplying, ProjectCreationCommandApplying,
+    EditTransactionDetailsApplying,
     CategoryManagementCommandApplying, InventorySaleCommandApplying, EditUncollectedItemPriceApplying, EditItemDetailsApplying, ReturnUninvoicedItemsCommandApplying, ReturnPaidItemsCommandApplying, CreateExpenseCommandApplying, EditExpenseCommandApplying, CreateInvoiceCommandApplying, ReviseCreatedInvoiceCommandApplying, CreateFeeInstallmentCommandApplying, InventorySaleReviewReading, TransactionReceiptReading, Sendable {
     enum Failure: Error, Equatable { case scopeMismatch, invalidResponse, rejected(Int) }
     let url: URL
@@ -49,6 +50,15 @@ struct SupabaseWorkspaceCommandRPC: ClientCreationCommandApplying, ProjectCreati
         let result: TransactionReceiptSnapshot = try await call("spike_read_transaction_receipt", body: body)
         try result.validate(accountId: authorization.accountId, principalId: authorization.principalId,
             transactionId: transactionId)
+        return result
+    }
+
+    func apply(_ command: EditTransactionDetailsCommand) async throws -> EditTransactionDetailsServerResult {
+        try requireScope(account: command.envelope.accountId.rawValue,
+                         principal: command.envelope.actorPrincipalId.rawValue)
+        let request = try EditTransactionDetailsUploadRequest(command)
+        let result: EditTransactionDetailsServerResult = try await call("spike_edit_transaction_details", body: request.rpcBody)
+        try result.validate(for: command)
         return result
     }
 

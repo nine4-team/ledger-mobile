@@ -51,6 +51,8 @@ public struct TransactionDetailSnapshot: Codable, Equatable, Sendable {
     public let notes: String?
     public let paymentMethod: String?
     public let hasEmailReceipt: Bool?
+    /// Missing on older downloads: browsing remains available, editing does not.
+    public let detailsRevision: Int64?
     /// Original source metadata, never inferred or used in receipt arithmetic.
     public let legacySubtotal: Money?
     public let legacyTaxRatePct: String?
@@ -111,6 +113,8 @@ public struct TransactionDetailSnapshot: Codable, Equatable, Sendable {
         notes = wire.notes
         paymentMethod = wire.paymentMethod
         hasEmailReceipt = wire.hasEmailReceipt
+        detailsRevision = try wire.detailsRevision.map(Self.integer)
+        if let detailsRevision, detailsRevision <= 0 { throw Failure.invalidEvidence }
         let currency = amount.currency
         legacySubtotal = try wire.legacySubtotalMinorUnits.map {
             Money(minorUnits: try Self.integer($0), currency: currency)
@@ -156,6 +160,7 @@ public struct TransactionDetailSnapshot: Codable, Equatable, Sendable {
             category: category.map { .init(id: $0.id.rawValue, name: $0.name, revision: String($0.revision), kind: $0.kind) },
             source: source, transactionDate: transactionDate, createdAtMilliseconds: createdAtMilliseconds.map(String.init),
             notes: notes, paymentMethod: paymentMethod, hasEmailReceipt: hasEmailReceipt,
+            detailsRevision: detailsRevision.map(String.init),
             legacySubtotalMinorUnits: legacySubtotal.map { String($0.minorUnits) },
             legacyTaxRatePct: legacyTaxRatePct,
             currentItemCategories: currentItemCategories.map { rows in rows.map {
@@ -197,6 +202,7 @@ public struct TransactionDetailSnapshot: Codable, Equatable, Sendable {
         let category: CategoryWire?
         let source, transactionDate, createdAtMilliseconds, notes, paymentMethod: String?
         let hasEmailReceipt: Bool?
+        let detailsRevision: String?
         let legacySubtotalMinorUnits, legacyTaxRatePct: String?
         let currentItemCategories: [ItemCategoryWire]?
         let receipt: TransactionReceiptSnapshot?
