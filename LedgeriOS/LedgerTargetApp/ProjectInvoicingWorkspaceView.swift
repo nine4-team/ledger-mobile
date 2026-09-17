@@ -306,6 +306,7 @@ struct ProjectInvoicingWorkspaceView: View {
                 for try await value in runtime.watchExpenses(accountId: accountId, projectId: projectId) {
                     if Task.isCancelled { return }; expenses = value
                 }
+                if !Task.isCancelled { expenses = nil; expenseError = "Expenses are unavailable." }
             } catch { if !Task.isCancelled { expenses = nil; expenseError = "Expenses are unavailable." } }
         }
         .task(id: projectId) {
@@ -314,6 +315,7 @@ struct ProjectInvoicingWorkspaceView: View {
                 for try await value in runtime.watchCollectedInvoices(accountId: accountId, projectId: projectId) {
                     if Task.isCancelled { return }; invoices = value
                 }
+                if !Task.isCancelled { invoices = nil; invoiceError = "Invoices are unavailable." }
             } catch { if !Task.isCancelled { invoices = nil; invoiceError = "Invoices are unavailable." } }
         }
         .task(id: projectId) {
@@ -341,8 +343,14 @@ struct ProjectInvoicingWorkspaceView: View {
                     guard !Task.isCancelled else { return }
                     liveInvoices = value; pendingInvoices = pending; feeReview = review; pendingFees = feePending
                 }
-                if !Task.isCancelled { liveInvoices = nil; pendingInvoices = []; liveInvoiceError = "Live Invoices are unavailable." }
-            } catch { if !Task.isCancelled { liveInvoices = nil; pendingInvoices = []; liveInvoiceError = "Live Invoices are unavailable." } }
+                if !Task.isCancelled {
+                    liveInvoices = nil; pendingInvoices = []; feeReview = nil; pendingFees = []
+                    liveInvoiceError = "Live Invoices are unavailable."
+                }
+            } catch { if !Task.isCancelled {
+                liveInvoices = nil; pendingInvoices = []; feeReview = nil; pendingFees = []
+                liveInvoiceError = "Live Invoices are unavailable."
+            } }
         }
     }
 

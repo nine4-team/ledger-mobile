@@ -1443,6 +1443,33 @@ final class WorkspaceChecklistUITests: XCTestCase {
         #endif
     }
 
+    #if os(iOS)
+    func testInvoicingClearsRowsWhenFinancialStreamsEnd() throws {
+        continueAfterFailure = false
+        let app = XCUIApplication()
+        app.launchArguments = ["--ledger-ui-test-workspace-checklist", "--ledger-ui-test-item-credit",
+            "--ledger-ui-test-paid-expense", "--ledger-ui-test-invoicing-stream-end"]
+        app.launch(); defer { app.terminate() }
+        let project = app.buttons["target-active-project-card-project-ui-test"]
+        XCTAssertTrue(project.waitForExistence(timeout: 10)); project.tap()
+        let invoicing = app.buttons["target-project-invoicing"]
+        reveal(invoicing, in: app); invoicing.tap()
+        let credit = app.buttons["target-invoicing-item-credit:return-credit"]
+        XCTAssertTrue(credit.waitForExistence(timeout: 5))
+        let expense = app.buttons["target-invoicing-expense-expense-ui-test"]
+        reveal(expense, in: app); XCTAssertTrue(expense.exists)
+        let section = app.buttons["Invoices"].firstMatch
+        reveal(section, in: app); section.tap()
+        let invoice = app.buttons["target-invoicing-invoice-paid-expense-invoice"]
+        reveal(invoice, in: app); XCTAssertTrue(invoice.waitForExistence(timeout: 5))
+        XCUIDevice.shared.press(.home); app.activate()
+        XCTAssertTrue(invoice.waitForNonExistence(timeout: 5), app.debugDescription)
+        XCTAssertFalse(expense.exists)
+        XCTAssertFalse(credit.exists)
+        XCTAssertTrue(app.staticTexts["Invoices are unavailable."].exists)
+    }
+    #endif
+
     func testInvoicingReusesSourceAndSearchControls() throws {
         continueAfterFailure = false
         let app = XCUIApplication()

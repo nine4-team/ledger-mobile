@@ -1303,6 +1303,11 @@ private struct UITestFixtureItemReader: DownloadedItemPlacementReading, Download
                             expenseAccess.withdraw()
                             continuation.yield(nil)
                         }
+                    } else if ProcessInfo.processInfo.arguments.contains("--ledger-ui-test-invoicing-stream-end") {
+                        for await _ in NotificationCenter.default.notifications(named: UIApplication.didBecomeActiveNotification).map({ _ in true }) {
+                            continuation.finish()
+                            break
+                        }
                     } else if ProcessInfo.processInfo.arguments.contains("--ledger-ui-test-invoice-source-change") {
                         for await _ in NotificationCenter.default.notifications(named: UIApplication.didBecomeActiveNotification).map({ _ in true }) {
                             expenseAccess.changeInvoiceSource()
