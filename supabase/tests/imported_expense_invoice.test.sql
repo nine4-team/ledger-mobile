@@ -262,6 +262,14 @@ select set_config('request.jwt.claims','{"sub":"10000000-0000-0000-0000-00000000
 set local role authenticated;
 select is(public.spike_read_collected_invoice('account-primary','expense-import-project','expense-import-invoice')->>'total_minor_units',
   '9007199254740993','Direct Invoice read preserves exact amount without Expense selection');
+select is((select value from jsonb_array_elements(public.spike_list_project_collected_invoices('account-primary','expense-import-project'))
+  where value->>'invoice_id'='expense-import-invoice'),
+  public.spike_read_collected_invoice('account-primary','expense-import-project','expense-import-invoice'),
+  'Collected directory preserves complete frozen Invoice and exact money');
+select throws_ok($$select public.spike_list_project_collected_invoices('account-other','expense-import-project')$$,
+  '42501','invoice_not_available','Collected directory denies foreign Account');
+select throws_ok($$select public.spike_list_project_collected_invoices('account-primary','missing-project')$$,
+  '42501','invoice_not_available','Missing Project is not empty paid history');
 select throws_ok($$select public.spike_begin_expense_attachment_upload('paid-new-receipt','account-primary',
   'expense-import-project','expense-import-source',repeat('d',64),12,'application/pdf','Paid.pdf')$$,
   '42501','expense_upload_unavailable','Collected Expense cannot reserve a new receipt');
@@ -282,6 +290,8 @@ select throws_ok($$select public.spike_read_expense_invoice('account-other','exp
   '42501',null,'Foreign Account cannot read paid Expense');
 reset role;
 update public.spike_account_memberships set financial_access='none' where account_id='account-primary' and principal_id='principal-owner';
+select throws_ok($$select public.spike_list_project_collected_invoices('account-primary','expense-import-project')$$,
+  '42501','invoice_not_available','Financial downgrade denies collected directory');
 set local role authenticated;
 select throws_ok($$select public.spike_read_collected_invoice('account-primary','expense-import-project','expense-import-invoice')$$,
   '42501',null,'Direct Invoice read denies financial withdrawal');
@@ -292,6 +302,8 @@ select ok(not has_function_privilege(r,'public.spike_read_expense_invoice(text,t
   from unnest(array['anon','service_role']) r;
 -- No privileged public entry point or anonymous/service invocation.
 select ok(not has_function_privilege(r,'public.spike_read_collected_invoice(text,text,text)','EXECUTE'),r||' cannot invoke direct Invoice read')
+  from unnest(array['anon','service_role']) r;
+select ok(not has_function_privilege(r,'public.spike_list_project_collected_invoices(text,text)','EXECUTE'),r||' cannot invoke collected directory')
   from unnest(array['anon','service_role']) r;
 select ok(not prosecdef,'Public Invoice wrapper uses invoker rights') from pg_proc
   where oid='public.spike_read_collected_invoice(text,text,text)'::regprocedure;
@@ -420,5 +432,19 @@ select is((select description from public.spike_items where id='imported-paid-it
   'Historical import does not rewrite current physical Item');
 select is((select count(*) from ledger_private.item_charge_occurrences where item_id='imported-paid-item'),0::bigint,
   'Historical import creates no billable charge');
+insert into public.spike_projects(id,account_id,client_id,display_name,created_at,updated_at,created_at_ms,updated_at_ms,created_by_principal_id)
+values('paid-list-empty','account-primary','client-existing','Empty directory test',now(),now(),1,1,'principal-owner');
+update public.spike_account_memberships set state='active',financial_access='full'
+  where account_id='account-primary' and principal_id='principal-owner';
+select set_config('request.jwt.claims','{"sub":"10000000-0000-0000-0000-000000000001","role":"authenticated"}',true);
+set local role authenticated;
+select is(public.spike_list_project_collected_invoices('account-primary','paid-list-empty'),'[]'::jsonb,'Authorized empty collected directory');
+reset role;
+update public.spike_account_memberships set state='removed' where account_id='account-primary' and principal_id='principal-owner';
+select throws_ok($$select ledger_private.list_project_collected_invoices('account-primary','paid-list-empty')$$,
+  '42501','invoice_not_available','Removed member cannot query even an empty directory');
+select set_config('request.jwt.claims','{}',true);
+select throws_ok($$select ledger_private.list_project_collected_invoices('account-primary','paid-list-empty')$$,
+  '42501','invoice_not_available','Missing identity denied through privileged caller');
 select * from finish();
 rollback;

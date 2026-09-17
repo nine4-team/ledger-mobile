@@ -306,6 +306,9 @@ try {
                 assert.equal(paid.invoice.lines[0].source_id,expense);
                 assert.deepEqual(paid.invoice.display_metadata,invoice.display_metadata);
                 assert.deepEqual(await invoiceReader.read({projectId:project,invoiceId:invoice.invoice_id},context),paid.invoice);
+                assert.deepEqual(await invoiceReader.list({projectId:project},context),[paid.invoice]);
+                await assert.rejects(invoiceReader.list({projectId:project},{...context,accountId:key+'-foreign'}),
+                    error=>error.statusCode===403);
                 await assert.rejects(invoiceReader.read({projectId:key+'-foreign-project',invoiceId:invoice.invoice_id},context),error=>error.statusCode===403);
                 await assert.rejects(invoiceReader.read({projectId:project,invoiceId:invoice.invoice_id},
                     {...context,accountId:key+'-foreign-account'}),error=>error.statusCode===403);
@@ -470,6 +473,7 @@ try {
             error=>error.statusCode===403);
         if(expenseService) await assert.rejects(expenseService.invoice({projectId:project,expenseId:expense},context),
             error=>error.statusCode===403);
+        if(invoiceReader) await assert.rejects(invoiceReader.list({projectId:project},context),error=>error.statusCode===403);
         if(invoiceReader) await assert.rejects(invoiceReader.read({projectId:project,invoiceId:key+'-invoice'},context),
             error=>error.statusCode===403);
         if(expenseService && receiptAttachmentIds.length) await assert.rejects(expenseService.receipt({projectId:project,

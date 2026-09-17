@@ -7,7 +7,7 @@ import { paidReturnInputSchema, paidReturnReviewInputSchema, validatePaidReturnR
 import { feeCreationInputSchema, feeCreationTool, type FeeCreationServing } from "./feeCreation.js";
 import { feeReadInputSchema, validateFees, type FeeReading } from "./feeRead.js";
 import { invoiceCreationInputSchema, invoiceCreationTool, invoiceRevisionInputSchema, invoiceRevisionTool, type InvoiceCreationServing } from "./invoiceCreation.js";
-import { collectedInvoiceInputSchema, validateCollectedInvoice, type CollectedInvoiceReading } from "./collectedInvoiceRead.js";
+import { collectedInvoiceInputSchema, collectedInvoiceListInputSchema, validateCollectedInvoiceList, validateCollectedInvoice, type CollectedInvoiceReading } from "./collectedInvoiceRead.js";
 import { liveInvoiceInputSchema, liveInvoiceListInputSchema, validateLiveInvoiceList, validateLiveInvoice, type LiveInvoiceReading } from "./liveInvoiceRead.js";
 import { TargetMCPFailure, type TargetMCPRequestContext } from "./contractSupport.js";
 import { encodePropertyManagementReportSnapshot, type PropertyManagementReportSnapshot } from "./propertyManagementReport.js";
@@ -142,6 +142,17 @@ export function createTargetServer(reader: PropertyReportReading, context: Targe
       return { isError: true, content: [{ type: "text", text: JSON.stringify({
         code: error instanceof TargetMCPFailure ? error.code : "invoice_read_failed" }) }] };
     }
+  });
+  if (collectedInvoices?.list) server.registerTool("list_project_collected_invoices", {
+    description: "List authorized collected Project Invoices with immutable source lines and exact totals using the same records as get_collected_invoice. Excludes Created, Sent and canceled Invoices. Does not collect an Invoice, create a payment or report offline pending work.",
+    inputSchema: collectedInvoiceListInputSchema,
+    annotations: { readOnlyHint: true, destructiveHint: false, idempotentHint: true, openWorldHint: false },
+  }, async input => {
+    try {
+      const result = validateCollectedInvoiceList(await collectedInvoices.list!(input, context), input, context);
+      return { content: [{ type: "text", text: JSON.stringify(result) }] };
+    } catch (error) { return { isError: true, content: [{ type: "text", text: JSON.stringify({
+      code: error instanceof TargetMCPFailure ? error.code : "invoice_read_failed" }) }] }; }
   });
   if (collectedInvoices) server.registerTool("get_collected_invoice", {
     description: "Read one authorized paid Invoice with complete immutable lines, exact minor-unit amounts, original metadata and payment link. Does not read live Invoices, infer unpaid status, collect payment or add the payment to the Invoice total again.",
