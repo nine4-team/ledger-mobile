@@ -15,6 +15,11 @@ const local=JSON.parse(execFileSync('npx',['--offline','--yes','supabase@2.116.0
     {encoding:'utf8',stdio:['ignore','pipe','ignore'],timeout:15000}));
 assert.equal(local.API_URL,'http://127.0.0.1:54321');
 const budgetRead = process.argv.includes('--native-budget');
+const profileLogo = process.argv.includes('--native-profile-logo');
+const profileRead = profileLogo || process.argv.includes('--native-profile');
+if (profileRead) assert.deepEqual(process.argv.slice(2), [profileLogo ? '--native-profile-logo' : '--native-profile'], 'Profile read uses an isolated read-only scenario');
+const profileLogoBytes = Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+jH1sAAAAASUVORK5CYII=', 'base64');
+const profileStorageFixtures = [];
 const paidReturnNative = process.argv.includes('--native-paid-return');
 const importedPaidReturn = process.argv.includes('--imported-paid-return');
 assert.ok(!importedPaidReturn || paidReturnNative, 'Imported paid return uses the existing native return scenario');
@@ -154,6 +159,7 @@ try {
                 ...(mixedInvoice?{LEDGER_INVOICE_LOCAL_MIXED:'1'}:{}),
                 ...(process.argv.includes('--native-history-invoice')?{LEDGER_HISTORY_LIVE_INVOICE:'1'}:{}),
                 ...(budgetRead?{LEDGER_BUDGET_LOCAL:'1'}:{}),
+                ...(profileLogo?{LEDGER_PROFILE_LOCAL_LOGO:profileLogoBytes.toString('base64')}:{}),
                 ...(paidReturnNative?{LEDGER_PAID_RETURN_LOCAL:'1'}:{}),
                 ...(process.argv.includes('--native-expense-edit')?{LEDGER_EXPENSE_LOCAL_EDIT:'1'}:{}),
                 ...(process.argv.includes('--expense-edit-media')?{LEDGER_EXPENSE_LOCAL_EDIT_MEDIA:'1'}:{}),
@@ -606,6 +612,56 @@ try {
         }
         console.log(JSON.stringify({mcpMixedOriginSale:true,items:3,charges:3,totalMinorUnits:400,
             staleBatchAtomic:true,replay:true,sourcePurchaseReceiptAndHistoryUnchanged:true,frozenInvoiceAndPaymentUnchanged:true,newTransactions:0}));
+    } else if(profileRead) {
+        const ports=JSON.parse(docker(['inspect','--format','{{json .NetworkSettings.Ports}}','ledger_powersync_local']));
+        assert.deepEqual(ports['8080/tcp'],[{HostIp:'127.0.0.1',HostPort:'5590'}]);
+        sql(`insert into public.spike_account_business_profiles(id,account_id) values(${q(account)},${q(account)})`);
+        const profileURL=local.API_URL+'/rest/v1/spike_account_business_profiles?account_id=eq.'+encodeURIComponent(account);
+        const profileHeaders={apikey:local.PUBLISHABLE_KEY,Authorization:'Bearer '+token};
+        let logoURL;
+        if (profileLogo) {
+            const hash=createHash('sha256').update(profileLogoBytes).digest('hex');
+            for (const owner of [account,account+'-foreign']) {
+                const attachment=owner+'-logo', path=`accounts/${owner}/attachments/${attachment}/${hash}`;
+                if (owner!==account) sql(`insert into public.spike_accounts(id,display_name) values(${q(owner)},'Foreign synthetic profile');
+                    insert into public.spike_account_business_profiles(id,account_id) values(${q(owner)},${q(owner)})`);
+                const upload=await fetch(local.API_URL+'/storage/v1/object/ledger-attachments/'+path,{
+                    method:'POST',redirect:'error',signal:AbortSignal.timeout(10000),
+                    headers:{apikey:local.SERVICE_ROLE_KEY,Authorization:'Bearer '+local.SERVICE_ROLE_KEY,'Content-Type':'image/png'},body:profileLogoBytes});
+                assert.equal(upload.status,200,'Synthetic logo fixture upload');
+                profileStorageFixtures.push(path);
+                sql(`update public.spike_account_business_profiles set logo_attachment_id=${q(attachment)},
+                    logo_content_sha256=${q(hash)},logo_byte_count=${profileLogoBytes.length},logo_media_type='image/png',
+                    logo_storage_path=${q(path)} where account_id=${q(owner)}`);
+                const url=local.API_URL+'/storage/v1/object/authenticated/ledger-attachments/'+path;
+                const response=await fetch(url,{headers:profileHeaders,redirect:'error',signal:AbortSignal.timeout(10000)});
+                if(owner===account) {
+                    logoURL=url; assert.equal(response.status,200);
+                    assert.deepEqual(Buffer.from(await response.arrayBuffer()),profileLogoBytes);
+                } else assert.ok(response.status>=400 && response.status<500,'Foreign Account logo must be denied, not fail with a server error');
+            }
+            const anonymousLogo=await fetch(logoURL,{headers:{apikey:local.PUBLISHABLE_KEY},redirect:'error',signal:AbortSignal.timeout(10000)});
+            assert.ok(anonymousLogo.status>=400 && anonymousLogo.status<500,'Anonymous logo must be denied, not fail with a server error');
+        }
+        const allowed=await fetch(profileURL,{headers:profileHeaders});
+        assert.equal(allowed.status,200);
+        assert.equal((await allowed.json()).length,1);
+        const anonymous=await fetch(profileURL,{headers:{apikey:local.PUBLISHABLE_KEY}});
+        assert.equal(anonymous.status,401);
+        const mutation=await fetch(profileURL,{method:'PATCH',headers:{...profileHeaders,'Content-Type':'application/json'},body:JSON.stringify({revision:2})});
+        assert.equal(mutation.status,403);
+        await runNative('accountProfileLiveReplication');
+        sql(`update public.spike_account_memberships set state='removed' where account_id=${q(account)} and principal_id=${q(principal)}`);
+        const removed=await fetch(profileURL,{headers:profileHeaders});
+        assert.equal(removed.status,200);
+        assert.deepEqual(await removed.json(),[]);
+        if (logoURL) {
+            const removedLogo=await fetch(logoURL,{headers:profileHeaders,redirect:'error',signal:AbortSignal.timeout(10000)});
+            assert.ok(removedLogo.status>=400 && removedLogo.status<500,'Removed member must be denied with the same JWT, not fail with a server error');
+        }
+        assert.equal(sql(`select count(*) from public.spike_transactions where account_id=${q(account)}`),'0');
+        assert.equal(sql(`select revision from public.spike_account_business_profiles where account_id=${q(account)}`),'1');
+        console.log('PASS actual Account profile sync and offline restart without profile or financial mutation');
     } else if(process.argv.includes('--native')) {
         const ports=JSON.parse(docker(['inspect','--format','{{json .NetworkSettings.Ports}}','ledger_powersync_local']));
         assert.deepEqual(ports['8080/tcp'],[{HostIp:'127.0.0.1',HostPort:'5590'}]);
@@ -862,4 +918,11 @@ try {
     await call('/auth/v1/logout?scope=local',{},token).catch(() => {
         console.error('Local fixture logout transport failed; membership has been removed.');
     });
+    if (profileStorageFixtures.length) {
+        const cleanup=await fetch(local.API_URL+'/storage/v1/object/ledger-attachments',{
+            method:'DELETE',redirect:'error',signal:AbortSignal.timeout(10000),
+            headers:{apikey:local.SERVICE_ROLE_KEY,Authorization:'Bearer '+local.SERVICE_ROLE_KEY,'Content-Type':'application/json'},
+            body:JSON.stringify({prefixes:profileStorageFixtures})});
+        assert.equal(cleanup.status,200,'Delete only this run\'s synthetic logo objects');
+    }
 }

@@ -1,8 +1,12 @@
 import Foundation
 import Auth
 import LedgerTargetCore
+import LedgerTargetAppModel
 import PowerSync
 import Testing
+#if canImport(PDFKit)
+import PDFKit
+#endif
 #if canImport(CoreGraphics)
 import CoreGraphics
 #endif
@@ -291,15 +295,18 @@ struct AccountWorkspacePendingWorkRuntimeTests {
         context.remove()
     }
 
-    @Test("Profile first download arrives through selected subscription; disappearing evidence ends access")
-    func accountProfileFirstDownloadAndDisappearance() async throws {
-        let context = try RuntimeTestContext(suffix: "profile-first-download")
+    @Test("Profile first download arrives through selected subscription; disappearing evidence ends access", arguments: [false, true], [false, true])
+    func accountProfileFirstDownloadAndDisappearance(membershipArrivesLater: Bool, removeMembership: Bool) async throws {
+        let context = try RuntimeTestContext(suffix: "profile-first-download-\(membershipArrivesLater)-\(removeMembership)")
         let databases = LockedRecorder<any PowerSyncDatabaseProtocol>()
         var dependencies = physicalItemDependencies(context)
         let validate = dependencies.validateStructuredDatabase
         dependencies.validateStructuredDatabase = { database in
             try await validate(database)
             _ = try await database.execute(sql: "INSERT INTO spike_accounts(id,display_name) VALUES('account-runtime','Design studio')", parameters: nil)
+            if membershipArrivesLater {
+                _ = try await database.execute(sql: "DELETE FROM spike_account_memberships WHERE account_id='account-runtime'", parameters: nil)
+            }
             databases.append(database)
         }
         let runtime = try await context.openRuntime(dependencies: dependencies)
@@ -315,11 +322,18 @@ struct AccountWorkspacePendingWorkRuntimeTests {
         let parameters = try #require(registrations.first)
         let decoded = try JSONSerialization.jsonObject(with: Data(parameters.utf8)) as? [String: String]
         #expect(decoded == ["account_id": context.accountId.rawValue])
+        if membershipArrivesLater {
+            _ = try await database.execute(sql: "INSERT INTO spike_account_memberships(id,account_id,principal_id,role,state) VALUES('delayed-profile-member','account-runtime','principal-runtime','owner','active')", parameters: nil)
+        }
         _ = try await database.execute(sql: "INSERT INTO spike_account_business_profiles(id,account_id) VALUES('account-runtime','account-runtime')", parameters: nil)
         var iterator = stream.makeAsyncIterator()
         let profile = try #require(await iterator.next())
         #expect(profile.name.rawValue == "Design studio" && profile.logo == .absent)
-        _ = try await database.execute(sql: "DELETE FROM spike_account_business_profiles WHERE id='account-runtime'", parameters: nil)
+        if removeMembership {
+            _ = try await database.execute(sql: "UPDATE spike_account_memberships SET state='removed' WHERE account_id='account-runtime'", parameters: nil)
+        } else {
+            _ = try await database.execute(sql: "DELETE FROM spike_account_business_profiles WHERE id='account-runtime'", parameters: nil)
+        }
         await #expect(throws: AccountBusinessProfileReadFailure.self) {
             _ = try await iterator.next()
         }
@@ -423,6 +437,94 @@ struct AccountWorkspacePendingWorkRuntimeTests {
             _ = try await denied.next()
         }
         context.remove()
+    }
+
+    @Test("Account business profile arrives through real local sync and survives encrypted offline reopening",
+          .enabled(if: ProcessInfo.processInfo.environment["LEDGER_SALE_LOCAL_ACCOUNT"] != nil), .timeLimit(.minutes(1)))
+    func accountProfileLiveReplication() async throws {
+        let env = ProcessInfo.processInfo.environment
+        guard let account = env["LEDGER_SALE_LOCAL_ACCOUNT"], account.hasPrefix("sale-http-"),
+              let principal = env["LEDGER_SALE_LOCAL_PRINCIPAL"], principal.hasPrefix("sale-http-"),
+              let key = env["LEDGER_SALE_LOCAL_KEY"], let email = env["LEDGER_SALE_LOCAL_EMAIL"],
+              email.hasSuffix("@ledger-tests.invalid"), let password = env["LEDGER_SALE_LOCAL_PASSWORD"] else {
+            throw RuntimeInjectedFailure()
+        }
+        let context = try RuntimeTestContext(suffix: "profile-live", accountId: .init(validating: account),
+                                             principalId: .init(validating: principal))
+        defer { context.remove() }
+        let url = URL(string: "http://127.0.0.1:54321")!
+        let auth = AuthClient(configuration: .init(url: url.appendingPathComponent("auth/v1"), headers: ["apikey": key],
+            storageKey: "profile-live", localStorage: CategoryAuthTestStorage(), fetch: { try await URLSession.shared.data(for: $0) },
+            autoRefreshToken: false, emitLocalSessionAsInitialSession: true))
+        let entry = await SupabaseOnlineSignIn(client: auth, supabaseURL: url, publishableKey: key)
+        try await entry.signIn(email: email, password: password)
+        let directory = try await entry.accounts(environment: context.environment.manifest.environment)
+        let authorization = try await entry.authorize(AccountSelectionPolicy.makeIntent(selecting: context.accountId,
+            from: directory.snapshot, requestedAt: Date()))
+        let expectedLogo = try env["LEDGER_PROFILE_LOCAL_LOGO"].map { try #require(Data(base64Encoded: $0)) }
+        let downloader = try SupabaseAccountLogoDownload(baseURL: url, publishableKey: key,
+            accessToken: { try #require(auth.currentSession).accessToken })
+        var dependencies = context.dependencies()
+        dependencies.downloadImage = { try await downloader.download($0) }
+        let first = try await context.openRuntime(dependencies: dependencies)
+        try await entry.startWorkspaceSync(first, authorization: authorization,
+            powerSyncURL: URL(string: "http://127.0.0.1:5590")!)
+        var iterator = first.watchAccountBusinessProfile(accountId: context.accountId).makeAsyncIterator()
+        var downloaded = try #require(await iterator.next())
+        if let expectedLogo {
+            if downloaded.logo == .notDownloaded { downloaded = try #require(await iterator.next()) }
+            #expect(downloaded.logo == .downloaded(expectedLogo))
+        } else { #expect(downloaded.logo == .absent) }
+        #expect(downloaded.name.rawValue == "Synthetic HTTP sale")
+        #expect(downloaded.accountId == context.accountId)
+        var downloadedReport: PropertyManagementReportSnapshot?
+        if expectedLogo != nil {
+            let project = try ProjectID(validating: #require(env["LEDGER_SALE_LOCAL_PROJECT"]))
+            let currency = try CurrencyCode(validating: "USD")
+            for try await update in first.watchPropertyManagementReport(accountId: context.accountId,
+                projectId: project, currency: currency) {
+                if case .ready(let snapshot) = update { downloadedReport = snapshot; break }
+            }
+            #expect(downloadedReport != nil)
+        }
+        try await first.close()
+        var offlineDependencies = context.dependencies()
+        offlineDependencies.downloadImage = { _ in
+            Issue.record("Offline profile must use its downloaded logo without network access")
+            throw RuntimeInjectedFailure()
+        }
+        let offline = try await context.openRuntime(dependencies: offlineDependencies)
+        let saved = try await offline.readAccountBusinessProfile(accountId: context.accountId)
+        #expect(saved.name == downloaded.name && saved.logo == downloaded.logo && saved.isStale)
+        #if canImport(PDFKit)
+        if let downloadedReport {
+            let report = try await offline.readDownloadedPropertyManagementReport(accountId: context.accountId,
+                projectId: downloadedReport.project.projectId, currency: downloadedReport.currency,
+                asOf: downloadedReport.provenance.asOf)
+            #expect(report.reference == downloadedReport.reference)
+            let bytes = try PropertyManagementReportPDF.render(report, profile: saved)
+            let delivered = LockedRecorder<URL>()
+            try await PropertyManagementReportDelivery.deliver(data: bytes, snapshot: report, reader: offline) { url in
+                let current = try await offline.readAccountBusinessProfile(accountId: context.accountId)
+                #expect(current.matchesExportedBranding(saved))
+                let document = try #require(PDFDocument(url: url))
+                let text = try #require(document.string)
+                #expect(text.contains(saved.name.rawValue) && text.contains("Report totals"))
+                #expect(!text.contains("Business logo unavailable") && !text.contains("Business logo not downloaded"))
+                #expect(try Data(contentsOf: url) == bytes)
+                delivered.append(url)
+            }
+            let deliveredURL = try #require(delivered.values.first)
+            #expect(!FileManager.default.fileExists(atPath: deliveredURL.path))
+        }
+        #endif
+        await #expect(throws: LedgerOfflineClientRuntimeFailure.accountScopeMismatch) {
+            try await offline.readAccountBusinessProfile(accountId: .init(validating: "foreign-account"))
+        }
+        try await offline.lockAccessPreservingPendingWork()
+        await #expect(throws: LedgerOfflineClientRuntimeFailure.runtimeClosed) {
+            try await offline.readAccountBusinessProfile(accountId: context.accountId)
+        }
     }
 
     @Test("Client Summary downloads hosted physical facts and survives encrypted offline reopening",

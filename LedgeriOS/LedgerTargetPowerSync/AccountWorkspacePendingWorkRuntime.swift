@@ -1428,6 +1428,7 @@ actor AccountWorkspacePendingWorkRuntime {
                         params: ["account_id": .string(accountId.rawValue)]).subscribe()
                 }, observe: {
                 var receivedProfile = false
+                var receivedMembership = false
                 for try await rows in try reader.watch(accountId: accountId, principalId: resources.principalId) {
                     try Task.checkCancellation()
                     if rows.isEmpty {
@@ -1437,13 +1438,21 @@ actor AccountWorkspacePendingWorkRuntime {
                             WHERE account_id = ? AND principal_id = ? AND state = 'active'
                             """, parameters: [accountId.rawValue, resources.principalId.rawValue],
                             mapper: { try $0.getString(name: "id") })
-                        guard !memberships.isEmpty else { throw AccountBusinessProfileReadFailure.unavailable }
+                        if memberships.isEmpty {
+                            guard !receivedMembership else { throw AccountBusinessProfileReadFailure.unavailable }
+                            // A newly authorized workspace can start observing before
+                            // bootstrap membership arrives. Do not mistake that for
+                            // learned removal; the scoped query yields no profile until
+                            // active membership is present. Runtime revocation still
+                            // closes this watch through the normal access fence.
+                        } else { receivedMembership = true }
                         // Keep the selected subscription alive for its first download.
                         // Missing profile evidence is not an explicit absent logo.
                         continue
                     }
                     guard rows.count == 1 else { throw AccountBusinessProfileReadFailure.unavailable }
                     receivedProfile = true
+                    receivedMembership = true
                     let row = rows[0]
                     var logo: AccountBusinessProfile.Logo = .absent
                     if let reference = row.logo {
