@@ -990,6 +990,17 @@ private struct UITestFixtureItemReader: DownloadedItemPlacementReading, Download
         return []
     }
     func readInvoicingCharges(accountId: AccountID, projectId: ProjectID) async throws -> ProjectInvoicingItems {
+        if ProcessInfo.processInfo.arguments.contains("--ledger-ui-test-item-credit") {
+            let item = try ItemID(validating: "returned-chair")
+            let rows = try [false, true].map { credit in
+                try ProjectInvoicingItem(occurrence: .init(id: .init(validating: credit ? "return-credit" : "original-charge"),
+                    accountId: accountId, projectId: projectId, itemId: item, polarity: credit ? .credit : .charge,
+                    phase: credit ? .availableToInvoice : .frozenPaid(invoiceId: .init(validating: "paid-invoice"))),
+                    amount: .init(minorUnits: credit ? -12550 : 12550, currency: .init(validating: "USD")),
+                    availability: credit ? .available : .paid, title: "Returned chair", categoryName: "Furnishings")
+            }
+            return try .init(accountId: accountId, projectId: projectId, rows: rows)
+        }
         let rows: [ProjectInvoicingItem] = try ProcessInfo.processInfo.arguments.contains("--ledger-ui-test-item-invoice-statuses")
             ? [InvoicingAvailability.available, .created, .sent].map { status in
                 try .init(occurrence: .init(id: .init(validating: "charge-\(status.rawValue)"), accountId: accountId,

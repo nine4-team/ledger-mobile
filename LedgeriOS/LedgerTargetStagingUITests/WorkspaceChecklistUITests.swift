@@ -1405,6 +1405,28 @@ final class WorkspaceChecklistUITests: XCTestCase {
         }
     }
 
+    func testInvoicingKeepsPaidChargeAndReturnCreditDistinct() throws {
+        continueAfterFailure = false
+        let app = XCUIApplication()
+        app.launchArguments = ["--ledger-ui-test-workspace-checklist", "--ledger-ui-test-item-credit"]
+        app.launch()
+        defer { app.terminate() }
+        let project = app.buttons["target-active-project-card-project-ui-test"]
+        XCTAssertTrue(project.waitForExistence(timeout: 10)); project.tap()
+        let invoicing = app.buttons["target-project-invoicing"]
+        reveal(invoicing, in: app); invoicing.tap()
+        app.buttons["Items"].firstMatch.tap()
+        XCTAssertTrue(app.staticTexts["-$125.50"].waitForExistence(timeout: 5), app.debugDescription)
+        XCTAssertTrue(app.staticTexts["$125.50"].exists)
+        XCTAssertEqual(app.staticTexts.matching(identifier: "Returned chair").count, 2)
+        app.buttons["Filter receivables"].tap()
+        app.buttons["Paid"].tap()
+        app.buttons["Close menu"].tap()
+        XCTAssertTrue(app.staticTexts["$125.50"].waitForExistence(timeout: 5))
+        XCTAssertFalse(app.staticTexts["-$125.50"].exists)
+        XCTAssertEqual(app.staticTexts.matching(identifier: "Returned chair").count, 1)
+    }
+
     func testInvoicingReusesSourceAndSearchControls() throws {
         continueAfterFailure = false
         let app = XCUIApplication()

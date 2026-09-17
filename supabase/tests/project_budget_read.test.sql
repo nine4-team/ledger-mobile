@@ -22,6 +22,11 @@ values('budget-direct','account-primary','budget-project','client-existing',20,'
 select set_config('request.jwt.claims','{"sub":"10000000-0000-0000-0000-000000000001","role":"authenticated"}',true);
 set local role authenticated;
 select is(public.spike_read_project_budget('account-primary','budget-project','USD')->>'overallRecognizedMinorUnits','195','Mixed source total matches native fixture');
+select is(public.spike_read_project_invoicing_items('account-primary','budget-project')->'rows'->0->>'amountMinorUnits','100','Invoicing exact open charge');
+select is(public.spike_read_project_invoicing_items('account-primary','budget-project')->'rows'->0->>'availability','available','Open charge is available');
+select is(public.spike_read_project_invoicing_items('account-primary','budget-project')->>'principalId','principal-owner','Reader binds principal');
+select throws_ok($$select public.spike_read_project_invoicing_items('account-foreign','budget-project')$$,'42501',null,'Invoicing foreign Account denied');
+select throws_ok($$select public.spike_read_project_invoicing_items('account-primary','missing')$$,'42501',null,'Invoicing missing Project denied');
 select is(public.spike_read_project_budget('account-primary','budget-project','USD')->>'overallPaidMinorUnits','20','Only direct amount paid initially');
 select is(public.spike_read_project_budget('account-primary','budget-project','USD')->>'overallUnpaidMinorUnits','175','Item Expense Fee count once before invoicing');
 select is(public.spike_read_project_budget('account-primary','budget-project','USD')->>'overallBudgetMinorUnits','1000','Enabled allocation preserved');
@@ -37,6 +42,17 @@ values('account-primary','budget-invoice','item','budget-charge',0),
  ('account-primary','budget-invoice','expense','budget-expense',1),
  ('account-primary','budget-invoice','fee_installment','budget-fee',2);
 select is(public.spike_read_project_budget('account-primary','budget-project','USD')->>'overallUnpaidMinorUnits','175','Sent membership does not remove demand');
+select is(public.spike_read_project_invoicing_items('account-primary','budget-project')->'rows'->0->>'availability','sent','Sent Item membership matches native read');
+select is(public.spike_read_project_invoicing_items('account-primary','budget-project')->'rows'->0->>'invoiceName','Invoice','Live Invoice name retained');
+savepoint invoice_read_states;
+update ledger_private.live_invoices set status='created' where id='budget-invoice';
+select is(public.spike_read_project_invoicing_items('account-primary','budget-project')->'rows'->0->>'availability','created','Created Item membership matches native read');
+update ledger_private.live_invoices set status='canceled' where id='budget-invoice';
+select throws_ok($$select public.spike_read_project_invoicing_items('account-primary','budget-project')$$,'55000','invoicing_history_incomplete','Canceled header with unreleased source fails closed');
+update ledger_private.live_invoice_memberships set released_at=now() where invoice_id='budget-invoice';
+select is(public.spike_read_project_invoicing_items('account-primary','budget-project')->'rows'->0->>'availability','available','Released source returns to available');
+select is(public.spike_read_project_invoicing_items('account-primary','budget-project')->'rows'->0->>'invoiceId',null,'Released membership is not retained as active');
+rollback to invoice_read_states;
 select ledger_private.import_client_payment('budget-payment','account-primary','budget-project','client-existing',175,'USD','synthetic-budget','budget-invoice','\x01'::bytea);
 insert into ledger_private.collected_invoices(id,account_id,project_id,client_id,purchase_id,invoice_revision,currency,total_minor_units)
 values('budget-invoice','account-primary','budget-project','client-existing','budget-payment',1,'USD',175);
@@ -44,10 +60,13 @@ insert into ledger_private.collected_invoice_lines(id,account_id,invoice_id,line
 values('budget-line-item','account-primary','budget-invoice',0,'USD','item','budget-charge','budget-item',1,'category-furnishings',100,'Chair','{}'),
  ('budget-line-expense','account-primary','budget-invoice',1,'USD','expense','budget-expense',null,1,'category-furnishings',50,'Expense','{}'),
  ('budget-line-fee','account-primary','budget-invoice',2,'USD','fee_installment','budget-fee',null,1,'category-furnishings',25,'Fee','{}');
+select throws_ok($$select public.spike_read_project_invoicing_items('account-primary','budget-project')$$,'55000','invoicing_history_incomplete','Unsealed frozen history is not published as paid');
 update ledger_private.collected_invoices set sealed=true where id='budget-invoice';
 set local role authenticated;
 select is(public.spike_read_project_budget('account-primary','budget-project','USD')->>'overallPaidMinorUnits','195','Collection moves sources to paid without counting payment twice');
 select is(public.spike_read_project_budget('account-primary','budget-project','USD')->>'overallUnpaidMinorUnits','0','Collected sources no longer unpaid');
+select is(public.spike_read_project_invoicing_items('account-primary','budget-project')->'rows'->0->>'availability','paid','Frozen charge is paid');
+select is(public.spike_read_project_invoicing_items('account-primary','budget-project')->'rows'->0->>'invoiceId','budget-invoice','Original Invoice identity preserved');
 select is((public.spike_return_paid_items(jsonb_build_object('operationId','budget-return','accountId','account-primary',
  'actorPrincipalId','principal-owner','projectId','budget-project','contractVersion','return-paid-items-v1','createdAtMs','1788523200000',
  'items',jsonb_build_array(jsonb_build_object('itemId','budget-item','placementId','budget-placement','chargeId','budget-charge',
@@ -55,6 +74,10 @@ select is((public.spike_return_paid_items(jsonb_build_object('operationId','budg
  'creditId','budget-credit')))::text)).phase,'applied','Return creates exact credit');
 select is(public.spike_read_project_budget('account-primary','budget-project','USD')->>'overallPaidMinorUnits','195','Return retains original paid history');
 select is(public.spike_read_project_budget('account-primary','budget-project','USD')->>'overallUnpaidMinorUnits','-100','Return credit is signed unpaid');
+select is(jsonb_array_length(public.spike_read_project_invoicing_items('account-primary','budget-project')->'rows'),2,'Moved Item retains original charge and credit');
+select is(public.spike_read_project_invoicing_items('account-primary','budget-project')->'rows'->1->>'amountMinorUnits','-100','Credit uses original frozen amount with negative sign');
+select is(public.spike_read_project_invoicing_items('account-primary','budget-project')->'rows'->1->>'polarity','credit','Credit kind retained');
+select is(public.spike_read_project_invoicing_items('account-primary','budget-project')->'rows'->1->>'invoiceId',null,'Credit does not pretend to be collected on original Invoice');
 select is(public.spike_read_project_budget('account-primary','budget-project','USD')->>'overallRecognizedMinorUnits','95','Return reduces total once');
 reset role;
 savepoint restricted;
@@ -84,15 +107,18 @@ rollback to restricted;
 update public.spike_account_memberships set financial_access='limited' where account_id='account-primary' and principal_id='principal-owner';
 set local role authenticated;
 select throws_ok($$select public.spike_read_project_budget('account-primary','budget-project','USD')$$,'42501',null,'Limited financial access denied');
+select throws_ok($$select public.spike_read_project_invoicing_items('account-primary','budget-project')$$,'42501',null,'Invoicing limited financial access denied');
 reset role;
 rollback to restricted;
 update public.spike_account_memberships set state='removed' where account_id='account-primary' and principal_id='principal-owner';
 set local role authenticated;
 select throws_ok($$select public.spike_read_project_budget('account-primary','budget-project','USD')$$,'42501',null,'Removed membership denied');
+select throws_ok($$select public.spike_read_project_invoicing_items('account-primary','budget-project')$$,'42501',null,'Invoicing removed membership denied');
 reset role;
 rollback to restricted;
 set local role anon;
 select throws_ok($$select public.spike_read_project_budget('account-primary','budget-project','USD')$$,'42501',null,'Anonymous role cannot call endpoint');
+select throws_ok($$select public.spike_read_project_invoicing_items('account-primary','budget-project')$$,'42501',null,'Invoicing anonymous role denied');
 reset role;
 select is((select provolatile::text from pg_proc where oid='ledger_private.read_project_budget(text,text,text)'::regprocedure),'s','Read has stable snapshot semantics');
 select * from finish();

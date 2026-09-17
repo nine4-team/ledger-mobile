@@ -608,6 +608,20 @@ try {
             assert.equal(sql(`select signed_amount_minor_units from ledger_private.collected_invoice_lines where id=${q(paidLine)}`),'100');
             assert.equal(sql(`select count(*) from public.spike_transactions where account_id=${q(account)}`),'3','Return creates no cash Transaction');
             assert.equal(history(),before,'Prior paid history remains unchanged');
+            const {SupabaseProjectInvoicingItemsReader}=await import('../LedgerTargetMCP/src/projectInvoicingItemsRead.ts');
+            const invoicingReader=new SupabaseProjectInvoicingItemsReader(new URL(local.API_URL),local.PUBLISHABLE_KEY);
+            const invoicing=await invoicingReader.read({projectId:project},context);
+            const returnedRows=invoicing.rows.filter(row=>row.itemId===returnItem);
+            assert.equal(returnedRows.length,2,'MCP preserves both original paid charge and credit');
+            assert.deepEqual(returnedRows.map(row=>[row.polarity,row.amountMinorUnits,row.availability]),
+                [['charge','100','paid'],['credit','-100','available']],'MCP matches actual native Invoicing read');
+            assert.equal(returnedRows[0].invoiceId,paidInvoice);
+            assert.equal(returnedRows[1].invoiceId,null);
+            await assert.rejects(invoicingReader.read({projectId:project},{...context,accountId:'foreign'}),
+                error=>error.statusCode===403);
+            sql(`update public.spike_account_memberships set financial_access='limited' where account_id=${q(account)} and principal_id=${q(principal)}`);
+            await assert.rejects(invoicingReader.read({projectId:project},context),error=>error.statusCode===403);
+            sql(`update public.spike_account_memberships set financial_access='full' where account_id=${q(account)} and principal_id=${q(principal)}`);
             console.log('PASS offline native paid return: one credit, one Inventory placement, unchanged paid line and no cash event.');
         }
         console.log(JSON.stringify({mcpMixedOriginSale:true,items:3,charges:3,totalMinorUnits:400,
