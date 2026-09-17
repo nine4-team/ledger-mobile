@@ -1,6 +1,12 @@
 # Decision Packet — O-002/O-011–O-014 Transfer Edge Policy
 
 Status: proposed recommendation; product decision not yet approved
+Implementation caution (2026-09-17): this packet predates the confirmed
+2026-09-15 manual-collection/external-delivery clarification. Its resend,
+delivery-attestation and collection-blocking proposals are **not approved**.
+O-002 and O-034 remain distinct open decisions; do not implement that proposed
+gate as a dependency of otherwise approved Transfer behavior. See the
+[confirmed clarification](../decision-log.md#collection-and-expense-clarification-2026-09-15).
 Last reviewed: 2026-08-31
 Owners: Transfer, Invoicing, Item Placement, Tags, Credits, Corrections
 Unlocks: 6 unique residual surfaces (O-002: 4; O-011/O-012/O-013/O-014: 6 each)

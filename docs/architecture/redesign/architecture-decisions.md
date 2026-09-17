@@ -4158,3 +4158,132 @@ inventory-entry amount or historical payment is rewritten. The tradeoff is a
 versioned scope in the existing operation, not a new screen or parallel history.
 Contract groundwork is not delivery: database concurrency, local admission,
 MCP, UI and actual sync evidence remain required in `item-everyday-editing`.
+
+### 2026-09-17 — Paid returns retain the frozen charge and add linked credit
+
+Implement lifecycle Story4 under `item-credit-after-payment`: retain the
+positive collected charge, Invoice line and payment unchanged, and create a
+separate negative credit linked uniquely to that frozen line and the physical
+return. The server derives amount/category from frozen evidence; the command
+contains identities, not caller-authored money. Return and credit creation must
+commit together, with existing placement/source locks and replay receipts.
+This avoids weakening the positive-charge and paid-history constraints merely
+to encode a return. Reuse existing return controls, queue and transport.
+
+The tradeoff is a distinct credit fact in the existing accounting projections,
+not a second physical Item/history system or a synthetic refund Transaction.
+Do not automatically create a credit-only Invoice or settle a credit: those
+policies remain separate. Proven imported facts use the same validation;
+ambiguous legacy paid basis must not be guessed. Typed-intent tests pass;
+database, budget/read/sync, offline, app/MCP and concurrency proof remain pending
+in the owning checklist record.
+
+Inventory history uses the existing on-demand `item_invoice_history` stream for
+paid-return credit links, alongside frozen Invoice contents; the account physical
+stream supplies placement history. These links remain Item-scoped after a move
+or resale and require active full-financial membership. The existing history
+reader joins the credit to its exact frozen line/occurrence and Inventory
+placement, and the existing Invoice-line UI displays the resulting credit without
+implying a cash refund. Incomplete downloaded history remains explicitly partial.
+This does not require retaining every Project's financial stream in Inventory.
+Invoicing list identity includes charge/credit polarity plus the raw source ID:
+the separate tables may legitimately reuse a raw ID. This changes only combined
+read/display identity; persisted command, charge and credit IDs remain unchanged.
+
+The 10-Project/700-Item capacity check exposed per-charge bucket expansion in
+the Project credit join and category lookup. Credits now carry a derived,
+immutable `project_id`, populated/validated against their charge by the database;
+the migration backfills under a transaction/table lock without changing money or
+provenance. Project credit routing filters this column directly. Category labels
+use the already-authorized Account/full-financial reference scope rather than
+looking up a category once per charge. The tradeoff is one verified routing
+column, not another accounting source. The pinned service evaluator now uses
+one bucket per Project credit query; combined ten-Project input stays bounded.
+
+### 2026-09-17 — Budget composition reuses accounting facts
+
+`ProjectBudgetCalculation` combines existing frozen Invoice lines, live/unassigned
+Invoice candidates, explicit Item credits and direct Transaction snapshots into
+the existing paid/unpaid category segments. Collected lines replace their live
+Invoice; the associated lump-sum payment is verified but never added again.
+There is no new stored budget ledger. The provider must establish one authorized,
+complete local snapshot; this pure calculation cannot establish download or
+provenance completeness itself. Unknown Transfers and missing source/category
+evidence are not zero. Provider/runtime/MCP/UI and Transfer/overlay integration
+remain required in `project-budget-progress`; the first mixed-source tests are
+calculation evidence, not complete budget delivery.
+
+The MCP read uses `spike_read_project_budget`, a read-only `STABLE` Postgres
+function over those existing facts. Authorization and amounts therefore share
+the calling statement's snapshot instead of combining separate RPC responses
+across collection. Its private definer checks authenticated full-financial
+Account membership and exact Project scope; the public invoker wrapper grants
+only authenticated execution, not table access. Amounts are Int64 decimal text;
+the MCP adapter validates category/overall sums with BigInt and rejects mismatched
+scope, overflow and false completeness. This duplicates the offline calculation
+at the server boundary, not its storage; parity remains a required test obligation.
+The current result explicitly excludes complete Transfer/Additional Requests
+coverage and cannot include unsynced device edits. Local SQL collection/return
+and permission tests plus MCP contract tests exist; hosted and complete parity
+acceptance remain open in the existing workflow record.
+
+The actual-service parity test exposed a cross-priority readiness gap: a prior
+financial checkpoint could yield 900 while a newer directory state required
+another 200 of direct payments. Budget now applies the existing Transaction
+export rule to all consumed streams: their completed microsecond checkpoints
+must be at least the directory checkpoint. Until then the watch emits incomplete,
+not a partial total. This is a reuse of the existing readiness mechanism, not a
+new sync subsystem. The same real-service fixture subsequently matched native,
+RPC and MCP amounts and retained those amounts through encrypted offline reopen.
+
+### Source movement interpretation (2026-09-17)
+
+Migration distinguishes physical custody from legacy movement labels before
+constructing target intervals. `FirebasePhysicalMovementEvidence` interprets
+the audited Swift app writer shapes (baseline `fe018501`,
+`InventoryOperationsService` and `ItemsService`), retaining original lineage
+records. A same-Project `returned` edge is not a physical return; explicit
+correction scopes can change custody. Missing correction scopes, unknown writer
+sources, invalid references and unsupported shapes remain unresolved. No cash,
+Invoice credit or paid status is inferred from these interpretations.
+
+The private QA manifest consumes these results with `targetHistoryImported=false`.
+This is not interval reconstruction: atomic same-time two-hop moves must retain
+both source edges without inventing a positive-duration Inventory stay, and an
+unknown initial custody time must remain unknown. Target import/reconciliation
+is still required. Focused interpretation tests cover these per-edge distinctions;
+they do not prove complete historical migration.
+
+Imported movement envelopes are retained in private, immutable
+`imported_item_movement_sources`, bound to the exact target Account/Item and
+unique original Account/document identity. The copier uses the existing
+`canonicalEvidenceData()` encoding and reconciles retained counts in its import
+transaction. This table is source provenance, not a second current-location
+authority: it grants no credit eligibility, contains no calculated balances and
+has no app/service API grants or Sync publication. Known target intervals remain
+the responsibility of the history importer; unknown initial start times are not
+fabricated. Local storage/grant tests pass; no hosted deployment or real copy of
+this extension has yet been performed.
+
+The copier now emits known placement intervals from validated transitions,
+retaining its existing current-placement identity for downstream import links.
+Historical intervals start at actual source movements and end at the next known
+movement; only the current interval receives the current Space assignment.
+Source records explicitly reference their resulting placement through an
+Account/Item-scoped foreign key. Unknown initial custody is omitted, not dated;
+unresolved chains retain an `import_observation` instead. Sub-microsecond source
+timestamps are retained but not converted to Postgres intervals by rounding.
+These changes have compilation/unit/storage evidence, not a completed import
+rehearsal or imported paid-return eligibility proof.
+
+Reviewed paid-line placement mappings use the operator-only atomic
+`import_invoice_sources_with_placements` wrapper. It creates the exact charge
+before freezing the Invoice, preserving the existing prohibition on adding a
+charge behind an already-frozen line. Every Item line needs an explicitly named,
+same-Account/Project/Item recorded placement; current location and date proximity
+are never selectors. Review bytes and reviewer identity are retained immutably;
+conflicting retries fail. Imported prices retain `imported_invoice_amount`, not
+`project_price`. Unmapped legacy paid lines remain retained evidence without
+invented custody or return eligibility. This is a local operator boundary, not
+authorization to migrate data; Swift mapping input and imported paid-return
+end-to-end verification remain unfinished.

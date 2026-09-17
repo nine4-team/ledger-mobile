@@ -82,9 +82,16 @@ func envelope(_ source: FirebaseSourceDocument) -> FirebaseSourceValue {
 
 func run() throws {
     let args = Array(CommandLine.arguments.dropFirst())
-    if (args.count == 2 || (args.count == 4 && args[2] == "--receipt-media")), ["--check-project-copy", "--apply-partial-qa-copy"].contains(args[0]) {
+    if args.count >= 2, ["--check-project-copy", "--apply-partial-qa-copy"].contains(args[0]) {
+        try require(args.count.isMultiple(of: 2), "Copy options require values")
+        var options: [String:String] = [:]
+        for index in stride(from: 2, to: args.count, by: 2) {
+            try require(["--receipt-media", "--placement-review"].contains(args[index]) && options[args[index]] == nil,
+                "Unknown or duplicate copy option")
+            options[args[index]] = args[index + 1]
+        }
         try loadRealProjectCopy(path: args[1], apply: args[0] == "--apply-partial-qa-copy",
-            mediaDirectory: args.count == 4 ? args[3] : nil)
+            mediaDirectory: options["--receipt-media"], placementReviewPath: options["--placement-review"])
         return
     }
     if args.count == 2, args[0] == "--review-source" {

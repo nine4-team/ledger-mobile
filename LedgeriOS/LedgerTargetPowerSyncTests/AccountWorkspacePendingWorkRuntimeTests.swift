@@ -2029,6 +2029,100 @@ struct AccountWorkspacePendingWorkRuntimeTests {
         context.remove()
     }
 
+    @Test("Paid return survives offline restart and converges once through real services",
+          .enabled(if: ProcessInfo.processInfo.environment["LEDGER_PAID_RETURN_LOCAL"] == "1"), .timeLimit(.minutes(1)))
+    func paidReturnLiveReplication() async throws {
+        let env = ProcessInfo.processInfo.environment
+        let hosted = env["LEDGER_PAID_RETURN_HOSTED_QA"] == "1"
+        guard let account = env["LEDGER_SALE_LOCAL_ACCOUNT"], let principal = env["LEDGER_SALE_LOCAL_PRINCIPAL"],
+              let project = env["LEDGER_SALE_LOCAL_PROJECT"], let item = env["LEDGER_SALE_LOCAL_ITEM"],
+              let key = env["LEDGER_SALE_LOCAL_KEY"], let email = env["LEDGER_SALE_LOCAL_EMAIL"],
+              let password = env["LEDGER_SALE_LOCAL_PASSWORD"],
+              env["LEDGER_SALE_LOCAL_FINANCIAL_ACCESS"] == "full" else { throw RuntimeInjectedFailure() }
+        if hosted {
+            guard account == "realcopy-b9d236394770-account",
+                  principal == "upload-http-owner-4b1e9766-5791-48a9-a7b1-15a541807e64",
+                  [project,item].allSatisfy({ $0.hasPrefix("hosted-paid-return-") }),
+                  email.hasSuffix("@ledger-tests.invalid") else { throw RuntimeInjectedFailure() }
+        } else {
+            guard [account,principal,project,item].allSatisfy({ $0.hasPrefix("sale-http-") }) else { throw RuntimeInjectedFailure() }
+        }
+        let context = try RuntimeTestContext(suffix: "paid-return-live", accountId: .init(validating: account), principalId: .init(validating: principal))
+        defer { context.remove() }
+        let url = URL(string: hosted ? "https://ybwviepljilrkrjoahbl.supabase.co" : "http://127.0.0.1:54321")!
+        let sync = URL(string: hosted ? "https://6aa8966802481fb31b96942c.powersync.journeyapps.com" : "http://127.0.0.1:5590")!
+        let auth = AuthClient(configuration: .init(url: url.appendingPathComponent("auth/v1"), headers: ["apikey":key],
+            storageKey: "paid-return-live", localStorage: CategoryAuthTestStorage(), fetch: { try await URLSession.shared.data(for: $0) },
+            autoRefreshToken: false, emitLocalSessionAsInitialSession: true))
+        let entry = await SupabaseOnlineSignIn(client: auth, supabaseURL: url, publishableKey: key)
+        try await entry.signIn(email: email, password: password)
+        let directory = try await entry.accounts(environment: context.environment.manifest.environment)
+        let authorization = try await entry.authorize(AccountSelectionPolicy.makeIntent(selecting: context.accountId,
+            from: directory.snapshot, requestedAt: Date()))
+        let projectId = try ProjectID(validating: project), itemId = try ItemID(validating: item)
+        let first = try await context.openRuntime()
+        try await entry.startWorkspaceSync(first, authorization: authorization, powerSyncURL: sync)
+        // Match app navigation: a Project must be downloaded before entering
+        // its return workflow, rather than interpreting absent scope as denial.
+        for try await value in first.watchProjects() {
+            if value.local.rows.contains(where: { $0.id == projectId }) { break }
+        }
+        var reviewed: PaidReturnReview?
+        for try await value in first.watchPaidReturnReview(projectId: projectId, itemIds: [itemId]) {
+            if let value { reviewed = value; break }
+        }
+        let initial = try #require(reviewed)
+        #expect(initial.items.count == 1 && initial.items[0].paidAmount.minorUnits == 100)
+        try await first.close()
+        let offline = try await context.openRuntime()
+        #expect(try await offline.readPaidReturnReview(projectId: projectId, itemIds: [itemId]) == initial)
+        let payload = try initial.makePayload(), uuid = UUID(), captured = Date()
+        let receipt = try await offline.returnPaidItems(payload, operationUUID: uuid, capturedAt: captured)
+        #expect(receipt.localState == .queued)
+        try await offline.close()
+        let resumed = try await context.openRuntime()
+        #expect(try await resumed.returnPaidItems(payload, operationUUID: uuid, capturedAt: captured).operationId == receipt.operationId)
+        #expect(try await resumed.paidReturnStatus(receipt.operationId)?.state.phase == .queued)
+        try await entry.startWorkspaceSync(resumed, authorization: authorization, powerSyncURL: sync)
+        var applied = false
+        for try await state in resumed.watchPaidReturn(receipt.operationId) {
+            if state?.state.phase == .rejected { throw RuntimeInjectedFailure() }
+            if state?.state.phase == .applied { applied = true; break }
+        }
+        #expect(applied)
+        var inventory = false
+        for try await value in resumed.watchDownloadedItemPlacements(accountId: context.accountId, scope: .businessInventory) {
+            if value.rows.contains(where: { $0.itemId == itemId && $0.placementId == payload.items[0].inventoryPlacementId }) {
+                inventory = true; break
+            }
+        }
+        #expect(inventory)
+        var credit = false
+        for try await value in resumed.watchInvoicingCharges(accountId: context.accountId, projectId: projectId) {
+            guard let value else { continue }
+            if let returned = value.rows.first(where: { $0.occurrence.itemId == itemId && $0.occurrence.polarity == .credit }) {
+                #expect(returned.occurrence.id.rawValue == payload.items[0].creditId.rawValue)
+                #expect(returned.amount.minorUnits == -100)
+                #expect(value.rows.contains { $0.occurrence.id == payload.items[0].chargeId && $0.availability == .paid && $0.amount.minorUnits == 100 })
+                credit = true; break
+            }
+        }
+        #expect(credit)
+        var savedHistory: DownloadedItemPlacementHistory?
+        for try await value in resumed.watchDownloadedItemPlacementHistory(accountId: context.accountId, itemId: itemId) {
+            if value.invoiceLines.contains(where: { $0.paidReturn?.creditId == payload.items[0].creditId }) {
+                savedHistory = value; break
+            }
+        }
+        let history = try #require(savedHistory)
+        try await resumed.close()
+        let final = try await context.openRuntime()
+        #expect(try await final.paidReturnStatus(receipt.operationId)?.state.phase == .applied)
+        #expect(try await final.readDownloadedItemPlacementHistory(accountId: context.accountId, itemId: itemId) == history)
+        #expect(try await final.returnPaidItems(payload, operationUUID: uuid, capturedAt: captured).operationId == receipt.operationId)
+        try await final.close()
+    }
+
     @Test("Historical Invoicing downloads both sale cycles and survives offline restart",
           .enabled(if: ProcessInfo.processInfo.environment["LEDGER_SALE_LOCAL_ACCOUNT"] != nil), .timeLimit(.minutes(1)))
     func invoicingHistoricalLiveReplication() async throws {
@@ -2093,8 +2187,55 @@ struct AccountWorkspacePendingWorkRuntimeTests {
             savedHistory = history; break
         }
         let originalHistory = try #require(savedHistory)
+        var savedBudgets: [ProjectBudgetRead] = []
+        if env["LEDGER_BUDGET_LOCAL"] == "1" {
+            guard !hostedQA else { throw RuntimeInjectedFailure() }
+            let currency = try CurrencyCode(validating: "USD")
+            for (project, expected) in [(source, Int64(1100)), (destination, Int64(400))] {
+                let projectId = try ProjectID(validating: project)
+                var downloaded: ProjectBudgetRead?
+                for try await value in runtime.watchProjectBudget(accountId: context.accountId, projectId: projectId, currency: currency) {
+                    guard let value else { continue }
+                    downloaded = value; break
+                }
+                let value = try #require(downloaded)
+                #expect(value.overallRecognized.minorUnits == expected)
+                #expect(!value.isCompleteForProjectBudget)
+                var request = URLRequest(url: url.appendingPathComponent("rest/v1/rpc/spike_read_project_budget"))
+                request.httpMethod = "POST"
+                request.setValue(key, forHTTPHeaderField: "apikey")
+                request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+                request.setValue("Bearer \(try #require(auth.currentSession).accessToken)", forHTTPHeaderField: "Authorization")
+                request.httpBody = try JSONSerialization.data(withJSONObject: ["p_account_id":account,
+                    "p_project_id":project,"p_currency":"USD"])
+                let (bytes, response) = try await URLSession.shared.data(for: request)
+                #expect((response as? HTTPURLResponse)?.statusCode == 200)
+                let remote = try #require(JSONSerialization.jsonObject(with: bytes) as? [String: Any])
+                #expect(remote["accountId"] as? String == account && remote["principalId"] as? String == principal)
+                #expect(remote["projectId"] as? String == project)
+                #expect(remote["overallPaidMinorUnits"] as? String == String(value.overallPaid.minorUnits))
+                #expect(remote["overallUnpaidMinorUnits"] as? String == String(value.overallUnpaid.minorUnits))
+                #expect(remote["overallRecognizedMinorUnits"] as? String == String(value.overallRecognized.minorUnits))
+                #expect(remote["overallBudgetMinorUnits"] as? String == String(value.overallBudget.minorUnits))
+                let categories = try #require(remote["categories"] as? [[String: Any]])
+                #expect(categories.count == value.segments.count)
+                for segment in value.segments {
+                    let row = try #require(categories.first { $0["id"] as? String == segment.category.id.rawValue })
+                    #expect(row["paidMinorUnits"] as? String == String(segment.clientPaid.minorUnits))
+                    #expect(row["unpaidMinorUnits"] as? String == String(segment.invoicingUnpaid.minorUnits))
+                }
+                savedBudgets.append(value)
+            }
+        }
         try await runtime.close()
         let offline = try await context.openRuntime()
+        for original in savedBudgets {
+            let value = try await offline.readProjectBudget(accountId: context.accountId,
+                projectId: try #require(original.scope.projectId), currency: original.currency)
+            #expect(value.segments == original.segments)
+            #expect(value.overallBudget == original.overallBudget)
+            #expect(value.overallRecognized == original.overallRecognized)
+        }
         #expect(try await offline.readDownloadedItemPlacementHistory(accountId: context.accountId, itemId: itemId) == originalHistory)
         for original in originals {
             #expect(try await offline.readInvoicingCharges(accountId: context.accountId, projectId: original.projectId) == original)
@@ -3596,6 +3737,39 @@ struct AccountWorkspacePendingWorkRuntimeTests {
         try await Self.expectClosed(runtime.watchItemPriceEdit(operation))
         try await Self.expectClosed(runtime.watchItemDetailsEdit(detailsOperation))
         ready.continuation.finish()
+    }
+
+    @Test("Budget interface rejects foreign scope and drains on close")
+    func projectBudgetLifecycle() async throws {
+        let context = try RuntimeTestContext(suffix: "budget-lifecycle")
+        defer { context.remove() }
+        let entered = EntryCounter()
+        var dependencies = context.dependencies()
+        dependencies.streamOperationCheckpoint = { operation in
+            if operation == .projectBudget {
+                await entered.enter(operation)
+                try await Task.sleep(for: .seconds(30))
+            }
+        }
+        let runtime = try await context.openRuntime(dependencies: dependencies)
+        let project = try ProjectID(validating: "project"), currency = try CurrencyCode(validating: "USD")
+        let foreign = try AccountID(validating: "foreign")
+        await #expect(throws: LedgerOfflineClientRuntimeFailure.accountScopeMismatch) {
+            try await runtime.readProjectBudget(accountId: foreign, projectId: project, currency: currency)
+        }
+        var wrong = runtime.watchProjectBudget(accountId: foreign, projectId: project, currency: currency).makeAsyncIterator()
+        await #expect(throws: LedgerOfflineClientRuntimeFailure.accountScopeMismatch) { try await wrong.next() }
+        let consumer = Task {
+            var values = runtime.watchProjectBudget(accountId: context.accountId, projectId: project, currency: currency).makeAsyncIterator()
+            await #expect(throws: CancellationError.self) { try await values.next() }
+        }
+        await entered.waitUntilEntered(1)
+        try await runtime.close()
+        try await consumer.value
+        await #expect(throws: LedgerOfflineClientRuntimeFailure.runtimeClosed) {
+            try await runtime.readProjectBudget(accountId: context.accountId, projectId: project, currency: currency)
+        }
+        try await Self.expectClosed(runtime.watchProjectBudget(accountId: context.accountId, projectId: project, currency: currency))
     }
 
     @Test("Invoicing charge interface rejects foreign scope and drains on close")

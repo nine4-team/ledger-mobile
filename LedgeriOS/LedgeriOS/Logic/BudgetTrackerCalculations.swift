@@ -7,7 +7,7 @@ enum BudgetTrackerCalculations {
 
     /// Spent label — "$X spent" or "$X received" for fee categories.
     static func spentLabel(spentCents: Int, isFeeCategory: Bool) -> String {
-        BudgetTabCalculations.spentLabel(spentCents: spentCents, isFeeCategory: isFeeCategory)
+        BudgetDisplayCalculations.spentLabel(spentCents: spentCents, isFeeCategory: isFeeCategory)
     }
 
     /// Remaining label relative to budget.
@@ -16,7 +16,7 @@ enum BudgetTrackerCalculations {
     /// - Zero budget: "No budget set"
     static func remainingLabel(spentCents: Int, budgetCents: Int, isFeeCategory: Bool) -> String {
         guard budgetCents != 0 else { return "No budget set" }
-        return BudgetTabCalculations.remainingLabel(
+        return BudgetDisplayCalculations.remainingLabel(
             spentCents: spentCents, budgetCents: budgetCents, isFeeCategory: isFeeCategory
         )
     }

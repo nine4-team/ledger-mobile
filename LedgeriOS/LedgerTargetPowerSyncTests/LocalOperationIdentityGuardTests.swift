@@ -37,6 +37,7 @@ struct LocalOperationIdentityGuardTests {
             LedgerPowerSyncTable.itemPriceEditCommands,
             LedgerPowerSyncTable.itemDetailsEditCommands,
             LedgerPowerSyncTable.uninvoicedReturnCommands,
+            LedgerPowerSyncTable.paidReturnCommands,
             LedgerPowerSyncTable.expenseCommands,
             LedgerPowerSyncTable.invoiceCommands,
             LedgerPowerSyncTable.feeCommands
@@ -477,7 +478,7 @@ struct LocalOperationIdentityGuardTests {
                 // Account-bound command families intentionally cannot share an
                 // operation ID. Their cross-family rejection is covered by each
                 // family's identity-contract tests rather than the shared-ID race.
-                if pair.filter({ [.reviseSpaceChecklists, .archiveProject, .archiveClient, .manageCategories, .sellInventoryItems, .editUncollectedItemPrice, .editItemDetails, .returnUninvoicedItems, .createExpense, .editExpense, .createInvoice, .reviseCreatedInvoice, .createFeeInstallment].contains($0) }).count > 1
+                if pair.filter({ [.reviseSpaceChecklists, .archiveProject, .archiveClient, .manageCategories, .sellInventoryItems, .editUncollectedItemPrice, .editItemDetails, .returnUninvoicedItems, .returnPaidItems, .createExpense, .editExpense, .createInvoice, .reviseCreatedInvoice, .createFeeInstallment].contains($0) }).count > 1
                 {
                     pairIndex += 1
                     continue
@@ -988,6 +989,11 @@ struct LocalOperationIdentityGuardTests {
                 INSERT INTO spike_expense_commands(id,account_id,actor_principal_id,expense_id,contract_version,fingerprint,envelope_json)
                 VALUES (?, 'account', 'principal', 'expense', 'contract', ?, ?)
                 """, parameters: [id, fingerprint, envelope])
+        case .returnPaidItems:
+            _ = try await database.execute(sql: """
+                INSERT INTO spike_paid_return_commands(id,account_id,actor_principal_id,project_id,contract_version,fingerprint,envelope_json)
+                VALUES (?, 'account', 'principal', 'project', 'contract', ?, ?)
+                """, parameters: [id, fingerprint, envelope])
         case .returnUninvoicedItems:
             _ = try await database.execute(sql: """
                 INSERT INTO spike_uninvoiced_return_commands(id,account_id,actor_principal_id,project_id,contract_version,fingerprint,envelope_json)
@@ -1068,7 +1074,7 @@ struct LocalOperationIdentityGuardTests {
         database: any PowerSyncDatabaseProtocol
     ) async throws {
         switch family {
-        case .sellInventoryItems, .editUncollectedItemPrice, .editItemDetails, .returnUninvoicedItems, .createExpense, .editExpense, .createInvoice, .reviseCreatedInvoice, .createFeeInstallment: break
+        case .sellInventoryItems, .editUncollectedItemPrice, .editItemDetails, .returnUninvoicedItems, .returnPaidItems, .createExpense, .editExpense, .createInvoice, .reviseCreatedInvoice, .createFeeInstallment: break
         case .manageCategories:
             _ = try await database.execute(sql: "UPDATE spike_local_operations SET category_projection_json = '[]' WHERE id = ?", parameters: [id])
         case .createClient:
@@ -1238,7 +1244,7 @@ struct LocalOperationIdentityGuardTests {
         case .createInvoice, .reviseCreatedInvoice: "invoice"
         case .createExpense, .editExpense: "expense"
         case .createClient, .archiveClient: "client"
-        case .createProject, .archiveProject, .sellInventoryItems, .returnUninvoicedItems: "project"
+        case .createProject, .archiveProject, .sellInventoryItems, .returnUninvoicedItems, .returnPaidItems: "project"
         case .assignItemsToSpace, .reviseSpaceChecklists: "space"
         case .clearItemSpaceAssignments, .manageCategories: "account"
         }
@@ -1837,6 +1843,9 @@ struct LocalOperationIdentityGuardTests {
         if families.contains(.createExpense) {
             return try ExpenseCreationOperationIdentity.make(accountId: guardAccountId, uuid: checkpointUUID(index: index))
         }
+        if families.contains(.returnPaidItems) {
+            return try ReturnPaidItemsOperationIdentity.make(accountId: guardAccountId, uuid: checkpointUUID(index: index))
+        }
         if families.contains(.returnUninvoicedItems) {
             return try ReturnUninvoicedItemsOperationIdentity.make(accountId: guardAccountId, uuid: checkpointUUID(index: index))
         }
@@ -1871,6 +1880,19 @@ struct LocalOperationIdentityGuardTests {
         for families: [LocalOperationCommandFamily],
         database: any PowerSyncDatabaseProtocol
     ) async throws {
+        if families.contains(.returnPaidItems) {
+            try await seedAuthorityIfNeeded(for: families.filter { $0 != .returnPaidItems } + [.returnUninvoicedItems], database: database)
+            for sql in [
+                "UPDATE spike_account_memberships SET financial_access='full' WHERE account_id=?",
+                "INSERT OR REPLACE INTO spike_items(id,account_id,description,revision) VALUES('return-item',?,'Paid Item',1)",
+                "INSERT OR REPLACE INTO item_charge_occurrences(id,account_id,project_id,item_id,placement_id,category_id,amount_minor_units,currency,revision) VALUES('return-charge',?,'project','return-item','return-old','return-category','100','USD',1)",
+                "INSERT OR REPLACE INTO collected_invoices(id,account_id,project_id,client_id,sealed) VALUES('paid-invoice',?,'project','sale-client',1)",
+                "INSERT OR REPLACE INTO collected_invoice_lines(id,account_id,invoice_id,source_kind,source_id,item_id,category_id,source_revision,signed_amount_minor_units,currency,description) VALUES('paid-line',?,'paid-invoice','item','return-charge','return-item','return-category',1,'100','USD','Paid Item')"
+            ] { _ = try await database.execute(sql: sql, parameters: [guardAccountId.rawValue]) }
+            let params = String(decoding: try OperationContractCodec.encode(["account_id":guardAccountId.rawValue,"project_id":"project"]), as: UTF8.self)
+            _ = try await database.execute(sql: "INSERT INTO ps_stream_subscriptions(stream_name,active,is_default,local_params,last_synced_at) VALUES('project_invoicing_item_charges',1,0,?,1000000)", parameters: [params])
+            return
+        }
         if families.contains(.editItemDetails) {
             try await seedAuthorityIfNeeded(for: families.filter { $0 != .editItemDetails }, database: database)
             _ = try await database.execute(sql: """
@@ -1959,6 +1981,8 @@ struct LocalOperationIdentityGuardTests {
             return try await submitExpense(operationId, changed: false, database: database)
         case .returnUninvoicedItems:
             return try await submitReturn(operationId, changed: false, database: database)
+        case .returnPaidItems:
+            return try await submitPaidReturn(operationId, changed: false, database: database)
         case .sellInventoryItems:
             return try await submitSale(operationId, changed: false, database: database)
         case .manageCategories:
@@ -2197,6 +2221,129 @@ struct LocalOperationIdentityGuardTests {
             payload: .init(items: [.init(itemId: .init(validating: "details-item"), expectedRevision: 1)],
                            changes: .init(name: .set(changed ? "Changed" : "Chair"))))
         return try await ItemDetailsEditPowerSyncStore(database: database, accountId: guardAccountId,
+            principalId: guardPrincipalId, accessFence: .init(), now: { guardAcceptedAt }).submit(command)
+    }
+
+    @Test("Paid return survives encrypted reopen and retries without losing terminal evidence", arguments: [false, true])
+    func paidReturnDurability(rejected: Bool) async throws {
+        let fixture = try LocalOperationGuardDatabaseFixture()
+        defer { fixture.remove() }
+        let first = try fixture.open()
+        try await Self.seedAuthorityIfNeeded(for: [.returnPaidItems], database: first)
+        while let setup = try await first.getNextCrudTransaction() { try await setup.complete() }
+        let id = try ReturnPaidItemsOperationIdentity.make(accountId: Self.guardAccountId, uuid: UUID())
+        #expect(try await Self.submitPaidReturn(id, changed: false, database: first).localState == .queued)
+        try await first.close()
+        let reopened = try fixture.open()
+        do {
+            #expect(try await Self.submitPaidReturn(id, changed: false, database: reopened).localState == .queued)
+            let transaction = try #require(try await reopened.getNextCrudTransaction())
+            let entry = try #require(transaction.crud.first)
+            #expect(transaction.crud.count == 1 && entry.table == LedgerPowerSyncTable.paidReturnCommands)
+            await #expect(throws: URLError.self) {
+                try await ReturnPaidItemsUpload.apply(entry, database: reopened, accessFence: .init(),
+                    applier: PaidReturnReply(rejected: rejected, transient: true))
+            }
+            #expect(try await Self.submitPaidReturn(id, changed: false, database: reopened).localState == .applying)
+            #expect(try await reopened.getNextCrudTransaction() != nil)
+            try await ReturnPaidItemsUpload.apply(entry, database: reopened, accessFence: .init(),
+                applier: PaidReturnReply(rejected: rejected))
+            // Simulate a retry after response persistence but before queue acknowledgement.
+            try await ReturnPaidItemsUpload.apply(entry, database: reopened, accessFence: .init(),
+                applier: PaidReturnReply(rejected: rejected))
+            try await transaction.complete()
+            #expect(try await reopened.getNextCrudTransaction() == nil)
+            #expect(try await Self.submitPaidReturn(id, changed: false, database: reopened).localState == (rejected ? .rejected : .applied))
+            let store = ReturnPaidItemsPowerSyncStore(database: reopened, accountId: Self.guardAccountId,
+                principalId: Self.guardPrincipalId, accessFence: .init())
+            let status = try #require(await store.status(id))
+            #expect(status.state.phase == (rejected ? .rejected : .applied))
+            #expect(status.operationId == id && status.accountId == Self.guardAccountId)
+            try await reopened.close()
+            let final = try fixture.open()
+            do {
+                let restored = try await ReturnPaidItemsPowerSyncStore(database: final, accountId: Self.guardAccountId,
+                    principalId: Self.guardPrincipalId, accessFence: .init()).status(id)
+                #expect(restored == status)
+                #expect(try await final.getNextCrudTransaction() == nil)
+                try await final.close()
+            } catch { try? await final.close(); throw error }
+        } catch { try? await reopened.close(); throw error }
+    }
+
+    @Test("Paid return revocation retains encrypted pending work before send or after response", arguments: [false, true])
+    func paidReturnRevocation(beforeSend: Bool) async throws {
+        let fixture = try LocalOperationGuardDatabaseFixture()
+        defer { fixture.remove() }
+        let db = try fixture.open()
+        let id = try ReturnPaidItemsOperationIdentity.make(accountId: Self.guardAccountId, uuid: UUID())
+        do {
+            try await Self.seedAuthorityIfNeeded(for: [.returnPaidItems], database: db)
+            while let setup = try await db.getNextCrudTransaction() { try await setup.complete() }
+            _ = try await Self.submitPaidReturn(id, changed: false, database: db)
+            let original = try await db.get(sql: "SELECT command_envelope_json FROM spike_local_operations WHERE id=?",
+                parameters: [id.rawValue]) { try $0.getString(index: 0) }
+            let transaction = try #require(try await db.getNextCrudTransaction())
+            let entry = try #require(transaction.crud.first)
+            let fence = LedgerWorkspaceAccessFence()
+            if beforeSend { fence.markRemoved() }
+            await #expect(throws: LedgerOfflineClientRuntimeFailure.runtimeClosed) {
+                try await ReturnPaidItemsUpload.apply(entry, database: db, accessFence: fence,
+                    applier: PaidReturnReply(rejected: false, revokeFence: beforeSend ? nil : fence, unexpectedCall: beforeSend))
+            }
+            _ = try await db.execute(sql: "UPDATE spike_account_memberships SET state='removed' WHERE account_id=? AND principal_id=?",
+                parameters: [Self.guardAccountId.rawValue,Self.guardPrincipalId.rawValue])
+            try await db.close()
+            let reopened = try fixture.open()
+            do {
+                let retained = try await reopened.get(sql: "SELECT command_envelope_json,local_state,terminal_phase FROM spike_local_operations WHERE id=?",
+                    parameters: [id.rawValue]) { (try $0.getString(index: 0),try $0.getString(index: 1),try $0.getStringOptional(index: 2)) }
+                #expect(retained.0 == original && retained.1 == (beforeSend ? "queued" : "applying") && retained.2 == nil)
+                let pending = try #require(try await reopened.getNextCrudTransaction())
+                #expect(pending.crud.count == 1 && pending.crud.first?.id == id.rawValue)
+                await #expect(throws: (any Error).self) {
+                    try await Self.submitPaidReturn(id, changed: false, database: reopened)
+                }
+                await #expect(throws: (any Error).self) {
+                    try await ReturnPaidItemsPowerSyncStore(database: reopened, accountId: Self.guardAccountId,
+                        principalId: Self.guardPrincipalId, accessFence: .init()).status(id)
+                }
+                try await reopened.close()
+            } catch { try? await reopened.close(); throw error }
+        } catch { try? await db.close(); throw error }
+    }
+
+    private struct PaidReturnReply: ReturnPaidItemsCommandApplying {
+        let rejected: Bool
+        var transient = false
+        var revokeFence: LedgerWorkspaceAccessFence? = nil
+        var unexpectedCall = false
+        func apply(_ command: ReturnPaidItemsCommand) async throws -> ReturnPaidItemsServerResult {
+            if unexpectedCall { Issue.record("Removed workspace must not send a paid-return command") }
+            if transient { throw URLError(.networkConnectionLost) }
+            revokeFence?.markRemoved()
+            let e = command.envelope, fingerprint = try ReturnPaidItemsUploadRequest(command).fingerprint
+            let time = Int64((e.clientCreatedAt.timeIntervalSince1970 * 1000).rounded())
+            return .init(operation_id: e.operationId.rawValue, account_id: e.accountId.rawValue,
+                actor_principal_id: e.actorPrincipalId.rawValue, command_type: "return_paid_items",
+                contract_version: "return-paid-items-v1", command_fingerprint: fingerprint,
+                envelope_sha256: fingerprint, subject_id: e.payload.projectId.rawValue,
+                phase: rejected ? "rejected" : "applied", request_sha256: nil,
+                result_code: rejected ? nil : "paid_items_returned", error_code: rejected ? "return_placement_stale" : nil,
+                client_created_at_ms: time, server_received_at_ms: time, completed_at_ms: time)
+        }
+    }
+
+    private static func submitPaidReturn(_ operationId: OperationID, changed: Bool,
+                                        database: any PowerSyncDatabaseProtocol) async throws -> OperationReceipt {
+        let command = try ReturnPaidItemsCommand(operationId: operationId, accountId: guardAccountId,
+            actorPrincipalId: guardPrincipalId, capturedAt: guardAcceptedAt,
+            payload: .init(projectId: .init(validating: "project"), items: [
+                .init(itemId: .init(validating: "return-item"), placementId: .init(validating: "return-old"),
+                    chargeId: .init(validating: "return-charge"), paidInvoiceLineId: .init(validating: "paid-line"),
+                    inventoryPlacementId: .init(validating: changed ? "return-new-changed" : "return-new"),
+                    returnOccurrenceId: .init(validating: "return-fact"), creditId: .init(validating: "return-credit"))]))
+        return try await ReturnPaidItemsPowerSyncStore(database: database, accountId: guardAccountId,
             principalId: guardPrincipalId, accessFence: .init(), now: { guardAcceptedAt }).submit(command)
     }
 
@@ -2913,6 +3060,8 @@ struct LocalOperationIdentityGuardTests {
             return try await submitExpense(operationId, changed: true, database: database)
         case .returnUninvoicedItems:
             return try await submitReturn(operationId, changed: true, database: database)
+        case .returnPaidItems:
+            return try await submitPaidReturn(operationId, changed: true, database: database)
         case .sellInventoryItems:
             return try await submitSale(operationId, changed: true, database: database)
         case .manageCategories:

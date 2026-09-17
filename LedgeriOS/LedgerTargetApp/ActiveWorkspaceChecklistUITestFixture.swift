@@ -754,7 +754,38 @@ private struct UITestFixtureSpaceDetailQuery: SpaceCoreDetailsQuerying {
         source.stream
     }
 }
-private struct UITestFixtureItemReader: DownloadedItemPlacementReading, DownloadedProjectItemsReading, DownloadedItemPlacementHistoryReading, AccountBusinessProfileReading, DownloadedItemImageReading, InventorySaleWorkflowServing, UninvoicedReturnWorkflowServing, ProjectInvoicingReading, ProjectInvoiceCreating, ProjectInvoiceRevising, ProjectFeeInstallmentCreating, ExpenseCreating, ExpenseEditing, ItemPriceEditing, ItemDetailsEditing {
+private struct UITestFixtureItemReader: DownloadedItemPlacementReading, DownloadedProjectItemsReading, DownloadedItemPlacementHistoryReading, AccountBusinessProfileReading, DownloadedItemImageReading, InventorySaleWorkflowServing, UninvoicedReturnWorkflowServing, PaidReturnWorkflowServing, ProjectInvoicingReading, ProjectInvoiceCreating, ProjectInvoiceRevising, ProjectFeeInstallmentCreating, ExpenseCreating, ExpenseEditing, ItemPriceEditing, ItemDetailsEditing, ProjectBudgetReading {
+    func readProjectBudget(accountId: AccountID, projectId: ProjectID, currency: CurrencyCode) async throws -> ProjectBudgetRead {
+        guard accountId.rawValue == "account-ui-test", projectId.rawValue == "project-ui-test" else {
+            throw ProjectBudgetCalculation.Failure.scopeMismatch
+        }
+        let category = BudgetCategoryDefinitionSnapshot(id: try .init(validating: "category-ui-test"), accountId: accountId,
+            name: try .init(validating: "Furnishings"), kind: .itemized, lifecycle: .active, isSystem: false,
+            excludesFromOverallBudget: false, presentationOrder: 0, revision: 1)
+        let fee = BudgetCategoryDefinitionSnapshot(id: try .init(validating: "fee-category-ui-test"), accountId: accountId,
+            name: try .init(validating: "Design Fee"), kind: .fee, lifecycle: .active, isSystem: false,
+            excludesFromOverallBudget: true, presentationOrder: 1, revision: 1)
+        return try .init(scope: .project(accountId: accountId, projectId: projectId, clientId: .init(validating: "client-ui-test")),
+            currency: currency, segments: [.init(category: category,
+                clientPaid: .init(minorUnits: 10000, currency: currency), invoicingUnpaid: .init(minorUnits: 5000, currency: currency)),
+                .init(category: fee, clientPaid: .init(minorUnits: 0, currency: currency),
+                    invoicingUnpaid: .init(minorUnits: 15000, currency: currency))],
+            allocations: [.init(categoryId: category.id, allocation: .init(minorUnits: 100000, currency: currency)),
+                .init(categoryId: fee.id, allocation: .init(minorUnits: 10000, currency: currency))],
+            localOperations: [.init(operationId: .init(validating: "budget-pending"), localState: .queued)])
+    }
+
+    func watchProjectBudget(accountId: AccountID, projectId: ProjectID, currency: CurrencyCode) -> AsyncThrowingStream<ProjectBudgetRead?, Error> {
+        AsyncThrowingStream { continuation in
+            let task = Task {
+                do {
+                    continuation.yield(try await readProjectBudget(accountId: accountId, projectId: projectId, currency: currency))
+                } catch { continuation.finish(throwing: error) }
+            }
+            continuation.onTermination = { _ in task.cancel() }
+        }
+    }
+
     func editItemDetails(_ payload: EditItemDetailsCommand.Payload, operationUUID: UUID,
                          capturedAt: Date) async throws -> OperationReceipt {
         if ProcessInfo.processInfo.arguments.contains("--ledger-ui-test-market-edit") {
@@ -1320,7 +1351,8 @@ private struct UITestFixtureItemReader: DownloadedItemPlacementReading, Download
     func watchUninvoicedReturnReview(projectId: ProjectID, itemIds: [ItemID]) -> AsyncThrowingStream<UninvoicedReturnReview?, Error> {
         AsyncThrowingStream { continuation in
             do {
-                guard !ProcessInfo.processInfo.arguments.contains("--ledger-ui-test-return-unavailable") else {
+                guard !ProcessInfo.processInfo.arguments.contains("--ledger-ui-test-return-unavailable"),
+                      !ProcessInfo.processInfo.arguments.contains("--ledger-ui-test-paid-return") else {
                     continuation.yield(nil); return
                 }
                 continuation.yield(try .init(accountId: .init(validating: "account-ui-test"),
@@ -1348,6 +1380,41 @@ private struct UITestFixtureItemReader: DownloadedItemPlacementReading, Download
         return .init(operationId: try .init(validating: operationUUID.uuidString), localState: .queued)
     }
     func watchUninvoicedReturn(_ operationId: OperationID) -> AsyncThrowingStream<OperationSnapshot?, Error> {
+        AsyncThrowingStream { $0.yield(nil) }
+    }
+    func watchPaidReturnReview(projectId: ProjectID, itemIds: [ItemID]) -> AsyncThrowingStream<PaidReturnReview?, Error> {
+        AsyncThrowingStream { continuation in
+            guard ProcessInfo.processInfo.arguments.contains("--ledger-ui-test-paid-return"),
+                  !ProcessInfo.processInfo.arguments.contains("--ledger-ui-test-return-unavailable") else {
+                continuation.yield(nil); return
+            }
+            do {
+                continuation.yield(try .init(accountId: .init(validating: "account-ui-test"),
+                    principalId: .init(validating: "principal-ui-test"), projectId: projectId,
+                    items: itemIds.map { item in
+                        try .init(itemId: item, placementId: .init(validating: "history-\(item.rawValue)"),
+                            chargeId: .init(validating: "charge-\(item.rawValue)"),
+                            paidInvoiceLineId: .init(validating: "line-\(item.rawValue)"),
+                            paidAmount: .init(minorUnits: 12550, currency: .init(validating: "USD")),
+                            categoryId: .init(validating: "furnishings-ui"))
+                    }))
+            } catch { continuation.finish(throwing: error) }
+        }
+    }
+    func returnPaidItems(_ payload: ReturnPaidItemsPayload, operationUUID: UUID, capturedAt: Date) async throws -> OperationReceipt {
+        let expected: Set<String> = ProcessInfo.processInfo.arguments.contains("--ledger-ui-test-bulk-return")
+            ? ["physical-ui-chair", "physical-ui-other-space", "physical-ui-unassigned"] : ["physical-ui-chair"]
+        guard ProcessInfo.processInfo.arguments.contains("--ledger-ui-test-paid-return"),
+              payload.projectId.rawValue == "project-ui-test", Set(payload.items.map { $0.itemId.rawValue }) == expected,
+              payload.items.count == expected.count, payload.items.allSatisfy({ item in
+                  item.placementId.rawValue == "history-\(item.itemId.rawValue)"
+                    && item.chargeId.rawValue == "charge-\(item.itemId.rawValue)"
+                    && item.paidInvoiceLineId.rawValue == "line-\(item.itemId.rawValue)"
+              }) else { throw ReturnPaidItemsFailure.invalidSelection }
+        await saleAccepted?()
+        return .init(operationId: try .init(validating: operationUUID.uuidString), localState: .queued)
+    }
+    func watchPaidReturn(_ operationId: OperationID) -> AsyncThrowingStream<OperationSnapshot?, Error> {
         AsyncThrowingStream { $0.yield(nil) }
     }
     private var imageBytes: Data {

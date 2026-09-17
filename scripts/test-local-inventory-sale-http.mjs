@@ -14,6 +14,14 @@ assert.equal(realpathSync(labels['com.supabase.cli.workdir']),realpathSync(proce
 const local=JSON.parse(execFileSync('npx',['--offline','--yes','supabase@2.116.0','status','-o','json'],
     {encoding:'utf8',stdio:['ignore','pipe','ignore'],timeout:15000}));
 assert.equal(local.API_URL,'http://127.0.0.1:54321');
+const budgetRead = process.argv.includes('--native-budget');
+const paidReturnNative = process.argv.includes('--native-paid-return');
+const importedPaidReturn = process.argv.includes('--imported-paid-return');
+assert.ok(!importedPaidReturn || paidReturnNative, 'Imported paid return uses the existing native return scenario');
+assert.ok(!paidReturnNative || (!budgetRead && ['--mixed','--mcp','--financial'].every(flag=>process.argv.includes(flag))),
+    'Paid return uses the existing mixed financial sale fixture');
+assert.ok(!budgetRead || ['--mixed','--mcp','--financial','--native-history'].every(flag=>process.argv.includes(flag)),
+    'Budget parity uses the existing mixed historical financial fixture');
 if(process.argv.includes('--price-edit')) assert.ok(process.argv.includes('--financial') &&
     !process.argv.some(flag=>flag !== '--native-price-edit' && /^(--native.*|--expense.*|--mixed|--return.*|--resale.*)$/.test(flag)),
     'Price edit uses the standalone financial sale fixture');
@@ -62,6 +70,7 @@ const email=key+'@ledger-tests.invalid', password=randomUUID()+'-aA1!';
 // Resolve optional test adapters before provisioning a synthetic user. A loader
 // failure must not leave a signed-in fixture outside the cleanup block.
 const mcp=process.argv.includes('--mcp') ? await import('../LedgerTargetMCP/src/inventorySale.ts') : null;
+const budgetMCP=budgetRead ? await import('../LedgerTargetMCP/src/projectBudgetRead.ts') : null;
 const priceMCP=process.argv.includes('--price-edit') ? await import('../LedgerTargetMCP/src/itemPriceEdit.ts') : null;
 const priceTransport=priceMCP ? await import('../LedgerTargetMCP/src/inventorySale.ts') : null;
 const returnMCP=process.argv.includes('--return-mcp') ? await import('../LedgerTargetMCP/src/uninvoicedReturn.ts') : null;
@@ -144,6 +153,8 @@ try {
                 ...(process.argv.includes('--invoice-sent')?{LEDGER_INVOICE_LOCAL_SENT:'1'}:{}),
                 ...(mixedInvoice?{LEDGER_INVOICE_LOCAL_MIXED:'1'}:{}),
                 ...(process.argv.includes('--native-history-invoice')?{LEDGER_HISTORY_LIVE_INVOICE:'1'}:{}),
+                ...(budgetRead?{LEDGER_BUDGET_LOCAL:'1'}:{}),
+                ...(paidReturnNative?{LEDGER_PAID_RETURN_LOCAL:'1'}:{}),
                 ...(process.argv.includes('--native-expense-edit')?{LEDGER_EXPENSE_LOCAL_EDIT:'1'}:{}),
                 ...(process.argv.includes('--expense-edit-media')?{LEDGER_EXPENSE_LOCAL_EDIT_MEDIA:'1'}:{}),
                 ...(process.argv.includes('--expense-edit-conflict')?{LEDGER_EXPENSE_LOCAL_EDIT_CONFLICT:'1'}:{}),
@@ -526,7 +537,72 @@ try {
                 assert.equal(history(),before,'Live membership must not rewrite earlier paid history');
             }
             await runNative('invoicingHistoricalLiveReplication',sourceProject,originItem);
+            if (budgetMCP) {
+                const reader=new budgetMCP.SupabaseProjectBudgetReader(new URL(local.API_URL),local.PUBLISHABLE_KEY);
+                for (const [projectId,expected] of [[sourceProject,'1100'],[project,'400']]) {
+                    const budget=await reader.read({projectId,currency:'USD'},context);
+                    assert.equal(budget.overallRecognizedMinorUnits,expected);
+                    assert.equal(budget.isCompleteForProjectBudget,false);
+                }
+                await assert.rejects(reader.read({projectId:sourceProject,currency:'USD'}, {...context,accountId:'foreign'}),
+                    error=>error.statusCode===403);
+                sql(`update public.spike_account_memberships set financial_access='limited' where account_id=${q(account)} and principal_id=${q(principal)}`);
+                await assert.rejects(reader.read({projectId:project,currency:'USD'},context),error=>error.statusCode===403);
+                console.log('PASS actual Budget MCP HTTP, native PowerSync/restart parity and foreign/restricted read denial.');
+            }
             assert.equal(history(),before);
+        }
+        if (paidReturnNative) {
+            const paidInvoice=key+'-current-invoice', paidPayment=key+'-current-payment', paidLine=key+'-current-line';
+            const returnItem=importedPaidReturn ? key+'-imported-item' : item;
+            if (importedPaidReturn) {
+                const charge=returnItem+'-charge', placement=returnItem+'-project';
+                const payment={p_id:paidPayment,p_account_id:account,p_project_id:project,p_client_id:client,
+                    p_amount:'100',p_currency:'USD',p_source_account:'synthetic-paid-return',
+                    p_source_document:paidPayment,p_source_bytes:'\\x01'};
+                const invoice={invoice_id:paidInvoice,invoice_revision:'1',account_id:account,project_id:project,
+                    client_id:client,purchase_id:paidPayment,currency:'USD',total_minor_units:'100',lines:[{
+                        id:paidLine,line_position:0,source_kind:'item',source_id:charge,item_id:returnItem,
+                        source_revision:'1',category_id:category,signed_amount_minor_units:'100',description:'Imported paid chair',
+                        source_snapshot_json:JSON.stringify({item:{itemId:returnItem,occurrenceId:charge,
+                            price:{basis:{importedInvoiceAmount:{}},amount:{minorUnits:100,currency:'USD'}}}})}]};
+                const sources=[{source_document_id:returnItem,source_line_id:paidLine,
+                    source_bytes:'\\x02',line_source_bytes:'\\x03'}];
+                sql(`begin;
+                  insert into public.spike_items(id,account_id,description,created_by_principal_id)
+                    values(${q(returnItem)},${q(account)},'Imported paid chair',${q(principal)});
+                  insert into public.spike_item_placements(id,account_id,item_id,scope_kind,started_at,started_by_principal_id,ended_at,ended_by_principal_id)
+                    values(${q(returnItem+'-origin')},${q(account)},${q(returnItem)},'business_inventory','2023-01-01',${q(principal)},'2024-01-01',${q(principal)});
+                  insert into public.spike_item_placements(id,account_id,item_id,scope_kind,project_id,started_at,started_by_principal_id)
+                    values(${q(placement)},${q(account)},${q(returnItem)},'project',${q(project)},'2024-01-01',${q(principal)});
+                  select ledger_private.import_client_payment(${q(paidPayment)},${q(account)},${q(project)},${q(client)},100,'USD','synthetic-paid-return',${q(paidPayment)},decode('01','hex'));
+                  select ledger_private.import_invoice_sources_with_placements(${q(JSON.stringify(invoice))}::jsonb,
+                    ${q(JSON.stringify(sources))}::jsonb,${q(JSON.stringify(payment))}::jsonb,'synthetic-paid-return',
+                    ${q(paidInvoice)},decode('04','hex'),${q(JSON.stringify([{line_id:paidLine,placement_id:placement}]))}::jsonb,
+                    ${q(principal)},decode('05','hex'));
+                  commit;`);
+            } else {
+            const snapshot=JSON.stringify({item:{itemId:item,occurrenceId:item+'-charge',
+                price:{basis:{projectPrice:{}},amount:{minorUnits:100,currency:'USD'}}}});
+            sql(`begin;
+              select ledger_private.import_client_payment(${q(paidPayment)},${q(account)},${q(project)},${q(client)},100,'USD','synthetic-paid-return',${q(paidPayment)},decode('01','hex'));
+              insert into ledger_private.collected_invoices(id,account_id,project_id,client_id,purchase_id,invoice_revision,currency,total_minor_units)
+                values(${q(paidInvoice)},${q(account)},${q(project)},${q(client)},${q(paidPayment)},1,'USD',100);
+              insert into ledger_private.collected_invoice_lines(id,account_id,invoice_id,line_position,currency,source_kind,source_id,item_id,source_revision,category_id,signed_amount_minor_units,description,source_snapshot)
+                values(${q(paidLine)},${q(account)},${q(paidInvoice)},0,'USD','item',${q(item+'-charge')},${q(item)},1,${q(category)},100,'Paid chair',${q(snapshot)}::jsonb);
+              update ledger_private.collected_invoices set sealed=true where id=${q(paidInvoice)};
+              commit;`);
+            }
+            const importedContents=sql(`select ledger_private.read_collected_invoice(${q(account)},${q(paidInvoice)})`);
+            await runNative('paidReturnLiveReplication',project,returnItem);
+            assert.equal(sql(`select ledger_private.read_collected_invoice(${q(account)},${q(paidInvoice)})`),importedContents,
+                'Returned Item retains exact frozen Invoice and payment membership');
+            assert.equal(sql(`select count(*) from ledger_private.paid_item_return_credits where account_id=${q(account)} and item_id=${q(returnItem)}`),'1');
+            assert.equal(sql(`select count(*) from public.spike_item_placements where account_id=${q(account)} and item_id=${q(returnItem)} and scope_kind='business_inventory' and ended_at is null`),'1');
+            assert.equal(sql(`select signed_amount_minor_units from ledger_private.collected_invoice_lines where id=${q(paidLine)}`),'100');
+            assert.equal(sql(`select count(*) from public.spike_transactions where account_id=${q(account)}`),'3','Return creates no cash Transaction');
+            assert.equal(history(),before,'Prior paid history remains unchanged');
+            console.log('PASS offline native paid return: one credit, one Inventory placement, unchanged paid line and no cash event.');
         }
         console.log(JSON.stringify({mcpMixedOriginSale:true,items:3,charges:3,totalMinorUnits:400,
             staleBatchAtomic:true,replay:true,sourcePurchaseReceiptAndHistoryUnchanged:true,frozenInvoiceAndPaymentUnchanged:true,newTransactions:0}));

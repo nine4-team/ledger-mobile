@@ -449,14 +449,27 @@ public struct DownloadedItemReturnLink: Equatable, Sendable, Identifiable {
 
 /// A frozen billing fact, independent of current custody or payment allocation.
 public struct DownloadedItemInvoiceLine: Equatable, Sendable, Identifiable {
+    public struct PaidReturn: Equatable, Sendable {
+        public let creditId: EntityID
+        public let returnOccurrenceId: EntityID
+        public let inventoryPlacementId: EntityID
+        public init(creditId: EntityID, returnOccurrenceId: EntityID, inventoryPlacementId: EntityID) {
+            self.creditId = creditId; self.returnOccurrenceId = returnOccurrenceId
+            self.inventoryPlacementId = inventoryPlacementId
+        }
+    }
     public var id: InvoiceLineID { line.id }
     public let invoiceId: InvoiceID
     public let purchaseId: TransactionID
     public let line: FrozenInvoiceLine
     public let invoiceNumber: String?
-    public init(invoiceId: InvoiceID, purchaseId: TransactionID, line: FrozenInvoiceLine, invoiceNumber: String? = nil) {
+    /// Nil means no validated downloaded return link, not proof of no return.
+    public let paidReturn: PaidReturn?
+    public init(invoiceId: InvoiceID, purchaseId: TransactionID, line: FrozenInvoiceLine, invoiceNumber: String? = nil,
+                paidReturn: PaidReturn? = nil) {
         self.invoiceId = invoiceId; self.purchaseId = purchaseId; self.line = line
         self.invoiceNumber = invoiceNumber
+        self.paidReturn = paidReturn
     }
 }
 

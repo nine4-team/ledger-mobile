@@ -178,6 +178,7 @@ extension ItemSpaceClearingPowerSyncStore:
 {}
 
 enum AccountWorkspaceRuntimeFiniteOperation: Equatable, Sendable {
+    case readProjectBudget
     case readInvoicingCharges
     case readExpenses
     case readCollectedInvoices
@@ -194,6 +195,7 @@ enum AccountWorkspaceRuntimeFiniteOperation: Equatable, Sendable {
     case editItemPrice
     case editItemDetails
     case returnUninvoicedItems
+    case returnPaidItems
     case createExpense
     case editExpense
     case reviseSpaceChecklists
@@ -221,6 +223,7 @@ enum AccountWorkspaceRuntimeFiniteOperation: Equatable, Sendable {
 
 enum AccountWorkspaceRuntimeStreamOperation: Equatable, Sendable {
     case invoicingCharges
+    case projectBudget
     case expenses
     case downloadedProjectItems
     case accountBusinessProfile
@@ -243,6 +246,7 @@ enum AccountWorkspaceRuntimeStreamOperation: Equatable, Sendable {
     case itemPriceEditOperation
     case itemDetailsEditOperation
     case uninvoicedReturnOperation
+    case paidReturnOperation
     case spaceAssignmentDestinations
     case transferDestinations
     case projectCreationOperation
@@ -590,6 +594,7 @@ final class AccountWorkspaceRuntimeResources: @unchecked Sendable {
     let itemPriceEditStore: ItemPriceEditPowerSyncStore
     let itemDetailsEditStore: ItemDetailsEditPowerSyncStore
     let uninvoicedReturnStore: ReturnUninvoicedItemsPowerSyncStore
+    let paidReturnStore: ReturnPaidItemsPowerSyncStore
     let spaceChecklistRevisionStore:
         any AccountWorkspaceSpaceChecklistRevisionStoring
     let itemSpaceAssignmentStore: any AccountWorkspaceItemSpaceAssignmentStoring
@@ -686,6 +691,8 @@ final class AccountWorkspaceRuntimeResources: @unchecked Sendable {
         itemDetailsEditStore = ItemDetailsEditPowerSyncStore(database: structuredDatabase,
             accountId: accountId, principalId: principalId, accessFence: accessFence, now: now)
         uninvoicedReturnStore = ReturnUninvoicedItemsPowerSyncStore(database: structuredDatabase,
+            accountId: accountId, principalId: principalId, accessFence: accessFence, now: now)
+        paidReturnStore = ReturnPaidItemsPowerSyncStore(database: structuredDatabase,
             accountId: accountId, principalId: principalId, accessFence: accessFence, now: now)
         spaceChecklistRevisionStore = SpaceChecklistRevisionPowerSyncStore(
             database: structuredDatabase,
@@ -867,6 +874,29 @@ actor AccountWorkspacePendingWorkRuntime {
                 accountId: resources.accountId, actorPrincipalId: resources.principalId,
                 capturedAt: capturedAt, payload: payload)
             return try await resources.inventorySaleStore.submit(command)
+        }
+    }
+
+    func readPaidReturnReview(projectId: ProjectID, itemIds: [ItemID]) async throws -> PaidReturnReview {
+        try await withFiniteLease(.returnPaidItems) { resources in
+            try await resources.paidReturnStore.review(projectId: projectId, itemIds: itemIds)
+        }
+    }
+
+    func paidReturnStatus(_ operationId: OperationID) async throws -> OperationSnapshot? {
+        try await withFiniteLease(.returnPaidItems) { resources in
+            try await resources.paidReturnStore.status(operationId)
+        }
+    }
+
+    func returnPaidItems(_ payload: ReturnPaidItemsPayload, operationUUID: UUID,
+                         capturedAt: Date) async throws -> OperationReceipt {
+        try await withFiniteLease(.returnPaidItems) { resources in
+            let command = try ReturnPaidItemsCommand(
+                operationId: ReturnPaidItemsOperationIdentity.make(accountId: resources.accountId, uuid: operationUUID),
+                accountId: resources.accountId, actorPrincipalId: resources.principalId,
+                capturedAt: capturedAt, payload: payload)
+            return try await resources.paidReturnStore.submit(command)
         }
     }
 
@@ -1629,6 +1659,14 @@ actor AccountWorkspacePendingWorkRuntime {
         }
     }
 
+    func readProjectBudget(accountId: AccountID, projectId: ProjectID, currency: CurrencyCode) async throws -> ProjectBudgetRead {
+        try await withFiniteLease(.readProjectBudget) { resources in
+            guard accountId == resources.accountId else { throw LedgerOfflineClientRuntimeFailure.accountScopeMismatch }
+            return try await ProjectBudgetPowerSyncQuery(database: resources.structuredDatabase)
+                .readImplementedSources(accountId: accountId, principalId: resources.principalId, projectId: projectId, currency: currency)
+        }
+    }
+
     func readExpenses(accountId: AccountID, projectId: ProjectID) async throws -> ProjectExpenses {
         try await withFiniteLease(.readExpenses) { resources in
             guard accountId == resources.accountId else { throw LedgerOfflineClientRuntimeFailure.accountScopeMismatch }
@@ -1812,6 +1850,33 @@ actor AccountWorkspacePendingWorkRuntime {
                 try Task.checkCancellation()
                 try await ProjectExpensePowerSyncQuery(database: resources.structuredDatabase).run(
                     accountId: accountId, principalId: resources.principalId, projectId: projectId) { value in
+                        await self.forwardStreamValue(value, to: continuation)
+                    }
+                continuation.finish()
+            } catch is CancellationError { continuation.finish(throwing: CancellationError()) }
+            catch { await self.finishStream(continuation, error: error) }
+            await self.streamFinished(id: id)
+        }
+        streamTasks[id] = task
+    }
+
+    func startProjectBudgetWatch(id: UUID, accountId: AccountID, projectId: ProjectID, currency: CurrencyCode,
+        continuation: AsyncThrowingStream<ProjectBudgetRead?, Error>.Continuation) {
+        guard !normalAccessLocked, case .open = state, let resources else {
+            continuation.finish(throwing: LedgerOfflineClientRuntimeFailure.runtimeClosed); return
+        }
+        guard !Task.isCancelled, cancelledBeforeStart.remove(id) == nil else {
+            continuation.finish(throwing: CancellationError()); return
+        }
+        guard accountId == resources.accountId else {
+            continuation.finish(throwing: LedgerOfflineClientRuntimeFailure.accountScopeMismatch); return
+        }
+        let task = Task.detached { [resources] in
+            do {
+                try await resources.streamOperationCheckpoint(.projectBudget)
+                try Task.checkCancellation()
+                try await ProjectBudgetPowerSyncQuery(database: resources.structuredDatabase).run(
+                    accountId: accountId, principalId: resources.principalId, projectId: projectId, currency: currency) { value in
                         await self.forwardStreamValue(value, to: continuation)
                     }
                 continuation.finish()
@@ -2517,6 +2582,18 @@ actor AccountWorkspacePendingWorkRuntime {
             validate: { _ in }, makeStream: { $0.categoryManagementStore.watchOperations() })
     }
 
+    func startPaidReturnReviewWatch(id: UUID, projectId: ProjectID, itemIds: [ItemID],
+        continuation: AsyncThrowingStream<PaidReturnReview?, Error>.Continuation) {
+        startStream(id: id, operation: .paidReturnOperation, continuation: continuation,
+            validate: { _ in }, makeStream: { $0.paidReturnStore.watchReview(projectId: projectId, itemIds: itemIds) })
+    }
+
+    func startPaidReturnWatch(id: UUID, operationId: OperationID,
+        continuation: AsyncThrowingStream<OperationSnapshot?, Error>.Continuation) {
+        startStream(id: id, operation: .paidReturnOperation, continuation: continuation,
+            validate: { _ in }, makeStream: { $0.paidReturnStore.watch(operationId) })
+    }
+
     func startUninvoicedReturnReviewWatch(id: UUID, projectId: ProjectID, itemIds: [ItemID],
         continuation: AsyncThrowingStream<UninvoicedReturnReview?, Error>.Continuation) {
         startStream(id: id, operation: .uninvoicedReturnOperation, continuation: continuation,
@@ -2770,6 +2847,7 @@ actor AccountWorkspacePendingWorkRuntime {
             itemPriceEditApplier: appliers.itemPriceEdit,
             itemDetailsEditApplier: appliers.itemDetailsEdit,
             uninvoicedReturnApplier: appliers.uninvoicedReturn,
+            paidReturnApplier: appliers.paidReturn,
             expenseCreationApplier: appliers.expenseCreation,
             invoiceCreationApplier: appliers.invoiceCreation,
             invoiceRevisionApplier: appliers.invoiceRevision,
@@ -2838,6 +2916,7 @@ actor AccountWorkspacePendingWorkRuntime {
             itemPriceEditApplier: appliers.itemPriceEdit,
             itemDetailsEditApplier: appliers.itemDetailsEdit,
             uninvoicedReturnApplier: appliers.uninvoicedReturn,
+            paidReturnApplier: appliers.paidReturn,
             expenseCreationApplier: appliers.expenseCreation,
             invoiceCreationApplier: appliers.invoiceCreation,
             invoiceRevisionApplier: appliers.invoiceRevision,
@@ -3052,6 +3131,7 @@ actor AccountWorkspacePendingWorkRuntime {
         await resources.itemPriceEditStore.cancelAndDrainWatches()
         await resources.itemDetailsEditStore.cancelAndDrainWatches()
         await resources.uninvoicedReturnStore.cancelAndDrainWatches()
+        await resources.paidReturnStore.cancelAndDrainWatches()
         await resources.spaceAssignmentDestinationQuery.cancelAndDrainWatches()
         await resources.projectNoteQuery.cancelAndDrainWatches()
         await resources.spaceCoreDetailsQuery.cancelAndDrainWatches()

@@ -43,13 +43,10 @@ enum BudgetTabCalculations {
     static func sortCategories(
         _ categories: [BudgetProgress.CategoryProgress]
     ) -> [BudgetProgress.CategoryProgress] {
-        let nonFee = categories
-            .filter { !$0.isFeeCategory }
-            .sorted { $0.name.localizedCaseInsensitiveCompare($1.name) == .orderedAscending }
-        let fee = categories
-            .filter { $0.isFeeCategory }
-            .sorted { $0.name.localizedCaseInsensitiveCompare($1.name) == .orderedAscending }
-        return nonFee + fee
+        categories.sorted {
+            BudgetDisplayCalculations.categoryComesBefore(name: $0.name, isFee: $0.isFeeCategory,
+                otherName: $1.name, otherIsFee: $1.isFeeCategory)
+        }
     }
 
     /// Returns a remaining/over label relative to budget, or delegates to
@@ -64,17 +61,8 @@ enum BudgetTabCalculations {
         budgetCents: Int,
         isFeeCategory: Bool
     ) -> String {
-        guard budgetCents != 0 else {
-            return spentLabel(spentCents: spentCents, isFeeCategory: isFeeCategory)
-        }
-        if spentCents <= budgetCents {
-            let remaining = budgetCents - spentCents
-            return "\(BudgetDisplayCalculations.formatCentsAsDollars(remaining)) remaining"
-        } else {
-            let over = spentCents - budgetCents
-            let suffix = isFeeCategory ? "over received" : "over"
-            return "\(BudgetDisplayCalculations.formatCentsAsDollars(over)) \(suffix)"
-        }
+        BudgetDisplayCalculations.remainingLabel(spentCents: spentCents,
+            budgetCents: budgetCents, isFeeCategory: isFeeCategory)
     }
 
     /// Formats a spent/received label based on whether the category is a fee category.
@@ -85,8 +73,7 @@ enum BudgetTabCalculations {
         spentCents: Int,
         isFeeCategory: Bool
     ) -> String {
-        let formatted = BudgetDisplayCalculations.formatCentsAsDollars(spentCents)
-        return isFeeCategory ? "\(formatted) received" : "\(formatted) spent"
+        BudgetDisplayCalculations.spentLabel(spentCents: spentCents, isFeeCategory: isFeeCategory)
     }
 
     // MARK: - Pinning

@@ -13,6 +13,7 @@ enum AccountBoundOperationFamily: String, Sendable {
     case itemPriceEdit = "item-price-edit"
     case itemDetailsEdit = "item-details-edit"
     case uninvoicedReturn = "uninvoiced-return"
+    case paidReturn = "paid-return"
     case expenseCreation = "expense-create"
     case expenseEdit = "expense-edit"
     case invoiceCreation = "invoice-create"

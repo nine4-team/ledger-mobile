@@ -17,7 +17,7 @@ select is((select source_sha256 from ledger_private.imported_project_legacy_note
 create temporary table after_first_import as select ctid::text as version from public.spike_projects where id='legacy-import-a';
 select is(pg_temp.import_legacy(),'legacy-import-a','Exact retry returns same identity');
 select is((select ctid::text from public.spike_projects where id='legacy-import-a'),(select version from after_first_import),'Exact retry performs no Project update');
-select is((select count(*) from ledger_private.imported_project_legacy_note_sources),1::bigint,'Replay creates no duplicate evidence');
+select is((select count(*) from ledger_private.imported_project_legacy_note_sources where project_id='legacy-import-a'),1::bigint,'Replay creates no duplicate evidence for the imported Project');
 select throws_ok($$select pg_temp.import_legacy(p_notes=>'Changed')$$,'22000',null,'Changed text conflicts');
 select throws_ok($$select pg_temp.import_legacy(p_bytes=>decode('00','hex'))$$,'22000',null,'Changed bytes conflict');
 select throws_ok($$select pg_temp.import_legacy(p_source=>'different-source')$$,'22000',null,'Changed source conflicts');

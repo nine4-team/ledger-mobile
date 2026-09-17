@@ -45,6 +45,31 @@ package struct FirebaseExpenseInvoiceImportParameters: Encodable, Sendable {
     package let p_payment: FirebaseClientPaymentImportParameters
     package let p_source_account, p_source_invoice, p_invoice_bytes: String
 
+    package struct PlacementMapping: Encodable, Sendable {
+        package let line_id, placement_id: String
+    }
+
+    /// Explicit operator decisions keyed by original Invoice line ID. Resolving
+    /// the physical cycle belongs to review, never current Item metadata.
+    package func placementMappings(reviewed: [(sourceLineID: String, placementID: EntityID)]) throws -> [PlacementMapping] {
+        let lines = try p_invoice.restored().lines
+        let itemSources = p_sources.enumerated().compactMap { index, source -> (Int, Item)? in
+            guard case .item(let item) = source else { return nil }
+            return (index, item)
+        }
+        guard !reviewed.isEmpty, reviewed.count == itemSources.count,
+              Set(reviewed.map { Data($0.sourceLineID.utf8) }).count == reviewed.count else {
+            throw FirebaseExpenseConversion.MappingFailure.incompleteInvoiceMapping
+        }
+        return try itemSources.map { index, source in
+            guard index < lines.count, case .item = lines[index].source,
+                  let chosen = reviewed.first(where: { $0.sourceLineID.utf8.elementsEqual(source.source_line_id.utf8) }) else {
+                throw FirebaseExpenseConversion.MappingFailure.incompleteInvoiceMapping
+            }
+            return PlacementMapping(line_id: lines[index].id.rawValue, placement_id: chosen.placementID.rawValue)
+        }
+    }
+
     package static func make(review: FirebaseInvoiceSourcesReview, mappedSources: [FirebaseExpenseConversion.Result],
         targetScope: TransactionScope, invoiceID: InvoiceID, payment: FirebaseClientPaymentImportParameters,
         invoiceRevision: Int64, sourceRevision: Int64, historicalCategories: [String: BudgetCategoryID],

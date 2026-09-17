@@ -11,13 +11,14 @@ const invoiceFlow=process.argv.includes('--invoice-flow');
 const feeFlow=process.argv.includes('--fee-flow');
 const returnFlow=process.argv.includes('--return-flow');
 const historyFlow=process.argv.includes('--history-flow');
+const paidReturnFlow=process.argv.includes('--paid-return-flow');
 const sessionFlow=process.argv.includes('--session-flow');
 const clientReportFlow=process.argv.includes('--client-report-flow');
 const priceFlow=clientReportFlow||process.argv.includes('--price-flow');
 const onboardingFlow=process.argv.includes('--onboarding-flow');
 const expenseFlow=feeFlow||invoiceFlow||expenseEditFlow||process.argv.includes('--expense-flow');
 const expenseMode=expenseFlow||process.argv.includes('--expense');
-assert.deepEqual(process.argv.slice(2),clientReportFlow?['--apply','--client-report-flow']:onboardingFlow?['--apply','--onboarding-flow']:priceFlow?['--apply','--price-flow']:sessionFlow?['--apply','--session-flow']:historyFlow?['--apply','--history-flow']:returnFlow?['--apply','--return-flow']:expenseMode?['--apply',feeFlow?'--fee-flow':invoiceFlow?'--invoice-flow':expenseEditFlow?'--expense-edit-flow':expenseFlow?'--expense-flow':'--expense']:['--apply']);
+assert.deepEqual(process.argv.slice(2),paidReturnFlow?['--apply','--paid-return-flow']:clientReportFlow?['--apply','--client-report-flow']:onboardingFlow?['--apply','--onboarding-flow']:priceFlow?['--apply','--price-flow']:sessionFlow?['--apply','--session-flow']:historyFlow?['--apply','--history-flow']:returnFlow?['--apply','--return-flow']:expenseMode?['--apply',feeFlow?'--fee-flow':invoiceFlow?'--invoice-flow':expenseEditFlow?'--expense-edit-flow':expenseFlow?'--expense-flow':'--expense']:['--apply']);
 // Load the existing MCP implementations before opening a QA session.
 const expenseAPI=expenseFlow?await import('../LedgerTargetMCP/src/expenseCreation.ts'):null;
 const projectAPI=expenseFlow?await import('../LedgerTargetMCP/src/projectCreation.ts'):null;
@@ -132,6 +133,82 @@ try {
         LEDGER_SESSION_QA_EMAIL:auth.email,LEDGER_SESSION_QA_PASSWORD:auth.password}});
     process.stdout.write(run.stdout??'');process.stderr.write(run.stderr??'');
     assert.equal(run.status,0,'Hosted session sync/logout check failed');
+  } else if(paidReturnFlow) {
+    // Retain a labeled synthetic paid-sale fixture; only the native authenticated
+    // command performs the return. Existing copied Items are never changed.
+    if(memberships[0].financial_access==='none') {
+      restoreHistoryAccess=true;
+      const changed=historySQL(`update public.spike_account_memberships set financial_access='full'
+        where account_id='realcopy-b9d236394770-account'
+          and principal_id='upload-http-owner-4b1e9766-5791-48a9-a7b1-15a541807e64'
+          and state='active' and role='owner' and financial_access='none' returning financial_access;`);
+      assert.deepEqual(changed,[{financial_access:'full'}]);
+      memberships[0].financial_access='full';
+    }
+    assert.equal(memberships[0].financial_access,'full');
+    const clients=await read('/rest/v1/spike_clients?account_id=eq.'+account+'&lifecycle=eq.active&select=id&order=id&limit=1');
+    const accounts=await read('/rest/v1/spike_accounts?id=eq.'+account+'&select=furnishings_category_id');
+    assert.equal(clients.length,1);assert.equal(accounts.length,1);
+    const category=accounts[0].furnishings_category_id;assert.equal(typeof category,'string');
+    const id='hosted-paid-return-'+crypto.randomUUID(),project=id+'-project',item=id+'-item';
+    const q=value=>"'"+value.replaceAll("'","''")+"'";
+    historySQL(`begin;
+      insert into public.spike_projects(id,account_id,client_id,display_name,created_at,updated_at,created_at_ms,updated_at_ms,created_by_principal_id)
+        values(${q(project)},${q(account)},${q(clients[0].id)},'QA paid Item return',now(),now(),1,1,${q(auth.principalId)});
+      insert into public.spike_items(id,account_id,description,created_by_principal_id)
+        values(${q(item)},${q(account)},'QA synthetic paid chair',${q(auth.principalId)});
+      insert into public.spike_item_placements(id,account_id,item_id,scope_kind,project_id,started_at,ended_at,started_by_principal_id,ended_by_principal_id,start_evidence)
+        values(${q(id+'-inventory')},${q(account)},${q(item)},'business_inventory',null,'2025-01-01','2026-01-01',${q(auth.principalId)},${q(auth.principalId)},'import_observation'),
+        (${q(id+'-placement')},${q(account)},${q(item)},'project',${q(project)},'2026-01-01',null,${q(auth.principalId)},null,'recorded_move');
+      select ledger_private.import_client_payment(${q(id+'-payment')},${q(account)},${q(project)},${q(clients[0].id)},100,'USD',${q(id)},${q(id+'-payment')},decode('01','hex'));
+      select ledger_private.import_invoice_sources_with_placements(
+        jsonb_build_object('invoice_id',${q(id+'-invoice')},'invoice_revision','1','account_id',${q(account)},
+          'project_id',${q(project)},'client_id',${q(clients[0].id)},'purchase_id',${q(id+'-payment')},
+          'currency','USD','total_minor_units','100','lines',jsonb_build_array(jsonb_build_object(
+            'id',${q(id+'-line')},'line_position',0,'source_kind','item','source_id',${q(id+'-charge')},
+            'item_id',${q(item)},'source_revision','1','category_id',${q(category)},'signed_amount_minor_units','100',
+            'description','Paid chair','source_snapshot_json',jsonb_build_object('item',jsonb_build_object(
+              'itemId',${q(item)},'occurrenceId',${q(id+'-charge')},'price',jsonb_build_object(
+                'basis',jsonb_build_object('importedInvoiceAmount','{}'::jsonb),
+                'amount',jsonb_build_object('minorUnits',100,'currency','USD'))))::text))),
+        jsonb_build_array(jsonb_build_object('source_document_id',${q(item)},'source_line_id',${q(id+'-line')},
+          'source_bytes','\\x02','line_source_bytes','\\x03')),
+        jsonb_build_object('p_id',${q(id+'-payment')},'p_account_id',${q(account)},'p_project_id',${q(project)},
+          'p_client_id',${q(clients[0].id)},'p_amount','100','p_currency','USD','p_source_account',${q(id)},
+          'p_source_document',${q(id+'-payment')},'p_source_bytes','\\x01'),
+        ${q(id)},${q(id+'-invoice')},decode('04','hex'),
+        jsonb_build_array(jsonb_build_object('line_id',${q(id+'-line')},'placement_id',${q(id+'-placement')})),
+        ${q(auth.principalId)},decode('05','hex'));
+      commit; select true as seeded;`);
+    const frozen=()=>historySQL(`select (select to_jsonb(i) from ledger_private.collected_invoices i where id=${q(id+'-invoice')}) invoice,
+      (select to_jsonb(l)-'sync_is_current' from ledger_private.collected_invoice_lines l where id=${q(id+'-line')}) line,
+      (select to_jsonb(t) from public.spike_transactions t where id=${q(id+'-payment')}) payment;`);
+    const before=frozen();
+    const {SupabaseProjectBudgetReader}=await import('../LedgerTargetMCP/src/projectBudgetRead.ts');
+    const reader=new SupabaseProjectBudgetReader(new URL(base),apikey);
+    const context={accountId:account,principalId:auth.principalId,accessToken:session.access_token};
+    assert.equal((await reader.read({projectId:project,currency:'USD'},context)).overallRecognizedMinorUnits,'100');
+    console.log(JSON.stringify({hostedPaidReturnStarted:true,importedPaidLine:true,project,item}));
+    const run=spawnSync('swift',['test','--package-path','LedgeriOS','--no-parallel','--filter',
+      'AccountWorkspacePendingWorkRuntimeTests/paidReturnLiveReplication'],{encoding:'utf8',timeout:180000,env:{...process.env,
+        LEDGER_PAID_RETURN_LOCAL:'1',LEDGER_PAID_RETURN_HOSTED_QA:'1',LEDGER_SALE_LOCAL_ACCOUNT:account,
+        LEDGER_SALE_LOCAL_PRINCIPAL:auth.principalId,LEDGER_SALE_LOCAL_PROJECT:project,LEDGER_SALE_LOCAL_ITEM:item,
+        LEDGER_SALE_LOCAL_KEY:apikey,LEDGER_SALE_LOCAL_EMAIL:auth.email,LEDGER_SALE_LOCAL_PASSWORD:auth.password,
+        LEDGER_SALE_LOCAL_FINANCIAL_ACCESS:'full'}});
+    process.stdout.write(run.stdout??'');process.stderr.write(run.stderr??'');
+    assert.equal(run.status,0,'Hosted native paid return failed');
+    assert.match(run.stdout+run.stderr,/Test run with 1 test.*passed/);
+    assert.deepEqual(frozen(),before,'Frozen Invoice/line/payment must not change');
+    const budget=await reader.read({projectId:project,currency:'USD'},context);
+    assert.equal(budget.overallPaidMinorUnits,'100');assert.equal(budget.overallUnpaidMinorUnits,'-100');
+    assert.equal(budget.overallRecognizedMinorUnits,'0');assert.equal(budget.isCompleteForProjectBudget,false);
+    const [facts]=historySQL(`select
+      (select sync_is_current from ledger_private.collected_invoice_lines where id=${q(id+'-line')}) current_line_routing,
+      (select count(*) from ledger_private.paid_item_return_credits where account_id=${q(account)} and item_id=${q(item)}) credits,
+      (select count(*) from public.spike_item_placements where account_id=${q(account)} and item_id=${q(item)} and scope_kind='business_inventory' and ended_at is null) inventory,
+      (select count(*) from public.spike_transactions where account_id=${q(account)} and project_id=${q(project)}) payments;`);
+    assert.deepEqual(facts,{current_line_routing:false,credits:1,inventory:1,payments:1});
+    console.log(JSON.stringify({hostedPaidReturnPassed:true,project,item,...facts,budgetRecognized:'0',frozenHistoryUnchanged:true}));
   } else if(historyFlow) {
     if(memberships[0].financial_access==='none') {
       restoreHistoryAccess=true;

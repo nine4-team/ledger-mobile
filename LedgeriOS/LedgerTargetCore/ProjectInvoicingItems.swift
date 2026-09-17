@@ -11,20 +11,24 @@ public enum InvoicingAvailability: String, CaseIterable, Sendable {
 
 /// Read-only display data attached to the canonical occurrence, not a new history.
 public struct ProjectInvoicingItem: Equatable, Sendable, Identifiable {
-    public var id: BillableItemOccurrenceID { occurrence.id }
+    /// Charge and credit facts live in different authoritative tables. Their
+    /// raw IDs may coincide; list identity must retain the source kind.
+    public var id: String { "\(occurrence.polarity.rawValue):\(occurrence.id.rawValue)" }
     public let occurrence: BillableItemAccountingOccurrence
     public let amount: Money
     public let availability: InvoicingAvailability
     public let title: String
     public let invoiceDescription: String?
     public let categoryName: String?
+    public let categoryId: BudgetCategoryID?
     public let vendorName: String?
     public let invoiceName: String?
 
     public init(occurrence: BillableItemAccountingOccurrence, amount: Money,
                 availability: InvoicingAvailability, title: String,
                 invoiceDescription: String? = nil, categoryName: String? = nil,
-                vendorName: String? = nil, invoiceName: String? = nil) throws {
+                vendorName: String? = nil, invoiceName: String? = nil,
+                categoryId: BudgetCategoryID? = nil) throws {
         guard occurrence.polarity == .charge ? amount.minorUnits > 0 : amount.minorUnits < 0 else {
             throw ProjectInvoicingItemsFailure.invalidAmount
         }
@@ -37,6 +41,7 @@ public struct ProjectInvoicingItem: Equatable, Sendable, Identifiable {
         self.occurrence = occurrence; self.amount = amount; self.availability = availability
         self.title = title; self.invoiceDescription = invoiceDescription
         self.categoryName = categoryName; self.vendorName = vendorName; self.invoiceName = invoiceName
+        self.categoryId = categoryId
     }
 
     public func matches(search: String, availability: InvoicingAvailability? = nil) -> Bool {
@@ -48,7 +53,7 @@ public struct ProjectInvoicingItem: Equatable, Sendable, Identifiable {
 }
 
 public enum ProjectInvoicingItemsFailure: Error, Equatable {
-    case invalidAmount, invalidMembership, scopeMismatch, duplicateOccurrence
+    case invalidAmount, invalidMembership, scopeMismatch, duplicateOccurrence, missingBudgetCategory
 }
 
 /// Membership/stream completeness is established by the provider before creating
@@ -64,5 +69,35 @@ public struct ProjectInvoicingItems: Equatable, Sendable {
         }
         guard Set(rows.map(\.id)).count == rows.count else { throw ProjectInvoicingItemsFailure.duplicateOccurrence }
         self.accountId = accountId; self.projectId = projectId; self.rows = rows
+    }
+
+    /// Item-only contributions, not a complete Project budget. The caller must
+    /// establish download completeness and compose direct payments/Expenses/Fees.
+    /// Collected Item lines must not also be added by that caller.
+    public func budgetContributions(categories: [BudgetCategoryDefinitionSnapshot],
+                                    currency: CurrencyCode) throws -> [ProjectBudgetCategorySegment] {
+        guard categories.allSatisfy({ $0.accountId == accountId }) else {
+            throw ProjectBudgetSegmentFailure.accountScopeMismatch
+        }
+        guard Set(categories.map(\.id)).count == categories.count else {
+            throw ProjectBudgetSegmentFailure.duplicateCategoryIdentity
+        }
+        let known = Set(categories.map(\.id))
+        var paid: [BudgetCategoryID: Money] = [:], unpaid: [BudgetCategoryID: Money] = [:]
+        for row in rows {
+            guard let category = row.categoryId, known.contains(category) else {
+                throw ProjectInvoicingItemsFailure.missingBudgetCategory
+            }
+            guard row.amount.currency == currency else { throw ProjectBudgetSegmentFailure.currencyMismatch }
+            if row.availability == .paid {
+                paid[category] = try (paid[category] ?? .zero(currency: currency)).adding(row.amount)
+            } else {
+                unpaid[category] = try (unpaid[category] ?? .zero(currency: currency)).adding(row.amount)
+            }
+        }
+        return try categories.map { category in
+            try .init(category: category, clientPaid: paid[category.id] ?? .zero(currency: currency),
+                invoicingUnpaid: unpaid[category.id] ?? .zero(currency: currency))
+        }
     }
 }

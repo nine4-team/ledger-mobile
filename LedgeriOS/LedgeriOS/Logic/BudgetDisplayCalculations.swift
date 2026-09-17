@@ -3,6 +3,27 @@ import Foundation
 /// Pure functions for formatting and computing budget display values.
 /// Used by BudgetProgressView and testable without SwiftUI.
 enum BudgetDisplayCalculations {
+    static func categoryComesBefore(name: String, isFee: Bool, otherName: String, otherIsFee: Bool) -> Bool {
+        if isFee != otherIsFee { return !isFee }
+        return name.localizedCaseInsensitiveCompare(otherName) == .orderedAscending
+    }
+
+    /// Existing Budget tab labels, shared without importing its legacy models.
+    static func spentLabel(spentCents: Int, isFeeCategory: Bool) -> String {
+        let formatted = formatCentsAsDollars(spentCents)
+        return isFeeCategory ? "\(formatted) received" : "\(formatted) spent"
+    }
+
+    static func remainingLabel(spentCents: Int, budgetCents: Int, isFeeCategory: Bool) -> String {
+        guard budgetCents != 0 else {
+            return spentLabel(spentCents: spentCents, isFeeCategory: isFeeCategory)
+        }
+        if spentCents <= budgetCents {
+            return "\(formatCentsAsDollars(budgetCents - spentCents)) remaining"
+        }
+        let suffix = isFeeCategory ? "over received" : "over"
+        return "\(formatCentsAsDollars(spentCents - budgetCents)) \(suffix)"
+    }
 
     /// Formats cents as whole dollars: 15000 → "$150"
     static func formatCentsAsDollars(_ cents: Int) -> String {

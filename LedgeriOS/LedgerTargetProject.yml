@@ -81,6 +81,8 @@ targets:
       - path: LedgeriOS/Logic/ExportFieldConfig.swift
       - path: LedgeriOS/Modals/ExportTransactionsModal.swift
       - path: LedgeriOS/Logic/BudgetDisplayCalculations.swift
+      - path: LedgeriOS/Logic/BudgetTrackerCalculations.swift
+      - path: LedgeriOS/Components/BudgetCategoryTracker.swift
       - path: LedgeriOS/Platform/Clipboard.swift
       - path: LedgeriOS/Components/BulkSelectionBar.swift
       - path: LedgeriOS/Components/CollapsibleSection.swift
@@ -151,6 +153,7 @@ targets:
       - macOS
     sources:
       - path: LedgerTargetSharedLogicTests
+      - path: LedgeriOS/Logic/BudgetDisplayCalculations.swift
       - path: LedgerTargetPowerSync/ReportScratchStore.swift
       - path: LedgeriOS/Logic/InvoiceReportData.swift
       - path: LedgeriOS/Views/Reports/ReportHTMLBuilder.swift

@@ -266,6 +266,45 @@ struct SupabaseCategoryManagementRPCTests {
         }
     }
 
+    @Test func paidReturnUsesBoundAuthenticatedTransport() async throws {
+        let auth = authClient(storage: CategoryAuthTestStorage(), userId: UUID())
+        let signedIn = try await auth.signIn(email: "fixture@example.invalid", password: "fixture-password")
+        let http = session()
+        defer { http.invalidateAndCancel(); CategoryHTTPProtocol.handler = nil }
+        let access = try WorkspaceMembershipAuthorization(environment: .targetLocal, authUserId: signedIn.user.id,
+            principalId: .init(validating: "principal"), accountId: .init(validating: "account"),
+            role: .employee, financialAccess: .full)
+        let rpc = try SupabaseWorkspaceCommandRPC(url: URL(string: "https://target.invalid")!,
+            key: "sb_publishable_fixture", authorization: access,
+            identity: .init(client: auth, userId: signedIn.user.id), http: http)
+        func command(account: String) throws -> ReturnPaidItemsCommand {
+            try .init(operationId: .init(validating: "paid-return-op"), accountId: .init(validating: account),
+                actorPrincipalId: access.principalId, capturedAt: Date(timeIntervalSince1970: 123),
+                payload: .init(projectId: .init(validating: "project"), items: [
+                    .init(itemId: .init(validating: "item"), placementId: .init(validating: "old"),
+                        chargeId: .init(validating: "charge"), paidInvoiceLineId: .init(validating: "line"),
+                        inventoryPlacementId: .init(validating: "new"), returnOccurrenceId: .init(validating: "return"),
+                        creditId: .init(validating: "credit"))]))
+        }
+        let value = try command(account: "account"), wire = try ReturnPaidItemsUploadRequest(value)
+        CategoryHTTPProtocol.handler = { request in
+            #expect(request.url?.path == "/rest/v1/rpc/spike_return_paid_items")
+            #expect(request.value(forHTTPHeaderField: "Authorization") == "Bearer signed-in-token")
+            #expect(try requestBody(request) == wire.rpcBody)
+            return try response(request, result: ["operation_id":"paid-return-op", "account_id":"account",
+                "actor_principal_id":"principal", "command_type":"return_paid_items",
+                "contract_version":"return-paid-items-v1", "command_fingerprint":wire.fingerprint,
+                "envelope_sha256":wire.fingerprint, "subject_id":"project", "phase":"applied",
+                "result_code":"paid_items_returned", "client_created_at_ms":123000,
+                "server_received_at_ms":124000, "completed_at_ms":124000])
+        }
+        #expect(try await rpc.apply(value).phase == "applied")
+        CategoryHTTPProtocol.handler = { _ in throw URLError(.badURL) }
+        await #expect(throws: SupabaseWorkspaceCommandRPC.Failure.scopeMismatch) {
+            try await rpc.apply(command(account: "foreign"))
+        }
+    }
+
     @Test func feeCreationUsesBoundAuthenticatedTransport() async throws {
         let user = UUID(), auth = authClient(storage: CategoryAuthTestStorage(), userId: UUID())
         let signedIn = try await auth.signIn(email: "fixture@example.invalid", password: "fixture-password")

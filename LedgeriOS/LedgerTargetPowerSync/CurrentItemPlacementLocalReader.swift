@@ -95,11 +95,24 @@ struct CurrentItemPlacementLocalReader: Sendable {
               catch is DomainPrimitiveFailure { return [] }
             // An incomplete download is not proof of no billing history. The
             // containing history remains explicitly partial; SQL errors propagate.
-            return records.flatMap { invoice in
-                    invoice.lines.compactMap { line in
-                        guard case .item(let linkedItem, _, _) = line.source, linkedItem == itemId else { return nil }
+            return try records.flatMap { invoice in
+                    try invoice.lines.compactMap { line in
+                        guard case .item(let linkedItem, let occurrence, _) = line.source, linkedItem == itemId else { return nil }
+                        let paidReturn: DownloadedItemInvoiceLine.PaidReturn? = try transaction.getOptional(sql: """
+                            SELECT c.id,c.return_occurrence_id,c.inventory_placement_id
+                            FROM paid_item_return_credits c
+                            JOIN spike_item_placements p ON p.account_id=c.account_id
+                              AND p.id=c.inventory_placement_id AND p.item_id=c.item_id
+                            WHERE c.account_id=? AND c.item_id=? AND c.paid_invoice_line_id=? AND c.charge_id=?
+                              AND p.scope_kind='business_inventory' AND ? > 0
+                            """, parameters: [accountId.rawValue,itemId.rawValue,line.id.rawValue,
+                                occurrence.rawValue,line.signedAmount.minorUnits]) { row in
+                                try .init(creditId: .init(validating: row.getString(name: "id")),
+                                    returnOccurrenceId: .init(validating: row.getString(name: "return_occurrence_id")),
+                                    inventoryPlacementId: .init(validating: row.getString(name: "inventory_placement_id")))
+                            }
                         return DownloadedItemInvoiceLine(invoiceId: invoice.invoiceId, purchaseId: invoice.purchaseId,
-                            line: line, invoiceNumber: invoice.displayMetadata?.invoiceNumber)
+                            line: line, invoiceNumber: invoice.displayMetadata?.invoiceNumber, paidReturn: paidReturn)
                     }
                 }
         }
@@ -332,7 +345,8 @@ struct CurrentItemPlacementLocalReader: Sendable {
         EXISTS(SELECT 1 FROM collected_invoice_lines WHERE account_id=i.account_id) AS line_changes,
         EXISTS(SELECT 1 FROM collected_invoices WHERE account_id=i.account_id) AS invoice_changes,
         EXISTS(SELECT 1 FROM spike_transactions WHERE account_id=i.account_id) AS purchase_changes,
-        EXISTS(SELECT 1 FROM item_return_history WHERE account_id=i.account_id) AS return_changes
+        EXISTS(SELECT 1 FROM item_return_history WHERE account_id=i.account_id) AS return_changes,
+        EXISTS(SELECT 1 FROM paid_item_return_credits WHERE account_id=i.account_id) AS paid_return_changes
       FROM access CROSS JOIN validity LEFT JOIN selected_item i ON access.is_active
       LEFT JOIN placements p ON access.is_active
       LEFT JOIN spike_projects project ON project.id=p.project_id AND project.account_id=p.account_id

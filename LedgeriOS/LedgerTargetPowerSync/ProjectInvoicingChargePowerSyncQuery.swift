@@ -59,6 +59,7 @@ struct ProjectInvoicingChargePowerSyncQuery: Sendable {
                 let changes = try database.watch(sql: """
                     SELECT EXISTS(SELECT 1 FROM spike_account_memberships WHERE account_id=?)
                     UNION ALL SELECT EXISTS(SELECT 1 FROM spike_projects WHERE account_id=?)
+                    UNION ALL SELECT EXISTS(SELECT 1 FROM spike_clients WHERE account_id=?)
                     UNION ALL SELECT EXISTS(SELECT 1 FROM spike_item_placements WHERE account_id=?)
                     UNION ALL SELECT EXISTS(SELECT 1 FROM spike_items WHERE account_id=?)
                     UNION ALL SELECT EXISTS(SELECT 1 FROM item_charge_occurrences WHERE account_id=?)
@@ -66,10 +67,11 @@ struct ProjectInvoicingChargePowerSyncQuery: Sendable {
                     UNION ALL SELECT EXISTS(SELECT 1 FROM collected_invoices WHERE account_id=?)
                     UNION ALL SELECT EXISTS(SELECT 1 FROM spike_budget_categories WHERE account_id=?)
                     UNION ALL SELECT EXISTS(SELECT 1 FROM item_client_payment_connections WHERE account_id=?)
+                    UNION ALL SELECT EXISTS(SELECT 1 FROM paid_item_return_credits WHERE account_id=?)
                     UNION ALL SELECT EXISTS(SELECT 1 FROM ps_stream_subscriptions)
                     UNION ALL SELECT EXISTS(SELECT 1 FROM live_invoice_memberships)
                     UNION ALL SELECT EXISTS(SELECT 1 FROM live_invoices)
-                    """, parameters: Array(repeating: accountId.rawValue, count: 9)) { try $0.getInt(index: 0) }
+                    """, parameters: Array(repeating: accountId.rawValue, count: 11)) { try $0.getInt(index: 0) }
                 for try await _ in changes {
                     try Task.checkCancellation()
                     let snapshot: ProjectInvoicingItems?

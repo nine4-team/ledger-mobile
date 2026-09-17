@@ -449,6 +449,16 @@ streams:
     auto_subscribe: false
     queries:
       - |
+        SELECT paid_item_return_credits.id, paid_item_return_credits.account_id, paid_item_return_credits.charge_id, paid_item_return_credits.paid_invoice_line_id,
+          paid_item_return_credits.return_occurrence_id, paid_item_return_credits.inventory_placement_id, paid_item_return_credits.item_id
+        FROM ledger_private.paid_item_return_credits
+        JOIN spike_account_memberships AS membership ON membership.account_id = paid_item_return_credits.account_id
+        JOIN spike_principals AS principal ON principal.id = membership.principal_id
+        WHERE paid_item_return_credits.account_id = subscription.parameter('account_id')
+        AND paid_item_return_credits.project_id = subscription.parameter('project_id')
+        AND principal.auth_user_id = auth.user_id()
+        AND membership.state = 'active' AND membership.financial_access = 'full'
+      - |
         SELECT item_charge_occurrences.id, item_charge_occurrences.account_id, item_charge_occurrences.project_id,
           item_charge_occurrences.item_id, item_charge_occurrences.placement_id, item_charge_occurrences.category_id,
           item_charge_occurrences.amount_minor_units::text AS amount_minor_units, item_charge_occurrences.currency,
@@ -499,11 +509,6 @@ streams:
         JOIN spike_account_memberships AS membership ON membership.account_id = spike_budget_categories.account_id
         JOIN spike_principals AS principal ON principal.id = membership.principal_id
         WHERE spike_budget_categories.account_id = subscription.parameter('account_id')
-        AND spike_budget_categories.id IN (
-          SELECT charge.category_id FROM ledger_private.item_charge_occurrences AS charge
-          WHERE charge.account_id = subscription.parameter('account_id')
-          AND charge.project_id = subscription.parameter('project_id') AND charge.withdrawn_at IS NULL
-        )
         AND principal.auth_user_id = auth.user_id()
         AND membership.state = 'active' AND membership.financial_access = 'full'
 
@@ -819,6 +824,18 @@ streams:
             WHERE line.account_id=subscription.parameter('account_id') AND line.item_id=subscription.parameter('item_id')
               AND line.source_kind='item'
           )
+
+      - |
+        SELECT paid_item_return_credits.id, paid_item_return_credits.account_id,
+          paid_item_return_credits.charge_id, paid_item_return_credits.paid_invoice_line_id,
+          paid_item_return_credits.return_occurrence_id, paid_item_return_credits.inventory_placement_id,
+          paid_item_return_credits.item_id
+        FROM ledger_private.paid_item_return_credits
+        JOIN spike_account_memberships AS membership ON membership.account_id=paid_item_return_credits.account_id
+        JOIN spike_principals AS principal ON principal.id=membership.principal_id
+        WHERE paid_item_return_credits.account_id=subscription.parameter('account_id')
+          AND paid_item_return_credits.item_id=subscription.parameter('item_id')
+          AND principal.auth_user_id=auth.user_id() AND membership.state='active' AND membership.financial_access='full'
 
   item_return_review:
     queries:

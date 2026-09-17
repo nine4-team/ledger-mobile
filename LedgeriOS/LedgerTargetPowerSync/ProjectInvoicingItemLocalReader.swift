@@ -28,9 +28,9 @@ enum ProjectInvoicingItemLocalReader {
         let evidence = try ItemClientPaymentConnectionLocalReader.read(transaction: transaction,
             accountId: accountId, principalId: principalId, projectId: projectId, includeHistoricalPlacements: true)
         let occurrences = Dictionary(uniqueKeysWithValues: evidence.values.flatMap(\.evidence.billableOccurrences).map { ($0.id.rawValue, $0) })
-        return try transaction.getAll(sql: """
+        let charges = try transaction.getAll(sql: """
             SELECT c.id,c.amount_minor_units,c.currency,COALESCE(i.name,i.description) AS title,
-              category.display_name AS category_name,l.description AS frozen_description,
+              category.display_name AS category_name,c.category_id,l.category_id AS frozen_category_id,l.description AS frozen_description,
               m.invoice_id AS live_invoice_id,h.status AS live_status,h.name AS live_name,h.project_id AS live_project
             FROM item_charge_occurrences c
             LEFT JOIN spike_items i ON i.account_id=c.account_id AND i.id=c.item_id
@@ -70,7 +70,37 @@ enum ProjectInvoicingItemLocalReader {
                     amount: Money(minorUnits: amount, currency: CurrencyCode(validating: cursor.getString(name: "currency"))),
                     availability: availability, title: title,
                     // A current renamed category is not the paid category snapshot.
-                    categoryName: paid ? nil : cursor.getStringOptional(name: "category_name"), invoiceName: invoiceName)
+                    categoryName: paid ? nil : cursor.getStringOptional(name: "category_name"), invoiceName: invoiceName,
+                    categoryId: .init(validating: cursor.getString(name: paid ? "frozen_category_id" : "category_id")))
             }
+        let credits = try transaction.getAll(sql: """
+            SELECT credit.id,credit.item_id,l.id AS line_id,l.source_kind,l.source_id,
+              l.item_id AS line_item,l.signed_amount_minor_units,l.currency,l.description,l.category_id,
+              h.project_id AS invoice_project,h.sealed,c.id AS charge_id
+            FROM paid_item_return_credits credit
+            JOIN item_charge_occurrences c ON c.account_id=credit.account_id AND c.id=credit.charge_id
+            LEFT JOIN collected_invoice_lines l ON l.account_id=credit.account_id AND l.id=credit.paid_invoice_line_id
+            LEFT JOIN collected_invoices h ON h.account_id=l.account_id AND h.id=l.invoice_id
+            WHERE credit.account_id=? AND c.project_id=? ORDER BY credit.id
+            """, parameters: [accountId.rawValue, projectId.rawValue]) { cursor in
+                let item = try cursor.getString(name: "item_id")
+                guard try cursor.getStringOptional(name: "source_kind") == "item",
+                      try cursor.getStringOptional(name: "source_id") == cursor.getString(name: "charge_id"),
+                      try cursor.getStringOptional(name: "line_item") == item,
+                      try cursor.getStringOptional(name: "invoice_project") == projectId.rawValue,
+                      try cursor.getIntOptional(name: "sealed") == 1,
+                      let raw = try cursor.getStringOptional(name: "signed_amount_minor_units"),
+                      let amount = Int64(raw), amount > 0 else {
+                    throw PropertyManagementReportFailure.incompleteReadiness
+                }
+                return try ProjectInvoicingItem(occurrence: .init(
+                    id: .init(validating: cursor.getString(name: "id")), accountId: accountId,
+                    projectId: projectId, itemId: .init(validating: item), polarity: .credit,
+                    phase: .availableToInvoice),
+                    amount: .init(minorUnits: -amount, currency: .init(validating: cursor.getString(name: "currency"))),
+                    availability: .available, title: cursor.getString(name: "description"),
+                    categoryId: .init(validating: cursor.getString(name: "category_id")))
+            }
+        return charges + credits
     }
 }

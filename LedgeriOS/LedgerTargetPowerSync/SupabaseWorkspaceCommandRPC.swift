@@ -4,7 +4,7 @@ import LedgerTargetCore
 /// Transport mappings for the existing Client/Project/category command ports.
 /// Business validation and terminal-result checks stay in their existing owners.
 struct SupabaseWorkspaceCommandRPC: ClientCreationCommandApplying, ProjectCreationCommandApplying,
-    CategoryManagementCommandApplying, InventorySaleCommandApplying, EditUncollectedItemPriceApplying, EditItemDetailsApplying, ReturnUninvoicedItemsCommandApplying, CreateExpenseCommandApplying, EditExpenseCommandApplying, CreateInvoiceCommandApplying, ReviseCreatedInvoiceCommandApplying, CreateFeeInstallmentCommandApplying, InventorySaleReviewReading, TransactionReceiptReading, Sendable {
+    CategoryManagementCommandApplying, InventorySaleCommandApplying, EditUncollectedItemPriceApplying, EditItemDetailsApplying, ReturnUninvoicedItemsCommandApplying, ReturnPaidItemsCommandApplying, CreateExpenseCommandApplying, EditExpenseCommandApplying, CreateInvoiceCommandApplying, ReviseCreatedInvoiceCommandApplying, CreateFeeInstallmentCommandApplying, InventorySaleReviewReading, TransactionReceiptReading, Sendable {
     enum Failure: Error, Equatable { case scopeMismatch, invalidResponse, rejected(Int) }
     let url: URL
     let key: String
@@ -84,6 +84,15 @@ struct SupabaseWorkspaceCommandRPC: ClientCreationCommandApplying, ProjectCreati
                          principal: command.envelope.actorPrincipalId.rawValue)
         let request = try ReturnUninvoicedItemsUploadRequest(command)
         let result: ReturnUninvoicedItemsServerResult = try await call("spike_return_uninvoiced_items", body: request.rpcBody)
+        try result.validate(for: command)
+        return result
+    }
+
+    func apply(_ command: ReturnPaidItemsCommand) async throws -> ReturnPaidItemsServerResult {
+        try requireScope(account: command.envelope.accountId.rawValue,
+                         principal: command.envelope.actorPrincipalId.rawValue)
+        let request = try ReturnPaidItemsUploadRequest(command)
+        let result: ReturnPaidItemsServerResult = try await call("spike_return_paid_items", body: request.rpcBody)
         try result.validate(for: command)
         return result
     }

@@ -44,6 +44,22 @@ struct FirebaseLineageReconciliationTests {
               transactionIDs: ["purchase", "sale", "return", "resale"], projectIDs: ["project"])
     }
 
+    @Test("Explicit scope survives legacy labels without inventing Inventory custody")
+    func projectScopeEvidence() {
+        let records = [
+            edge("same",kind:"returned",from:"sale",to:"return",fromProject:"project",toProject:"project"),
+            edge("missing",kind:"returned",from:"sale",to:"return",fromProject:"project"),
+            edge("move",kind:"correction",from:"sale",to:"resale",fromProject:"project",toProject:"other"),
+            edge("invalid",kind:"sold",from:"missing",to:"resale",fromProject:"project",toProject:"other")
+        ]
+        let scoped = FirebaseLineageReferenceIndex(accountScopeID:"account",itemIDs:["chair"],
+            transactionIDs:["purchase","sale","return","resale"],projectIDs:["project","other"])
+        let result = FirebaseLineageReconciler.reconcile(records,against:scoped)
+        #expect(result.map(\.projectScopeEvidence) == [.sameProject("project"),.unresolved,
+            .differentProjects(from:"project",to:"other"),.unresolved])
+        #expect(result.map(\.source) == records)
+    }
+
     @Test("Foreign embedded Account does not resolve against an otherwise matching envelope")
     func foreignEmbeddedAccount() {
         let original = edge("foreign", kind: "sold", from: "unknown", to: "missing")

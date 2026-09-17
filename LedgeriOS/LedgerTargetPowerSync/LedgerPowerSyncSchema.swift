@@ -24,6 +24,7 @@ public enum LedgerPowerSyncTable {
     public static let transactionAttachmentSets = "transaction_attachment_sets"
     public static let transactionAttachmentReferences = "transaction_attachment_references"
     public static let itemChargeOccurrences = "item_charge_occurrences"
+    public static let paidItemReturnCredits = "paid_item_return_credits"
     public static let returnChargeSources = "return_charge_sources"
     public static let returnLiveMemberships = "return_live_memberships"
     public static let returnPaidMemberships = "return_paid_memberships"
@@ -59,6 +60,7 @@ public enum LedgerPowerSyncTable {
     public static let itemPriceEditCommands = "spike_item_price_edit_commands"
     public static let itemDetailsEditCommands = "spike_item_details_edit_commands"
     public static let uninvoicedReturnCommands = "spike_uninvoiced_return_commands"
+    public static let paidReturnCommands = "spike_paid_return_commands"
     public static let expenseCommands = "spike_expense_commands"
     public static let expenseEntryRecovery = "spike_expense_entry_recovery"
     public static let expenses = "expenses"
@@ -103,6 +105,10 @@ public enum LedgerPowerSyncSchema {
             columns: [.text("account_id"), .text("source_id")]),
         Table(name: LedgerPowerSyncTable.returnPaidMemberships,
             columns: [.text("account_id"), .text("source_id")]),
+        Table(name: LedgerPowerSyncTable.paidItemReturnCredits,
+            columns: [.text("account_id"), .text("charge_id"), .text("paid_invoice_line_id"),
+                      .text("return_occurrence_id"), .text("inventory_placement_id"), .text("item_id")],
+            indexes: [.ascending(name: "paid_return_source", columns: ["account_id", "charge_id"])]),
         Table(name: LedgerPowerSyncTable.itemChargeOccurrences,
             columns: [.text("account_id"), .text("project_id"), .text("item_id"), .text("placement_id"),
                       .text("category_id"), .text("amount_minor_units"), .text("currency"),
@@ -603,6 +609,12 @@ public enum LedgerPowerSyncSchema {
                 .text("account_id"), .text("actor_principal_id"), .text("project_id"),
                 .text("contract_version"), .text("fingerprint"), .text("envelope_json")
             ],
+            insertOnly: true
+        ),
+        Table(
+            name: LedgerPowerSyncTable.paidReturnCommands,
+            columns: [.text("account_id"), .text("actor_principal_id"), .text("project_id"),
+                      .text("contract_version"), .text("fingerprint"), .text("envelope_json")],
             insertOnly: true
         ),
         Table(

@@ -10,8 +10,8 @@ struct CurrentItemPlacementLocalReaderTests {
     private let principal = try! PrincipalID(validating: "principal-item")
     private let project = try! ProjectID(validating: "project-item")
 
-    @Test("Imported Invoice history survives encrypted reopen in Inventory without implying current payment")
-    func importedInvoiceHistory() async throws {
+    @Test("Invoice history and explicit paid-return evidence survive encrypted reopen in Inventory", arguments: [false, true])
+    func importedInvoiceHistory(withCredit: Bool) async throws {
         let item = try ItemID(validating: "chair")
         func verify(_ db: any PowerSyncDatabaseProtocol) async throws {
             let history = try await CurrentItemPlacementLocalReader(database: db)
@@ -20,6 +20,11 @@ struct CurrentItemPlacementLocalReaderTests {
             #expect(fact.invoiceId.rawValue == "paid-invoice" && fact.purchaseId.rawValue == "paid-purchase")
             #expect(fact.line.signedAmount.minorUnits == 9007199254740993)
             #expect(fact.line.description == "Historical chair")
+            #expect(fact.paidReturn?.creditId.rawValue == (withCredit ? "credit" : nil))
+            if withCredit {
+                #expect(fact.paidReturn?.returnOccurrenceId.rawValue == "return")
+                #expect(fact.paidReturn?.inventoryPlacementId.rawValue == "inventory-now")
+            }
             #expect(history.currentClientPaidPurchases.isEmpty && history.currentAccountingResolution == nil)
             #expect(history.intervals.first?.scope == .businessInventory)
         }
@@ -36,6 +41,18 @@ struct CurrentItemPlacementLocalReaderTests {
                 "INSERT INTO collected_invoices(id,account_id,project_id,client_id,purchase_id,invoice_revision,currency,total_minor_units,sealed) VALUES('paid-invoice','account-item','project-item','client','paid-purchase','1','USD','9007199254740993',1)",
                 "INSERT INTO collected_invoice_lines(id,account_id,invoice_id,line_position,source_kind,source_id,item_id,source_revision,category_id,signed_amount_minor_units,currency,description,source_snapshot_json) VALUES('paid-line','account-item','paid-invoice',0,'item','historical-occurrence','chair','1','furnishings','9007199254740993','USD','Historical chair','{\"item\":{\"itemId\":\"chair\",\"occurrenceId\":\"historical-occurrence\",\"price\":{\"basis\":{\"importedInvoiceAmount\":{}},\"amount\":{\"minorUnits\":9007199254740993,\"currency\":\"USD\"}}}}')"
             ] { _ = try await db.execute(sql: sql, parameters: nil) }
+            if withCredit {
+                _ = try await db.execute(sql: "INSERT INTO paid_item_return_credits(id,account_id,item_id,charge_id,paid_invoice_line_id,return_occurrence_id,inventory_placement_id) VALUES('credit','account-item','chair','historical-occurrence','paid-line','return','inventory-now')", parameters: nil)
+                var changes = try CurrentItemPlacementLocalReader(database: db)
+                    .watchHistory(accountId: account, principalId: principal, itemId: item).makeAsyncIterator()
+                _ = try #require(await changes.next())
+                _ = try await db.execute(sql: "UPDATE paid_item_return_credits SET charge_id='wrong-charge'", parameters: nil)
+                _ = try #require(await changes.next())
+                let mismatched = try await CurrentItemPlacementLocalReader(database: db)
+                    .readHistory(accountId: account, principalId: principal, itemId: item)
+                #expect(mismatched.invoiceLines.first?.paidReturn == nil)
+                _ = try await db.execute(sql: "UPDATE paid_item_return_credits SET charge_id='historical-occurrence'", parameters: nil)
+            }
             try await verify(db)
         }
     }

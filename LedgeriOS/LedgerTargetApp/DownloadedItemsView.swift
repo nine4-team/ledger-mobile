@@ -914,6 +914,12 @@ struct DownloadedItemDetailView: View {
                         Text(fact.line.description)
                         Text((Decimal(fact.line.signedAmount.minorUnits) / 100)
                             .formatted(.currency(code: fact.line.signedAmount.currency.rawValue)))
+                        if let returned = fact.paidReturn {
+                            Text("Returned to Inventory · credit \((-Decimal(fact.line.signedAmount.minorUnits) / 100).formatted(.currency(code: fact.line.signedAmount.currency.rawValue)))")
+                                .accessibilityIdentifier("target-item-paid-return-\(returned.creditId.rawValue)")
+                            Text("Original Invoice and payment preserved. This credit is not a cash refund.")
+                                .font(.caption).foregroundStyle(.secondary)
+                        }
                     }
                     .accessibilityElement(children: .combine)
                     .accessibilityIdentifier("target-item-invoice-line-\(fact.id.rawValue)")

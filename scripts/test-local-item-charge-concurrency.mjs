@@ -468,6 +468,67 @@ try {
   assert.equal(sql("select name||':'||revision from public.spike_items where id='race-details-retry'"), 'Once:2');
   assert.equal(sql("select count(*) from public.spike_operation_results where operation_id='details-same-operation'"), '1');
   console.log('PASS Item details competing edits, rollback and identical-operation races; no lost update or double revision');
+  for (const scenario of ['same-operation', 'competing-operation', 'rollback']) {
+    const name = `paid-return-${scenario}`, id = source(name);
+    prepare(name);
+    sql(`insert into public.spike_item_placements(id,account_id,item_id,scope_kind,
+      started_at,started_by_principal_id,ended_at,ended_by_principal_id)
+      values('original-${id}','account-primary','${id}','business_inventory',
+      '2025-01-01','principal-owner','2026-01-01','principal-owner');
+      begin; ${collect(name)} commit;`);
+    const paidReturn = suffix => {
+      const command = JSON.stringify({ operationId: `${id}-${suffix}`, accountId: 'account-primary',
+        actorPrincipalId: 'principal-owner', projectId: 'race-project',
+        contractVersion: 'return-paid-items-v1', createdAtMs: '1788523200000',
+        items: [{ itemId: id, placementId: id, chargeId: id, paidInvoiceLineId: `line-${id}`,
+          inventoryPlacementId: `inventory-${id}-${suffix}`, returnOccurrenceId: `return-${id}-${suffix}`,
+          creditId: `credit-${id}-${suffix}` }] });
+      return `set local role authenticated;
+        select set_config('request.jwt.claims','{"sub":"10000000-0000-0000-0000-000000000001","role":"authenticated"}',true);
+        select (public.spike_return_paid_items('${command}')).phase; reset role;`;
+    };
+    const waiter = scenario === 'same-operation' ? 'first' : 'second';
+    await race(name, paidReturn('first'), paidReturn(waiter), scenario === 'rollback' ? 'rollback' : 'commit');
+    assert.equal(sql(`select phase||coalesce(':'||error_code,'') from public.spike_operation_results
+      where operation_id='${id}-${waiter}'`),
+    scenario === 'competing-operation' ? 'rejected:return_placement_stale' : 'applied');
+    assert.equal(sql(`select count(*) from ledger_private.paid_item_return_credits where item_id='${id}'`), '1');
+    assert.equal(sql(`select count(*) from public.spike_item_placements
+      where item_id='${id}' and scope_kind='business_inventory' and ended_at is null`), '1');
+    assert.equal(sql(`select source_revision||':'||signed_amount_minor_units from ledger_private.collected_invoice_lines
+      where id='line-${id}'`), '1:12345');
+    assert.equal(sql(`select revision||':'||amount_minor_units||':'||(withdrawn_at is null)
+      from ledger_private.item_charge_occurrences where id='${id}'`), '1:12345:true');
+    assert.equal(sql(`select count(*) from public.spike_transactions where project_id='race-project'
+      and id='payment-${id}'`), '1');
+  }
+  console.log('PASS paid return identical retry, competing returns and rollback: one credit, one Inventory placement, frozen charge/line preserved');
+  for (const scenario of ['retry','conflicting-review','rollback']) {
+    const name='imported-placement-'+scenario, id=source(name);
+    prepare(name,false);
+    sql(`select ledger_private.import_client_payment('payment-${id}','account-primary','race-project','client-existing',
+      100,'USD','synthetic-placement-race','${id}',decode('01','hex'));`);
+    const invoice={invoice_id:'invoice-'+id,invoice_revision:'1',account_id:'account-primary',project_id:'race-project',
+      client_id:'client-existing',purchase_id:'payment-'+id,currency:'USD',total_minor_units:'100',lines:[{
+        id:'line-'+id,line_position:0,source_kind:'item',source_id:id,item_id:id,source_revision:'1',
+        category_id:'category-furnishings',signed_amount_minor_units:'100',description:'Imported race Item',
+        source_snapshot_json:JSON.stringify({item:{itemId:id,occurrenceId:id,
+          price:{basis:{importedInvoiceAmount:{}},amount:{minorUnits:100,currency:'USD'}}}})}]};
+    const sources=[{source_document_id:id,source_line_id:'line-'+id,source_bytes:'\\x02',line_source_bytes:'\\x03'}];
+    const payment={p_id:'payment-'+id,p_account_id:'account-primary',p_project_id:'race-project',p_client_id:'client-existing',
+      p_amount:'100',p_currency:'USD',p_source_account:'synthetic-placement-race',p_source_document:id,p_source_bytes:'\\x01'};
+    const quote=value=>"'"+JSON.stringify(value).replaceAll("'","''")+"'::jsonb";
+    const reviewedImport=review=>`select ledger_private.import_invoice_sources_with_placements(
+      ${quote(invoice)},${quote(sources)},${quote(payment)},'synthetic-placement-race','invoice-${id}',decode('04','hex'),
+      ${quote([{line_id:'line-'+id,placement_id:id}])},'principal-owner',decode('${review}','hex')); set constraints all immediate;`;
+    await race(name,reviewedImport('05'),reviewedImport(scenario==='conflicting-review'?'06':'05'),
+      scenario==='rollback'?'rollback':'commit',scenario==='conflicting-review'?'22000':undefined);
+    assert.equal(sql(`select count(*) from ledger_private.item_charge_occurrences where id='${id}'`),'1');
+    assert.equal(sql(`select count(*) from ledger_private.collected_invoice_lines where id='line-${id}'`),'1');
+    assert.equal(sql(`select encode(review_bytes,'hex') from ledger_private.imported_invoice_placement_reviews
+      where invoice_id='invoice-${id}'`),'05');
+  }
+  console.log('PASS reviewed placement import concurrent retry, changed-review rejection and rollback recovery');
 } finally {
   for (const child of sessions) if (!child.stdin.destroyed && !child.stdin.writableEnded) child.stdin.end('rollback;\n');
   if (created) {

@@ -7,12 +7,14 @@ import { SupabaseTransactionReceiptReader } from "./transactionReceiptRead.js";
 import { SupabaseTransactionDetailReader } from "./transactionDetailRead.js";
 import { SupabaseInventorySaleService } from "./inventorySale.js";
 import { SupabaseUninvoicedReturnService } from "./uninvoicedReturn.js";
+import { SupabasePaidReturnService } from "./paidReturn.js";
 import { SupabaseExpenseCreationService } from "./expenseCreation.js";
 import { SupabaseCollectedInvoiceReader } from "./collectedInvoiceRead.js";
 import { SupabaseLiveInvoiceReader } from "./liveInvoiceRead.js";
 import { SupabaseInvoiceCreationService, SupabaseInvoiceRevisionService } from "./invoiceCreation.js";
 import { SupabaseFeeCreationService } from "./feeCreation.js";
 import { SupabaseFeeReader } from "./feeRead.js";
+import { SupabaseProjectBudgetReader } from "./projectBudgetRead.js";
 
 // One local process per user/account. Credentials are supplied by the launching
 // host, never tool arguments. No token persistence or service-role fallback.
@@ -47,7 +49,11 @@ try {
     new URL(process.env.LEDGER_TARGET_SUPABASE_URL ?? ""), process.env.LEDGER_TARGET_PUBLISHABLE_KEY ?? "");
   const uninvoicedReturn = new SupabaseUninvoicedReturnService(
     new URL(process.env.LEDGER_TARGET_SUPABASE_URL ?? ""), process.env.LEDGER_TARGET_PUBLISHABLE_KEY ?? "");
-  const server = createTargetServer(reader, context, clientSummaryReader, categoryManagement, transactionReceipts, transactionDetails, inventorySale, expenseCreation, expenseCreation, collectedInvoices, liveInvoices, invoiceCreation, feeCreation, fees, invoiceRevision, uninvoicedReturn, inventorySale, inventorySale);
+  const paidReturn = new SupabasePaidReturnService(
+    new URL(process.env.LEDGER_TARGET_SUPABASE_URL ?? ""), process.env.LEDGER_TARGET_PUBLISHABLE_KEY ?? "");
+  const projectBudget = new SupabaseProjectBudgetReader(
+    new URL(process.env.LEDGER_TARGET_SUPABASE_URL ?? ""), process.env.LEDGER_TARGET_PUBLISHABLE_KEY ?? "");
+  const server = createTargetServer(reader, context, clientSummaryReader, categoryManagement, transactionReceipts, transactionDetails, inventorySale, expenseCreation, expenseCreation, collectedInvoices, liveInvoices, invoiceCreation, feeCreation, fees, invoiceRevision, uninvoicedReturn, inventorySale, inventorySale, paidReturn, projectBudget);
   await server.connect(new StdioServerTransport());
 } catch {
   process.stderr.write("Ledger target MCP could not start: check target configuration and user session.\n");

@@ -141,6 +141,12 @@ struct FirebaseInvoiceSettlementReviewTests {
         let imported = try parameters()
         #expect(try imported.p_invoice.restored().lines == [mapped])
         #expect(imported.p_expenses.isEmpty && imported.p_fees.isEmpty)
+        let placement = try EntityID(validating: "reviewed-physical-cycle")
+        let chosen = try imported.placementMappings(reviewed: [("line", placement)])
+        #expect(chosen.count == 1 && chosen[0].line_id == mapped.id.rawValue && chosen[0].placement_id == placement.rawValue)
+        for invalid: [(String, EntityID)] in [[], [("unknown", placement)], [("line", placement), ("line", placement)]] {
+            #expect(throws: (any Error).self) { try imported.placementMappings(reviewed: invalid) }
+        }
         guard case .item(let retained) = imported.p_sources.first else { Issue.record("Missing retained Item evidence"); return }
         #expect(retained.source_document_id == "physical-item" && retained.source_line_id == "line")
         #expect(retained.source_bytes == "\\x" + (try item.canonicalEvidenceData()).map { String(format: "%02x", $0) }.joined())

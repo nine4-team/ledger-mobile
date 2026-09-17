@@ -1,6 +1,6 @@
 {
   "schemaVersion": 2,
-  "stateVersion": 1367,
+  "stateVersion": 1416,
   "userRequestedPause": {
     "date": "2026-09-15",
     "status": "resumed",
@@ -8,7 +8,7 @@
     "completionEstimate": "Judgment estimate, not measured acceptance: approximately 50% overall (40–60% uncertainty), including remaining hosted integration and cutover readiness. Relative weights sum to 100; category completion estimates: auth/offline infrastructure 10@65%; Clients/Projects/Spaces/checklists 10@60%; categories/settings 8@80%; Items/inventory/movement/history 15@45%; Transactions/audit 12@55%; Expenses/Invoicing/collection/refunds 15@35%; media/pinning 8@65%; reports/export 7@60%; MCP 5@40%; migration/hosted/release readiness 10@20%. Weighted result50.4%. These are not hours, token forecasts, accepted-workflow counts or a comparable historical velocity series. Invoice importers excluded as retired."
   },
   "resumeAfterWorkflowId": "local-vendor-pdf-review",
-  "updatedAt": "2026-09-16",
+  "updatedAt": "2026-09-17",
   "branch": "codex/supabase-powersync-implementation",
   "worktree": "/Users/benjaminmackenzie/Dev/ledger_mobile_supabase",
   "method": {"path":"docs/plans/ledger-accounting-redesign/conversion/vertical-slice-implementation-method.md","version":4},
@@ -21,17 +21,17 @@
     "meaning": "Historical attempt1 passed all five jobs including1086native tests/156suites and25Mac/30iPhoneUI tests. Attempt2 failed iOS UI. Not a currently clean full-UI baseline or broad Item/Purchase/hosted/migration/cutover proof."
   },
   "activeWorkflow": {
-    "id": "inventory-to-project-sale",
-    "integrationWorkflowIds": ["inventory-to-project-sale", "item-remove-before-invoice", "transaction-browser-and-detail", "project-invoicing-workspace", "invoice-report-readback", "downloaded-item-browsing-and-detail", "item-history-source-reconciliation", "active-workspace-to-space-checklist", "business-paid-expense-entry", "account-profile-readback"],
+    "id": "item-credit-after-payment",
+    "integrationWorkflowIds": ["project-budget-progress", "item-credit-after-payment", "invoice-report-readback", "downloaded-item-browsing-and-detail", "project-invoicing-workspace", "account-profile-readback", "item-history-source-reconciliation"],
     "kind": "product_ui",
     "status": "implementation",
     "recordPath": "docs/plans/ledger-accounting-redesign/conversion/product-behavior-checklist.json",
-    "outcome": "Sell selected Inventory Items to an eligible Project using reviewed destination prices, one atomic placement/charge operation and durable replay. Keep Sell independent of source-Return eligibility and preserve acquisition and paid history.",
-    "baseCommit": "726431917f3acdd3091e7ca369222c5225c00754",
+    "outcome": "Return a paid Item to Inventory, preserving its paid Invoice, line, Transaction and historical membership. Create one retry-safe credit linked to the original paid line and return, using frozen amount/category and immediately reducing Furnishings progress. No cash refund or settlement is implied.",
+    "baseCommit": "e58ebbcb000000c3e53c1027cb24e26b230ae803",
     "nextActions": [
-      "Verify existing Sell on returned Inventory Items: same/different Project, fresh charge/placement, original history unchanged. Use existing UI and commands.",
-      "Correction7836695f CI35094251669 terminal failure: backend/native passed, Mac UI failed, iOS cancelled. Diagnose captured failures; no live watcher or unchanged broad rerun. Later follow-up evidence stays separate.",
-      "Earlier Invoice/Fee/PDF evidence and unfinished Mac/CI checks stay with their owners; this batch does not waive them."
+      "Paid-return offline/restart and hosted flow passed. SQL authorization32 PASS19326. Remaining paid-return hidden-evidence/legacy and UI acceptance; Budget UI, Transfers, overlay, pinning/allocation editing unfinished. Desktop rechecked locked2026-09-17; no UI run launched.",
+      "Additional Requests storage/tag edits absent; excluded categories are NOT this overlay. Async question pending: changing tag recomputes past Project activity vs frozen billing-time tag. Do not choose silently. O011 separately gates Transfer carry. Continue independent budget/MCP or accounting work. UI tests await unlock; failed CI35189334761 stays failed.",
+      "Credit settlement and cash refunds are excluded; preserve original paid source and history."
     ]
   },
   "blockers": [
@@ -53,19 +53,17 @@
     "instruction": "Follow the active checklist record and nextActions. Preserve failures; no full-suite context recovery."
   },
   "currentTask": {
-    "id": "inventory-sale-resale-followup",
+    "id": "item-credit-after-payment",
     "status": "implementation",
-    "acceptanceCheckIds": ["SALE-GENERAL","SALE-ATOMIC"],
-    "meaning": "Story5 resale follow-up through existing Sell implementation; retain return batch and other workflows under their own acceptance records.",
-    "verificationCommands": ["swift test --package-path LedgeriOS --no-parallel --filter ReturnUninvoicedItemsCommandTests"],
-    "lastResult": "Prior CI failures retained. PDF evidence: invoice-report-readback.liveInvoicePDFCaseDiagnosis; logout: session-clean-logout.",
-    "activeProcesses": {"ciCompletionWatcher":{"sessionId":32153,"run":35189334761,"attempt":1,"log":"/tmp/ledger-ci-35189334761-watch.log","instruction":"Reuse watcher; no duplicate. Goal continuation must review completion."}},
-    "integrationCI": {"run":35189334761,"attempt":1,"commit":"770f532e","status":"in_progress","meaning":"Observed2026-09-17T06:58Z: conversion/provider passed; iOS UI since06:29Z, Mac UI since06:40Z; native jobs started06:23Z with60min job limits. No duplicate dispatch. Excludes newer fc931380 report fix. Earlier failures not waived."},
-    "desktopPrerequisite": "Mac UI70530: runner initialization failed, system authentication running; zero tests. /tmp/ledger-mac-invoice-followup-20260916.{log,xcresult}. Build passed. No unchanged retry; iOS unaffected.",
-    "immediateFollowup": "fc931380 reportfix pushed; hosted/offline testsPASS. Local payment-note recovery32811 exit0; scoped evidence saved under item-history-source-reconciliation. CI35189334761 tests770f532e, excludes reportfix; reuse watcher32153. Transfer Space/tag/sentInvoice, purchase-price/vendor questions pending. Continue authorized work; preserve private files.",
-    "nextVerification": "CI35156566635 failed; no redispatch. Earlier failures retained.",
+    "acceptanceCheckIds": ["PAID-RETURN-OFFLINE","PAID-RETURN-REPLAY"],
+    "meaning": "Verify paid-return offline acceptance, encrypted restart, exact replay and real service readback; Budget retains its separate remaining gaps.",
+    "verificationCommands": ["Node24 --import ./LedgerTargetMCP/node_modules/tsx/dist/loader.mjs scripts/test-local-inventory-sale-http.mjs --mixed --mcp --financial --native-paid-return"],
+    "lastResult": "Integration preflight: SQL66files2165 PASS5s, MCP164 PASS Node24, tsc PASS, sync14 PASS. Initial MCP shell Node20 failed exact-Int64 test; corrected runtime without code changes. Seven targeted iPhone scenarios passed. Preparing coherent checkpoint, private .native-pdf files excluded; no active process.",
+    "activeProcesses": {},
+    "integrationCI": {"run":35189334761,"attempt":1,"commit":"770f532e","status":"failed","meaning":"Terminal: conversion/providerPASS, MacFAIL106UI/8skips/41assertion failures; iOS cancelled at60min job limit after3test failures. Complete iOS log proves tests began06:33; earlier download was incomplete. Excludes newer report/notes work; no redispatch."},
+    "desktopPrerequisite": "30132 exit65: buildPASS, zeroUI tests; automation mode timed out. CUA confirmed Mac locked; user asked to unlock. /tmp/ledger-mac-sheet-scroll-20260917.log. Dirty reveal helper fixes background-scroll selection from CI evidence; verify ArchivedFees/CreateInvoice after unlock. No unchanged retry.",
     "resaleBatchCI": {"run":35094251669,"attempt":1,"commit":"7836695f2a766960a1bd7de2644bc255d6bc63f0","status":"failed","url":"https://github.com/nine4-team/ledger-mobile/actions/runs/35094251669"},
-    "returnBatchCI": {"run":35093201085,"attempt":1,"commit":"726431917f3acdd3091e7ca369222c5225c00754","status":"failed","url":"https://github.com/nine4-team/ledger-mobile/actions/runs/35093201085","reason":"PR1 conflicts suppress automatic PR CI.","lastObserved":"Conversion passed; provider failed at outdated physical-query classification; native skipped, aggregate failed. Local consumer fix passed60captures; property consumer149captures. No unchanged rerun."},
-    "nextWorkflowDecision": "Follow immediateFollowup and auth-online-entry-and-recovery-boundary; never print auth.json. Earlier session/platform gaps remain in their owning stories."
+    "returnBatchCI": {"run":35093201085,"attempt":1,"commit":"726431917f3acdd3091e7ca369222c5225c00754","status":"failed"},
+    "nextWorkflowDecision": "Seven targeted iPhone checks passed; do not repeat. Mac counterparts await unlock; simulator usable. Continue approved gaps without inventing Transfer policies (O012/O014 questions pending, O002/O011/O013 open). Review accumulated integration changes before commit/normal CI; preserve source baseline/old failures. Migration initial custody/unmapped cycles and other required workflows unfinished."
   }
 }

@@ -38,6 +38,7 @@
 		26EAEA712C57F890A047FF1C /* AuthView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F34F461EEBDDDA1A4E913A90 /* AuthView.swift */; };
 		288726FB4C4F84EB0C3E20E3 /* Dimensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = 619FCCF27798C82AD1898C5C /* Dimensions.swift */; };
 		2907DFB1AD69599A251E4DA2 /* MediaGalleryPresentationCalculations.swift in Sources */ = {isa = PBXBuildFile; fileRef = 95D40A213B7B9C8786354400 /* MediaGalleryPresentationCalculations.swift */; };
+		2C0DD7960FDA6994623BAD85 /* BudgetLabelReuseTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5DED8C40DE0D20126291680F /* BudgetLabelReuseTests.swift */; };
 		30EBCD87CCD201841C9751AB /* ReferencedSpaceDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FB7A2B9D4B056045C345FD43 /* ReferencedSpaceDetailView.swift */; };
 		31196FD2AECBFD85857B90AB /* FindStateManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = FEF6324F2E23EC63D6956B03 /* FindStateManager.swift */; };
 		31CED7215B80D142B786C8EE /* VendorSuggestionPickerRuntimeAdapter.swift in Sources */ = {isa = PBXBuildFile; fileRef = DF86B466FBA526653A9B0E0A /* VendorSuggestionPickerRuntimeAdapter.swift */; };
@@ -52,6 +53,7 @@
 		38B4640C2E28DE47A0B956BD /* SpaceCreationStagingRuntimeAdapter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5C76F188AA61BFC3A787EA23 /* SpaceCreationStagingRuntimeAdapter.swift */; };
 		3B1D9103F92EB520DE6121F0 /* InvoiceReportData.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0C10D7E0C83536FA60734114 /* InvoiceReportData.swift */; };
 		3D144FB45A5F58C504484692 /* LedgerTargetCore in Frameworks */ = {isa = PBXBuildFile; productRef = 6CB14AD88379F733140B049C /* LedgerTargetCore */; };
+		3E077706C07E653BCDC49609 /* BudgetTrackerCalculations.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0591024BC13869903CE0BF5E /* BudgetTrackerCalculations.swift */; };
 		40D20E8C0920687C1E9E261E /* ReportScratchStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = F16FD9AD195F490ABD7D0147 /* ReportScratchStore.swift */; };
 		41EE42749610B8CF6600BC5E /* PinnedImagePresentation.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4CBAF653B0A70F46A29A2B4F /* PinnedImagePresentation.swift */; };
 		426CD223174409CEE8218510 /* FindMatchCalculations.swift in Sources */ = {isa = PBXBuildFile; fileRef = C114D41E757BC7BACDC4A19F /* FindMatchCalculations.swift */; };
@@ -89,8 +91,10 @@
 		793BFC80C10AEF7706A7FF91 /* FormDateField.swift in Sources */ = {isa = PBXBuildFile; fileRef = FE3F94BC7CF2C706DA8B5A45 /* FormDateField.swift */; };
 		7BD3218B9AACB12C9E1E9887 /* StatusColors.swift in Sources */ = {isa = PBXBuildFile; fileRef = DDEF2192CC57D816F34B1029 /* StatusColors.swift */; };
 		7C8664E8A4F83BA754D09E73 /* PropertyManagementReportPreview.swift in Sources */ = {isa = PBXBuildFile; fileRef = 23D3EB4EC0B5447391266FA3 /* PropertyManagementReportPreview.swift */; };
+		7DD4163575F01FD29ABB479E /* ProjectBudgetContent.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5BCA98B2F410544CED7EEBDD /* ProjectBudgetContent.swift */; };
 		7EE1A60177CCA8868D16F5F0 /* SpaceChecklistEditorStagingExerciseView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F85A81F9E5B704C7E7674DEB /* SpaceChecklistEditorStagingExerciseView.swift */; };
 		7EEC050E3E777A82542908AC /* ReportHTMLBuilder.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6C7463F5388550BDF9578145 /* ReportHTMLBuilder.swift */; };
+		7EF7864EC2BD5E203FDD4EF1 /* BudgetCategoryTracker.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1BE0EDBFE843E73446118EA3 /* BudgetCategoryTracker.swift */; };
 		7FEF31200288B9518F30167A /* TransactionExportCalculations.swift in Sources */ = {isa = PBXBuildFile; fileRef = 31A543DC51CDEB1F754445FF /* TransactionExportCalculations.swift */; };
 		831DF338B563C8D303A35D1E /* InlineOptionPicker.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4244524B9444C76CBEE85BB4 /* InlineOptionPicker.swift */; };
 		843FE7B0962AAFAFC759DDC1 /* ProjectNoteHistoryStagingExerciseView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 33BE0835EF060B599B952729 /* ProjectNoteHistoryStagingExerciseView.swift */; };
@@ -135,6 +139,7 @@
 		CFAE4E5A6FCD2D47D9543292 /* TargetOnlineAccountEntryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B1D67FE00E469BFCF0C78EBC /* TargetOnlineAccountEntryView.swift */; };
 		D2174EFBA2EADE729D9007F7 /* CardHeader.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3C27ED100C4144D99CABC334 /* CardHeader.swift */; };
 		D2C5B0F48456129D1BDA6478 /* AccountPendingWorkStagingRuntimeAdapter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9F6B77A7C5D9DF95AED707CF /* AccountPendingWorkStagingRuntimeAdapter.swift */; };
+		D4917597EE5C1F951C8F8E19 /* BudgetDisplayCalculations.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA8168F38170E9580A556D85 /* BudgetDisplayCalculations.swift */; };
 		D5549BCFFADB798944BA0844 /* VendorSuggestionPickerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7AEC21795FD972CBCE17D8C8 /* VendorSuggestionPickerView.swift */; };
 		D5942DD6184C318C7307D9C5 /* ReportHTMLBuilder.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6C7463F5388550BDF9578145 /* ReportHTMLBuilder.swift */; };
 		D8A9AE9853ACDF470CFC9C76 /* InvoicingInvoicePreview.swift in Sources */ = {isa = PBXBuildFile; fileRef = 476C8E73273701EA104A3252 /* InvoicingInvoicePreview.swift */; };
@@ -177,6 +182,7 @@
 
 /* Begin PBXFileReference section */
 		00F48174B1AE91B6B12C82B0 /* MultiStepFormSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MultiStepFormSheet.swift; sourceTree = "<group>"; };
+		0591024BC13869903CE0BF5E /* BudgetTrackerCalculations.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BudgetTrackerCalculations.swift; sourceTree = "<group>"; };
 		059DB7BEA3E9C8392645C773 /* LocalVendorDocumentReviewView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LocalVendorDocumentReviewView.swift; sourceTree = "<group>"; };
 		0A103E110626F4ED7D798B96 /* EditNotesModal.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EditNotesModal.swift; sourceTree = "<group>"; };
 		0A3370C96E9EA27325B750E7 /* AmazonInvoiceParser.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AmazonInvoiceParser.swift; sourceTree = "<group>"; };
@@ -189,6 +195,7 @@
 		1506FAABA4F269B2F6243331 /* TargetTransactionBrowserView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TargetTransactionBrowserView.swift; sourceTree = "<group>"; };
 		1702B803A73BB230008A22C4 /* CategoryManagementRuntimeAdapter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CategoryManagementRuntimeAdapter.swift; sourceTree = "<group>"; };
 		189D19394780A3800948F2A9 /* ActiveWorkspaceToSpaceChecklistStagingComposition.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ActiveWorkspaceToSpaceChecklistStagingComposition.swift; sourceTree = "<group>"; };
+		1BE0EDBFE843E73446118EA3 /* BudgetCategoryTracker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BudgetCategoryTracker.swift; sourceTree = "<group>"; };
 		1C55F877C9BC1958DD1D6378 /* ProjectCategoryConfigurationStagingRuntimeAdapter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProjectCategoryConfigurationStagingRuntimeAdapter.swift; sourceTree = "<group>"; };
 		1C9B504E0F9AEFB36F2BF019 /* CollapsibleSection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CollapsibleSection.swift; sourceTree = "<group>"; };
 		1CE98AA57CDBD26E8D8862E3 /* ProjectInvoicingWorkspaceView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProjectInvoicingWorkspaceView.swift; sourceTree = "<group>"; };
@@ -219,9 +226,11 @@
 		4FC436333F756D58FDC56B4F /* CurrencyFormatting.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CurrencyFormatting.swift; sourceTree = "<group>"; };
 		51CBDF4982AA2F704B281A8D /* CreateInvoiceModal.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CreateInvoiceModal.swift; sourceTree = "<group>"; };
 		52C16EC52DA94A22101F9E44 /* WorkspaceAccessGate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkspaceAccessGate.swift; sourceTree = "<group>"; };
+		5BCA98B2F410544CED7EEBDD /* ProjectBudgetContent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProjectBudgetContent.swift; sourceTree = "<group>"; };
 		5C76F188AA61BFC3A787EA23 /* SpaceCreationStagingRuntimeAdapter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SpaceCreationStagingRuntimeAdapter.swift; sourceTree = "<group>"; };
 		5D1F13A6F19C8E0674D52935 /* CategoryFormModal.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CategoryFormModal.swift; sourceTree = "<group>"; };
 		5DED8B22E1D40817EFF8DB1F /* ProjectBrowsingStagingRuntimeAdapter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProjectBrowsingStagingRuntimeAdapter.swift; sourceTree = "<group>"; };
+		5DED8C40DE0D20126291680F /* BudgetLabelReuseTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BudgetLabelReuseTests.swift; sourceTree = "<group>"; };
 		5E300F1046C6F7CCB6CB9F8D /* InventorySaleForm.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InventorySaleForm.swift; sourceTree = "<group>"; };
 		6072FB3877C65F0463E50421 /* TransactionCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TransactionCard.swift; sourceTree = "<group>"; };
 		607426AF30E800A83B515E7B /* Card.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Card.swift; sourceTree = "<group>"; };
@@ -354,6 +363,7 @@
 		057E1955DA262711D00CA502 /* LedgerTargetSharedLogicTests */ = {
 			isa = PBXGroup;
 			children = (
+				5DED8C40DE0D20126291680F /* BudgetLabelReuseTests.swift */,
 				8C58468B3CB410C3584888F4 /* ReportPDFRenderSessionTests.swift */,
 				ECCD603D80FB7214709D231E /* TransactionExportCSVTests.swift */,
 			);
@@ -448,6 +458,7 @@
 				3A1D16067F65E6E09530FCA0 /* ProjectArchiveBrowserStagingRuntimeAdapter.swift */,
 				4CCA466B59F8B1CBD0D4A2A8 /* ProjectBrowsingStagingExerciseView.swift */,
 				5DED8B22E1D40817EFF8DB1F /* ProjectBrowsingStagingRuntimeAdapter.swift */,
+				5BCA98B2F410544CED7EEBDD /* ProjectBudgetContent.swift */,
 				9465CF2153451F90E9C5742D /* ProjectCategoryConfigurationStagingExerciseView.swift */,
 				1C55F877C9BC1958DD1D6378 /* ProjectCategoryConfigurationStagingRuntimeAdapter.swift */,
 				1CE98AA57CDBD26E8D8862E3 /* ProjectInvoicingWorkspaceView.swift */,
@@ -516,6 +527,7 @@
 				7D493C4ED12595DA1E84D9D1 /* AppButton.swift */,
 				D7EDDD4D9FACA89057F966A4 /* Badge.swift */,
 				65A98646CCB4A2BB976FC4F9 /* BillingRowPresentation.swift */,
+				1BE0EDBFE843E73446118EA3 /* BudgetCategoryTracker.swift */,
 				B045C909B1E24167932E1491 /* BulkSelectionBar.swift */,
 				EB8A4E671E3E92A36B5F6B2E /* CameraCapture.swift */,
 				607426AF30E800A83B515E7B /* Card.swift */,
@@ -625,6 +637,7 @@
 				4C281B043078B971C6C07990 /* ActionMenuCalculations.swift */,
 				0A3370C96E9EA27325B750E7 /* AmazonInvoiceParser.swift */,
 				AA8168F38170E9580A556D85 /* BudgetDisplayCalculations.swift */,
+				0591024BC13869903CE0BF5E /* BudgetTrackerCalculations.swift */,
 				4FC436333F756D58FDC56B4F /* CurrencyFormatting.swift */,
 				748A13DD8801FEB30487E637 /* ExportFieldConfig.swift */,
 				C114D41E757BC7BACDC4A19F /* FindMatchCalculations.swift */,
@@ -799,7 +812,9 @@
 				52FD242749DC0542F3C4421F /* BillingRowPresentation.swift in Sources */,
 				5ACBAAA20C5C329E67B452E3 /* BrandColors.swift in Sources */,
 				F74F22211CD9B38288F58BCF /* BudgetCategoryManagementView.swift in Sources */,
+				7EF7864EC2BD5E203FDD4EF1 /* BudgetCategoryTracker.swift in Sources */,
 				6A232BDE124DE5E10C03493F /* BudgetDisplayCalculations.swift in Sources */,
+				3E077706C07E653BCDC49609 /* BudgetTrackerCalculations.swift in Sources */,
 				43186C30E53DA84F8825CA4C /* BulkSelectionBar.swift in Sources */,
 				FFB319CE3309702D4C8E6286 /* CameraCapture.swift in Sources */,
 				8D07D65619F61C98B2CF365F /* Card.swift in Sources */,
@@ -874,6 +889,7 @@
 				68CBC2C57317CEA0CC14DBE1 /* ProjectArchiveBrowserStagingRuntimeAdapter.swift in Sources */,
 				87832B784566F75607D084D9 /* ProjectBrowsingStagingExerciseView.swift in Sources */,
 				520AF30348A9AD6AD5E5DBCB /* ProjectBrowsingStagingRuntimeAdapter.swift in Sources */,
+				7DD4163575F01FD29ABB479E /* ProjectBudgetContent.swift in Sources */,
 				14022BD505BB0F7647391EA4 /* ProjectCategoryConfigurationStagingExerciseView.swift in Sources */,
 				DE3E4A326090EF7B781CCF9C /* ProjectCategoryConfigurationStagingRuntimeAdapter.swift in Sources */,
 				20E5E08892C1119C91436398 /* ProjectInvoicingWorkspaceView.swift in Sources */,
@@ -930,6 +946,8 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				D4917597EE5C1F951C8F8E19 /* BudgetDisplayCalculations.swift in Sources */,
+				2C0DD7960FDA6994623BAD85 /* BudgetLabelReuseTests.swift in Sources */,
 				CBFFEA878784855201DF9E9B /* ExportFieldConfig.swift in Sources */,
 				BFEC2FD764035639B3DB28C3 /* InvoiceReportData.swift in Sources */,
 				7EEC050E3E777A82542908AC /* ReportHTMLBuilder.swift in Sources */,

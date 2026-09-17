@@ -35,6 +35,21 @@ public struct ReconciledFirebaseLineageEvidence: Equatable, Sendable {
     /// Only eligibility for later semantic mapping, not proof of target history
     /// completeness, correct accounting, or migration success.
     public var canAttemptMapping: Bool { issues.isEmpty }
+
+    /// Only explicit Project-to-Project scope facts. Missing Project fields
+    /// cannot establish Inventory custody; that needs writer/transaction proof.
+    public var projectScopeEvidence: FirebaseLineageProjectScopeEvidence {
+        guard canAttemptMapping else { return .unresolved }
+        guard let from = source.fromProjectID, let to = source.toProjectID else { return .unresolved }
+        if from.utf8.elementsEqual(to.utf8) { return .sameProject(from) }
+        return .differentProjects(from: from, to: to)
+    }
+}
+
+public enum FirebaseLineageProjectScopeEvidence: Equatable, Sendable {
+    case sameProject(String)
+    case differentProjects(from: String, to: String)
+    case unresolved
 }
 
 public enum FirebaseLineageReconciler {

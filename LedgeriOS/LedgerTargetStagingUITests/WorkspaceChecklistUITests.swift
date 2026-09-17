@@ -9,6 +9,34 @@ import UIKit
 
 @MainActor
 final class WorkspaceChecklistUITests: XCTestCase {
+    func testProjectBudgetShowsPaidUnpaidAndHonestCoverage() throws {
+        continueAfterFailure = false
+        let app = XCUIApplication()
+        app.launchArguments = ["--ledger-ui-test-workspace-checklist"]
+        app.launch(); defer { app.terminate() }
+        let project = app.buttons["target-active-project-card-project-ui-test"]
+        XCTAssertTrue(project.waitForExistence(timeout: 10)); project.tap()
+        let budget = app.buttons["target-project-budget"]
+        reveal(budget, in: app); budget.tap()
+        XCTAssertTrue(app.staticTexts["target-budget-incomplete"].waitForExistence(timeout: 5))
+        XCTAssertTrue(app.staticTexts["target-budget-pending"].exists)
+        XCTAssertTrue(app.staticTexts["Furnishings"].exists)
+        XCTAssertTrue(app.staticTexts["Paid $100.00 · Unpaid $50.00"].exists)
+        XCTAssertTrue(app.staticTexts["Overall Budget"].exists)
+        let fee = app.staticTexts["Design Fee"]
+        reveal(fee, in: app)
+        XCTAssertTrue(fee.exists)
+        XCTAssertLessThan(app.staticTexts["Furnishings"].frame.minY, app.staticTexts["Overall Budget"].frame.minY)
+        XCTAssertLessThan(app.staticTexts["Overall Budget"].frame.minY, fee.frame.minY)
+        XCTAssertTrue(app.staticTexts["Paid $0.00 · Unpaid $150.00"].exists)
+        XCTAssertTrue(app.staticTexts["$50 over"].exists)
+        XCTAssertFalse(app.staticTexts["$50 over received"].exists)
+        app.buttons["Close"].tap()
+        XCTAssertTrue(budget.waitForExistence(timeout: 5))
+        budget.tap()
+        XCTAssertTrue(app.staticTexts["Paid $100.00 · Unpaid $50.00"].waitForExistence(timeout: 5))
+    }
+
     func testLocalAccountOnboardingThroughExistingGate() throws {
         try exerciseLocalAccountEntry(signOutOnly: false)
     }
@@ -3493,11 +3521,16 @@ final class WorkspaceChecklistUITests: XCTestCase {
         try exerciseUninvoicedReturn(retry: true)
     }
 
-    private func exerciseUninvoicedReturn(retry: Bool) throws {
+    func testPaidReturnCancelAndConfirmUsesExistingForm() throws {
+        try exerciseUninvoicedReturn(retry: false, paid: true)
+    }
+
+    private func exerciseUninvoicedReturn(retry: Bool, paid: Bool = false) throws {
         continueAfterFailure = false
         let app = XCUIApplication()
         app.launchArguments = ["--ledger-ui-test-workspace-checklist"]
         if retry { app.launchArguments.append("--ledger-ui-test-return-retry") }
+        if paid { app.launchArguments.append("--ledger-ui-test-paid-return") }
         app.launch()
         defer { app.terminate() }
         let project = app.buttons["target-active-project-card-project-ui-test"]
@@ -3515,6 +3548,11 @@ final class WorkspaceChecklistUITests: XCTestCase {
             XCTAssertTrue(action.waitForExistence(timeout: 5)); action.tap()
             XCTAssertTrue(app.buttons["Confirm Return"].waitForExistence(timeout: 5))
             XCTAssertTrue(waitUntil { app.buttons["Confirm Return"].isEnabled })
+            if paid {
+                let credit = app.staticTexts["target-return-credit-physical-ui-chair"]
+                XCTAssertTrue(credit.waitForExistence(timeout: 5))
+                XCTAssertTrue(self.displayedText(credit).contains("125.50"))
+            }
         }
         openReturn()
         app.buttons["Cancel"].tap()
@@ -3797,7 +3835,7 @@ final class WorkspaceChecklistUITests: XCTestCase {
         let history = app.staticTexts["target-item-history-partial"]
         reveal(history, in: app, fullyInsideScrollView: true, within: scroll)
         XCTAssertEqual(displayedText(history),
-            "Downloaded locations and available return links. Older history may be missing. This is not a payment or refund ledger.")
+            "Downloaded locations, Invoice lines and available return links. Older history may be missing. Invoice line amounts are not the total client payment.")
         let actions = app.descendants(matching: .any)
             .matching(identifier: "target-item-detail-actions").firstMatch
         XCTAssertTrue(actions.exists)
@@ -5287,7 +5325,11 @@ final class WorkspaceChecklistUITests: XCTestCase {
         let workspace = app.scrollViews["target-workspace-scroll"]
         let list = scrollView ?? (workspace.exists ? workspace : app.collectionViews.firstMatch)
         #elseif os(macOS)
-        let list = scrollView ?? app.scrollViews.firstMatch
+        // A modal sheet leaves the background workspace in the accessibility
+        // tree. Scroll the foremost sheet, not that disabled background page.
+        let modalScroll = app.sheets.allElementsBoundByIndex.reversed()
+            .map { $0.scrollViews.firstMatch }.first { $0.exists }
+        let list = scrollView ?? modalScroll ?? app.scrollViews.firstMatch
         #endif
         XCTAssertTrue(list.exists)
         for _ in 0..<6 {

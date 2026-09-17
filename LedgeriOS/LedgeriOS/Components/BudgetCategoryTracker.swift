@@ -7,6 +7,10 @@ struct BudgetCategoryTracker: View {
     let spentCents: Int
     let budgetCents: Int
     var isFeeCategory: Bool = false
+    /// A redesigned caller can label paid + unpaid value without calling it
+    /// cash received. Existing callers keep their original wording.
+    var amountLabel: String? = nil
+    var remainingAmountLabel: String? = nil
 
     private var overBudget: Bool {
         BudgetTrackerCalculations.isOverBudget(spentCents: spentCents, budgetCents: budgetCents)
@@ -35,13 +39,13 @@ struct BudgetCategoryTracker: View {
                 .foregroundStyle(BrandColors.textPrimary)
 
             HStack {
-                Text(BudgetTrackerCalculations.spentLabel(spentCents: spentCents, isFeeCategory: isFeeCategory))
+                Text(amountLabel ?? BudgetTrackerCalculations.spentLabel(spentCents: spentCents, isFeeCategory: isFeeCategory))
                     .font(Typography.small)
                     .foregroundStyle(BrandColors.textSecondary)
 
                 Spacer()
 
-                Text(BudgetTrackerCalculations.remainingLabel(
+                Text(remainingAmountLabel ?? BudgetTrackerCalculations.remainingLabel(
                     spentCents: spentCents, budgetCents: budgetCents, isFeeCategory: isFeeCategory
                 ))
                 .font(Typography.small)

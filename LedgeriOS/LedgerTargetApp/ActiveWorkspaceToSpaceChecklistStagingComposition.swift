@@ -33,6 +33,7 @@ struct ActiveWorkspaceToSpaceChecklistStagingView: View {
     @State private var showingClientReport = false
     @State private var showingSettings = false
     @State private var showingInvoicing = false
+    @State private var showingBudget = false
 
     private var itemSpaceNavigation: ItemSpaceNavigation? {
         guard let detailRuntime = model.referencedSpaceRuntime,
@@ -293,6 +294,21 @@ struct ActiveWorkspaceToSpaceChecklistStagingView: View {
                 }
                 LabeledContent("Project data", value: model.projectBrowser.detailStateLabel)
                     .accessibilityIdentifier("target-active-project-workspace-status")
+                if let reader = model.itemReader as? any ProjectBudgetReading {
+                    Button("Budget") { showingBudget = true }
+                        .accessibilityIdentifier("target-project-budget")
+                        .sheet(isPresented: $showingBudget) {
+                            NavigationStack {
+                                ProjectBudgetContent(accountId: model.accountId, projectId: projectId,
+                                    currency: accountCurrency, reader: reader)
+                                    .toolbar {
+                                        ToolbarItem(placement: .cancellationAction) {
+                                            Button("Close") { showingBudget = false }
+                                        }
+                                    }
+                            }
+                        }
+                }
                 if model.transactionBrowser != nil, model.projectBrowser.selectedClientId != nil {
                     Button("Transactions") { model.openTransactionsTab() }
                     .accessibilityIdentifier("target-project-transactions")

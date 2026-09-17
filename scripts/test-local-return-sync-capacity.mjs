@@ -21,10 +21,12 @@ for(const project of projectIds) for(let i=0;i<700;i++) {
  add('ledger_private','item_charge_occurrences',row);
  add('ledger_private','item_return_reviews',{...row,withdrawn:false,has_live_invoice:i%3===0,has_collected_invoice:i%3===1});
 }
+for(const stream of ['item_return_review','project_invoicing_item_charges']) {
 const result=execFileSync('docker',['exec','-i','ledger_powersync_local','node','--input-type=module','-e',
   readFileSync('scripts/evaluate-sync-parameter-budget.mjs','utf8')],{
-  input:JSON.stringify({yaml:readFileSync('powersync/sync-streams.yaml','utf8'),stream:'item_return_review',facts,projectIds,
+  input:JSON.stringify({yaml:readFileSync('powersync/sync-streams.yaml','utf8'),stream,facts,projectIds,
     diagnosticStack:process.argv.includes('--diagnostic-stack'),userId:'user',parameters:{account_id:'account',project_id:projectIds[0]}}),
   encoding:'utf8',timeout:15000});
-console.log(result.trim());
-for(const row of JSON.parse(result)) assert.equal(row.error,undefined,`Return stream query ${row.index} exceeds evaluator capacity`);
+console.log(stream,result.trim());
+for(const row of JSON.parse(result)) assert.equal(row.error,undefined,`${stream} query ${row.index} exceeds evaluator capacity`);
+}

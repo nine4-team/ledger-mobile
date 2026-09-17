@@ -298,7 +298,8 @@ select ok(not prosecdef,'Public Invoice wrapper uses invoker rights') from pg_pr
 set constraints all deferred;
 select ledger_private.import_client_payment('item-mixed-payment','account-primary','expense-import-project','client-existing',
   200,'USD','source-account','item-mixed-payment-source','\x0bff');
-create function pg_temp.item_mixed_import(source_line text default 'paid-item-line', item_id text default 'imported-paid-item')
+create function pg_temp.item_mixed_import(source_line text default 'paid-item-line', item_id text default 'imported-paid-item',
+  placement text default null, review_bytes bytea default '\x1234')
 returns jsonb language plpgsql as $$
 declare
   i jsonb:=replace(pg_temp.mixed_invoice()::text,'mixed-','item-mixed-')::jsonb;
@@ -313,6 +314,13 @@ begin
         'amount',jsonb_build_object('minorUnits',50,'currency','USD'))))::text)));
   s:=s||jsonb_build_array(jsonb_build_object('source_document_id','original-item','source_line_id',source_line,
     'source_bytes','\x09ff','line_source_bytes','\x0aff'));
+  if placement is not null then
+    return ledger_private.import_invoice_sources_with_placements(i,s,pg_temp.payment_record()||jsonb_build_object(
+      'p_id','item-mixed-payment','p_amount','200','p_source_document','item-mixed-payment-source','p_source_bytes','\x0bff'),
+      'source-account','item-mixed-source-invoice','\x0cff',
+      jsonb_build_array(jsonb_build_object('line_id','item-mixed-item-line','placement_id',placement)),
+      'principal-owner',review_bytes);
+  end if;
   return ledger_private.import_invoice_sources(i,s,pg_temp.payment_record()||jsonb_build_object(
     'p_id','item-mixed-payment','p_amount','200','p_source_document','item-mixed-payment-source','p_source_bytes','\x0bff'),
     'source-account','item-mixed-source-invoice','\x0cff');
@@ -328,6 +336,74 @@ select throws_ok($$select pg_temp.item_mixed_import(source_line=>'bad/line')$$,'
   'Late Item evidence constraint rejects entire import');
 select is((select count(*) from ledger_private.collected_invoices where id='item-mixed-invoice'),0::bigint,
   'Late evidence failure rolls back frozen Invoice');
+savepoint reviewed_placement;
+insert into public.spike_budget_categories(id,account_id,display_name,kind,lifecycle,is_system,
+  excludes_from_overall_budget,visibility_class,presentation_order,revision,created_at_ms,updated_at_ms)
+  select 'historical-category',account_id,'Historical',kind,lifecycle,false,
+    excludes_from_overall_budget,visibility_class,9999,1,1,1
+  from public.spike_budget_categories where id='category-system';
+insert into public.spike_item_placements(id,account_id,item_id,scope_kind,project_id,started_at,start_evidence,started_by_principal_id)
+  values('reviewed-placement','account-primary','imported-paid-item','project','expense-import-project','2024-01-01','recorded_move','principal-owner');
+select throws_ok($$select pg_temp.item_mixed_import(placement=>'missing-placement')$$,'22023',null,
+  'Explicit mapping must name a real matching Project placement');
+select throws_ok($$select pg_temp.item_mixed_import(placement=>'reviewed-placement',review_bytes=>null)$$,'22023',null,
+  'Mapping requires retained review evidence');
+select throws_ok($$select pg_temp.item_mixed_import(source_line=>'bad/line',placement=>'reviewed-placement')$$,'23514',null,
+  'Late invalid source rolls back reviewed occurrence too');
+select is((select count(*) from ledger_private.item_charge_occurrences where id='item-mixed-occurrence'),0::bigint,
+  'No orphan demand remains after failed import');
+select lives_ok($$select pg_temp.item_mixed_import(placement=>'reviewed-placement')$$,
+  'Reviewed placement and immutable paid Invoice import atomically');
+set constraints all immediate;
+set constraints all deferred;
+select lives_ok($$select pg_temp.item_mixed_import(placement=>'reviewed-placement')$$,'Exact reviewed import replays');
+select throws_ok($$select pg_temp.item_mixed_import(placement=>'reviewed-placement',review_bytes=>'\x5678')$$,'22000',null,
+  'Review evidence cannot change on replay');
+select throws_ok($$select pg_temp.item_mixed_import(placement=>'different-cycle')$$,'22000',null,
+  'Retry cannot redirect the paid line to a different physical cycle');
+select throws_ok($$update ledger_private.imported_invoice_placement_reviews set review_bytes='\x5678'
+  where invoice_id='item-mixed-invoice'$$,'55000',null,'Retained review cannot be rewritten');
+select is((select price_basis from ledger_private.item_charge_occurrences where id='item-mixed-occurrence'),
+  'imported_invoice_amount','Imported frozen price is not mislabeled as current Project price');
+select is((select placement_id from ledger_private.item_charge_occurrences where id='item-mixed-occurrence'),
+  'reviewed-placement','Occurrence retains explicitly reviewed placement');
+select is((select count(*) from ledger_private.item_charge_occurrences where id='item-mixed-occurrence'),1::bigint,
+  'Retry does not duplicate demand');
+select ok(not has_function_privilege(r,
+  'ledger_private.import_invoice_sources_with_placements(jsonb,jsonb,jsonb,text,text,bytea,jsonb,text,bytea)','EXECUTE'),
+  r||' cannot run operator placement import') from unnest(array['anon','authenticated','service_role']) r;
+select ok(not has_table_privilege(r,'ledger_private.imported_invoice_placement_reviews','SELECT,INSERT,UPDATE,DELETE'),
+  r||' cannot access private review evidence') from unnest(array['anon','authenticated','service_role']) r;
+insert into public.spike_item_placements(id,account_id,item_id,scope_kind,started_at,started_by_principal_id,ended_at,ended_by_principal_id)
+  values('reviewed-inventory-origin','account-primary','imported-paid-item','business_inventory',
+    '2023-01-01','principal-owner','2024-01-01','principal-owner');
+create temp table reviewed_frozen_before as
+  select ledger_private.read_collected_invoice('account-primary','item-mixed-invoice') as contents;
+update public.spike_account_memberships set financial_access='full'
+  where account_id='account-primary' and principal_id='principal-owner';
+create function pg_temp.return_imported_paid_item() returns text language sql as $$
+  select jsonb_build_object('operationId','reviewed-paid-return','accountId','account-primary',
+    'actorPrincipalId','principal-owner','projectId','expense-import-project',
+    'contractVersion','return-paid-items-v1','createdAtMs','1788523200000',
+    'items',jsonb_build_array(jsonb_build_object('itemId','imported-paid-item','placementId','reviewed-placement',
+      'chargeId','item-mixed-occurrence','paidInvoiceLineId','item-mixed-item-line',
+      'inventoryPlacementId','reviewed-return-placement','returnOccurrenceId','reviewed-return-occurrence',
+      'creditId','reviewed-return-credit')))::text
+$$;
+select set_config('request.jwt.claims','{"sub":"10000000-0000-0000-0000-000000000001","role":"authenticated"}',true);
+set local role authenticated;
+select is(public.spike_read_paid_return_review('account-primary','expense-import-project',array['imported-paid-item'])
+  #>>'{items,0,paidAmountMinorUnits}','50','Imported reviewed line supplies original paid amount');
+select is((public.spike_return_paid_items(pg_temp.return_imported_paid_item())).phase,'applied',
+  'Real authenticated paid-return command accepts reviewed imported billing and custody');
+select is((public.spike_return_paid_items(pg_temp.return_imported_paid_item())).phase,'applied',
+  'Imported paid return replays without a second credit');
+reset role;
+select is((select count(*) from ledger_private.paid_item_return_credits where id='reviewed-return-credit'),1::bigint,
+  'Exactly one credit follows imported paid return');
+select is(ledger_private.read_collected_invoice('account-primary','item-mixed-invoice'),
+  (select contents from reviewed_frozen_before),'Imported frozen Invoice and payment membership stay unchanged');
+rollback to reviewed_placement;
 select lives_ok('select pg_temp.item_mixed_import()','Complete Item Expense Fee import succeeds');
 set constraints all immediate;
 set constraints all deferred;

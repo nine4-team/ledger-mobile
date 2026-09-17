@@ -5,6 +5,7 @@ import PowerSync
 extension LedgerOfflineClientRuntime: ProjectInvoiceCreating {}
 extension LedgerOfflineClientRuntime: ProjectInvoiceRevising {}
 extension LedgerOfflineClientRuntime: ProjectFeeInstallmentCreating {}
+extension LedgerOfflineClientRuntime: PaidReturnWorkflowServing {}
 
 public enum LedgerOfflineClientRuntimeFailure: Error, Equatable, Sendable {
     case accountScopeMismatch
@@ -39,7 +40,7 @@ public enum LedgerOfflineClientRuntimeFailure: Error, Equatable, Sendable {
 public final class LedgerOfflineClientRuntime:
     ItemSpaceAssigning, ItemSpaceAssignmentClearing, SpaceChecklistRevising, CategoryManaging, ExpenseCreating, ExpenseEditing, TransactionBrowsing, TransactionReceiptWatching, TransactionExportReading, DownloadedTransactionAttachmentReading, TransactionAttachmentCapturing,
     RejectedOperationRecoveryQuerying, DownloadedItemPlacementReading, DownloadedItemPlacementHistoryReading, PropertyManagementReportReading,
-    PropertyManagementReportWatching, ClientSummaryPhysicalReportReading, ClientSummaryPhysicalReportWatching, AccountBusinessProfileReading, DownloadedProjectItemsReading, DownloadedItemImageReading, ProjectInvoicingReading, Sendable
+    PropertyManagementReportWatching, ClientSummaryPhysicalReportReading, ClientSummaryPhysicalReportWatching, AccountBusinessProfileReading, DownloadedProjectItemsReading, DownloadedItemImageReading, ProjectInvoicingReading, ProjectBudgetReading, Sendable
 {
     let lifecycleOwner: AccountWorkspacePendingWorkRuntime
     let location: LedgerWorkspaceRuntimeLocation
@@ -50,6 +51,15 @@ public final class LedgerOfflineClientRuntime:
     }
     public func readInvoicingCharges(accountId: AccountID, projectId: ProjectID) async throws -> ProjectInvoicingItems {
         try await lifecycleOwner.readInvoicingCharges(accountId: accountId, projectId: projectId)
+    }
+    public func readProjectBudget(accountId: AccountID, projectId: ProjectID, currency: CurrencyCode) async throws -> ProjectBudgetRead {
+        try await lifecycleOwner.readProjectBudget(accountId: accountId, projectId: projectId, currency: currency)
+    }
+    public func watchProjectBudget(accountId: AccountID, projectId: ProjectID, currency: CurrencyCode) -> AsyncThrowingStream<ProjectBudgetRead?, Error> {
+        trackedStream { id, continuation in
+            await self.lifecycleOwner.startProjectBudgetWatch(id: id, accountId: accountId,
+                projectId: projectId, currency: currency, continuation: continuation)
+        }
     }
     public func watchInvoicingCharges(accountId: AccountID, projectId: ProjectID) -> AsyncThrowingStream<ProjectInvoicingItems?, Error> {
         trackedStream { id, continuation in
@@ -304,6 +314,31 @@ public final class LedgerOfflineClientRuntime:
 
     public func readUninvoicedReturnReview(projectId: ProjectID, itemIds: [ItemID]) async throws -> UninvoicedReturnReview {
         try await lifecycleOwner.readUninvoicedReturnReview(projectId: projectId, itemIds: itemIds)
+    }
+
+    public func watchPaidReturnReview(projectId: ProjectID, itemIds: [ItemID]) -> AsyncThrowingStream<PaidReturnReview?, Error> {
+        trackedStream { id, continuation in
+            await self.lifecycleOwner.startPaidReturnReviewWatch(id: id, projectId: projectId, itemIds: itemIds, continuation: continuation)
+        }
+    }
+
+    public func watchPaidReturn(_ operationId: OperationID) -> AsyncThrowingStream<OperationSnapshot?, Error> {
+        trackedStream { id, continuation in
+            await self.lifecycleOwner.startPaidReturnWatch(id: id, operationId: operationId, continuation: continuation)
+        }
+    }
+
+    public func readPaidReturnReview(projectId: ProjectID, itemIds: [ItemID]) async throws -> PaidReturnReview {
+        try await lifecycleOwner.readPaidReturnReview(projectId: projectId, itemIds: itemIds)
+    }
+
+    public func returnPaidItems(_ payload: ReturnPaidItemsPayload, operationUUID: UUID,
+                                capturedAt: Date) async throws -> OperationReceipt {
+        try await lifecycleOwner.returnPaidItems(payload, operationUUID: operationUUID, capturedAt: capturedAt)
+    }
+
+    public func paidReturnStatus(_ operationId: OperationID) async throws -> OperationSnapshot? {
+        try await lifecycleOwner.paidReturnStatus(operationId)
     }
 
     public func watchUninvoicedReturnReview(projectId: ProjectID, itemIds: [ItemID]) -> AsyncThrowingStream<UninvoicedReturnReview?, Error> {

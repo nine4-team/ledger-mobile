@@ -77,7 +77,7 @@ struct LiveInvoicePowerSyncQuery: Sendable {
         }
     }
 
-    private static func requireReady(_ local: any Transaction, accountId: AccountID, principalId: PrincipalID, projectId: ProjectID) throws {
+    static func requireReady(_ local: any Transaction, accountId: AccountID, principalId: PrincipalID, projectId: ProjectID) throws {
             try ProjectInvoicingItemLocalReader.requireAccess(transaction: local,
                 accountId: accountId, principalId: principalId, projectId: projectId)
             for identity: any SyncStreamDescription in [

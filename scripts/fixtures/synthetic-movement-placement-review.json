@@ -1,0 +1,10 @@
+{
+  "sourceSHA256": "3b3674255347234256b9543f00104cad6ea64b40cd45ede38f8fa4f945882b80",
+  "mappings": [
+    {
+      "sourceInvoiceID": "synthetic-paid-invoice",
+      "sourceLineID": "synthetic-paid-line",
+      "sourceMovementDocumentID": "synthetic-resale"
+    }
+  ]
+}

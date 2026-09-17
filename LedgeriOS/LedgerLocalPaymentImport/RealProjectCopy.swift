@@ -13,9 +13,17 @@ private struct ExpenseReceiptCopyPlan: Decodable {
     let receipts: [Receipt]
 }
 
+private struct InvoicePlacementCopyReview: Decodable {
+    struct Mapping: Decodable {
+        let sourceInvoiceID, sourceLineID, sourceMovementDocumentID: String
+    }
+    let sourceSHA256: String
+    let mappings: [Mapping]
+}
+
 /// Private, partial real-data QA copy. Not the production cutover runner. The
 /// preserved snapshot remains authority for fields/history not loaded yet.
-func loadRealProjectCopy(path: String, apply: Bool, mediaDirectory: String? = nil) throws {
+func loadRealProjectCopy(path: String, apply: Bool, mediaDirectory: String? = nil, placementReviewPath: String? = nil) throws {
     let root = "/Users/benjaminmackenzie/Dev/ledger_mobile_supabase"
     let privateRoot = root + "/tmp/real-project-copy"
     try require(FileManager.default.currentDirectoryPath == root, "Use Supabase worktree")
@@ -91,6 +99,22 @@ func loadRealProjectCopy(path: String, apply: Bool, mediaDirectory: String? = ni
     }
     let account = prefix + "-account"
     let sourceHash = try MigrationSHA256.make(bytes: bytes).rawValue
+    let placementReviewBytes = try placementReviewPath.map { path -> Data in
+        let reviewURL = URL(fileURLWithPath: path).standardizedFileURL
+        try require(reviewURL.deletingLastPathComponent().path == privateRoot && (try regularFile(path)),
+            "Placement review must be a private regular file")
+        let data = try Data(contentsOf: reviewURL)
+        try require(!data.isEmpty && data.count <= 4_194_304, "Placement review size invalid")
+        return data
+    }
+    let placementReview = try placementReviewBytes.map { try JSONDecoder().decode(InvoicePlacementCopyReview.self, from: $0) }
+    if let placementReview {
+        try require(placementReview.sourceSHA256 == sourceHash && !placementReview.mappings.isEmpty,
+            "Placement review must match this exact snapshot")
+        let keys = try placementReview.mappings.map { try canonical([$0.sourceInvoiceID, $0.sourceLineID]) }
+        try require(Set(keys).count == keys.count, "Duplicate reviewed Invoice line")
+    }
+    var consumedPlacementReviews = 0
     func receiptCommand(_ mode: String, sourceIDs: [String]) throws -> ExpenseReceiptCopyPlan {
         guard let mediaDirectory else { throw ImportFailure("Receipt copy directory missing") }
         let request: [String:Any] = ["snapshotPath":url.path,"mediaDirectory":mediaDirectory,
@@ -140,13 +164,41 @@ func loadRealProjectCopy(path: String, apply: Bool, mediaDirectory: String? = ni
         let lifecycle = try boolean(space,"isArchived") == true ? "archived" : "active"
         sql += "insert into public.spike_spaces(id,account_id,scope_kind,project_id,display_name,lifecycle) values(\(q(try id("space",space.documentPathSegments[3]))),\(q(account)),'project',\(q(try id("project",project))),\(q(name)),\(q(lifecycle)));\n"
     }
+    var knownPlacementCount = 0
+    var observationPlacementCount = 0
+    var movementPlacementIDs: [Data:String] = [:]
     for item in items {
         let placement = FirebaseCurrentItemPlacement.read(item, accountID: sourceAccount, documents: documents)
         try require(placement.isResolved, "Unresolved current Item placement")
         let itemID = try id("item", item.documentPathSegments[3])
         let bookmark = try boolean(item,"bookmark").map { $0 ? "true" : "false" } ?? "null"
         sql += "insert into public.spike_items(id,account_id,description,name,sku,source,current_source,notes,workflow_status,bookmark,created_by_principal_id) values(\(q(itemID)),\(q(account)),coalesce(\(q(try text(item,"name"))),''),\(q(try text(item,"name"))),\(q(try text(item,"sku"))),\(q(try text(item,"source"))),\(q(try text(item,"currentSource"))),\(q(try text(item,"notes"))),\(q(try text(item,"status"))),\(bookmark),\(q(owner)));\n"
-        sql += "insert into public.spike_item_placements(id,account_id,item_id,scope_kind,project_id,space_id,started_at,started_by_principal_id,start_evidence) values(\(q(try id("placement",item.documentPathSegments[3]))),\(q(account)),\(q(itemID)),\(q(placement.projectID == nil ? "business_inventory" : "project")),\(q(try placement.projectID.map { try id("project",$0) })),\(q(try placement.spaceID.map { try id("space",$0) })),now(),\(q(owner)),'import_observation');\n"
+        let edges = lineage.lineage.filter { $0.source.itemID?.utf8.elementsEqual(item.documentPathSegments[3].utf8) == true }
+        let timeline = FirebasePhysicalMovementEvidence.timeline(edges,accountID:sourceAccount,
+            itemID:item.documentPathSegments[3],currentScope:placement.projectID.map(FirebasePhysicalMovementEvidence.Scope.project) ?? .inventory)
+        if timeline.transitions.isEmpty {
+            observationPlacementCount += 1
+            sql += "insert into public.spike_item_placements(id,account_id,item_id,scope_kind,project_id,space_id,started_at,started_by_principal_id,start_evidence) values(\(q(try id("placement",item.documentPathSegments[3]))),\(q(account)),\(q(itemID)),\(q(placement.projectID == nil ? "business_inventory" : "project")),\(q(try placement.projectID.map { try id("project",$0) })),\(q(try placement.spaceID.map { try id("space",$0) })),now(),\(q(owner)),'import_observation');\n"
+        } else {
+            func instant(_ time: FirebaseLineageTimestamp) throws -> String {
+                guard let seconds = Int64(time.seconds), time.nanoseconds.isMultiple(of:1000) else {
+                    throw ImportFailure("Movement time is not exactly representable")
+                }
+                return "(to_timestamp(\(seconds)) + interval '\(time.nanoseconds / 1000) microseconds')"
+            }
+            for (index,transition) in timeline.transitions.enumerated() {
+                let isCurrent = index == timeline.transitions.count - 1
+                let placementID = try isCurrent ? id("placement",item.documentPathSegments[3])
+                    : id("historical-placement",transition.sourceDocumentIDs[0])
+                let project: String?
+                switch transition.to { case .inventory: project = nil; case .project(let value): project = value }
+                let end = try isCurrent ? "null" : instant(timeline.transitions[index+1].at)
+                let space = try isCurrent ? placement.spaceID.map { try id("space",$0) } : nil
+                sql += "insert into public.spike_item_placements(id,account_id,item_id,scope_kind,project_id,space_id,started_at,started_by_principal_id,ended_at,ended_by_principal_id,start_evidence) values(\(q(placementID)),\(q(account)),\(q(itemID)),\(q(project == nil ? "business_inventory" : "project")),\(q(try project.map { try id("project",$0) })),\(q(space)),\(try instant(transition.at)),\(q(owner)),\(end),\(q(isCurrent ? nil : owner)),'recorded_move');\n"
+                for sourceID in transition.sourceDocumentIDs { movementPlacementIDs[Data(sourceID.utf8)] = placementID }
+                knownPlacementCount += 1
+            }
+        }
     }
     // Financial plans are prepared separately below; never relabel legacy
     // vendor purchases as imported client payments to make a test load succeed.
@@ -312,6 +364,17 @@ func loadRealProjectCopy(path: String, apply: Bool, mediaDirectory: String? = ni
         } catch {
             excludedInvoices[sourceInvoiceID] = "completeInvoiceParametersRequireMapping"; continue
         }
+        let reviewed = placementReview?.mappings.filter { $0.sourceInvoiceID.utf8.elementsEqual(sourceInvoiceID.utf8) } ?? []
+        let placementMappings: [FirebaseExpenseInvoiceImportParameters.PlacementMapping]
+        if reviewed.isEmpty { placementMappings = [] }
+        else {
+            placementMappings = try parameters.placementMappings(reviewed: reviewed.map { mapping in
+                guard let placement = movementPlacementIDs[Data(mapping.sourceMovementDocumentID.utf8)] else {
+                    throw ImportFailure("Reviewed movement has no proven target placement")
+                }
+                return (mapping.sourceLineID, try EntityID(validating: placement))
+            })
+        }
         // Historical definitions can differ from a source's current category.
         // Retain both IDs; use source category kind rather than renaming all as General.
         var categorySQL = ""
@@ -347,7 +410,14 @@ func loadRealProjectCopy(path: String, apply: Bool, mediaDirectory: String? = ni
         sql += "select ledger_private.import_client_payment(" + [payment.p_id,payment.p_account_id,payment.p_project_id,
             payment.p_client_id,payment.p_amount,payment.p_currency,payment.p_source_account,payment.p_source_document,payment.p_source_bytes]
             .map { q($0) }.joined(separator: ",") + ");\n"
-        sql += "select ledger_private.import_invoice_sources(\(q(String(decoding: try canonical(parameters.p_invoice),as: UTF8.self)))::jsonb,\(q(String(decoding: try canonical(parameters.p_sources),as: UTF8.self)))::jsonb,\(q(String(decoding: try canonical(payment),as: UTF8.self)))::jsonb,\(q(parameters.p_source_account)),\(q(parameters.p_source_invoice)),\(q(parameters.p_invoice_bytes))::bytea);\n"
+        let importFunction = placementMappings.isEmpty ? "import_invoice_sources" : "import_invoice_sources_with_placements"
+        let placementArguments: String
+        if placementMappings.isEmpty { placementArguments = "" }
+        else {
+            let reviewHex = "\\x" + placementReviewBytes!.map { String(format: "%02x", $0) }.joined()
+            placementArguments = ",\(q(String(decoding: try canonical(placementMappings), as: UTF8.self)))::jsonb,\(q(owner)),\(q(reviewHex))::bytea"
+        }
+        sql += "select ledger_private.\(importFunction)(\(q(String(decoding: try canonical(parameters.p_invoice),as: UTF8.self)))::jsonb,\(q(String(decoding: try canonical(parameters.p_sources),as: UTF8.self)))::jsonb,\(q(String(decoding: try canonical(payment),as: UTF8.self)))::jsonb,\(q(parameters.p_source_account)),\(q(parameters.p_source_invoice)),\(q(parameters.p_invoice_bytes))::bytea\(placementArguments));\n"
         let expenseJSON = String(decoding: try canonical(parameters.p_expenses),as: UTF8.self)
         let invoiceJSON = String(decoding: try canonical(parameters.p_invoice),as: UTF8.self)
         // Swift omits nil item_id for Expense/Fee; Postgres emits JSON null.
@@ -358,6 +428,7 @@ func loadRealProjectCopy(path: String, apply: Bool, mediaDirectory: String? = ni
         let feeJSON = String(decoding: try canonical(parameters.p_fees), as: UTF8.self)
         sql += "do $$ begin if exists(select 1 from jsonb_array_elements(\(q(feeJSON))::jsonb) expected left join ledger_private.fee_installments f on f.id=expected->'record'->>'id' where to_jsonb(f) is distinct from to_jsonb(jsonb_populate_record(null::ledger_private.fee_installments,expected->'record'))) then raise exception 'Imported Fee field reconciliation mismatch'; end if; end $$;\n"
         expenseInvoices += 1; importedExpenses += parameters.p_expenses.count; importedFees += parameters.p_fees.count
+        consumedPlacementReviews += reviewed.count
         excludedTransactions.removeValue(forKey: payments[0].documentPathSegments[3])
         for source in review.lines.compactMap(\.source) where source.documentPathSegments.count == 4 && source.documentPathSegments[2] == "transactions" {
             excludedTransactions.removeValue(forKey: source.documentPathSegments.last!)
@@ -379,12 +450,30 @@ func loadRealProjectCopy(path: String, apply: Bool, mediaDirectory: String? = ni
     }
     sql += "update public.spike_accounts set furnishings_category_id=\(q(furnishingsID)) where id=\(q(account)) and furnishings_category_id is null;\n"
     sql += "do $$ begin if (select furnishings_category_id from public.spike_accounts where id=\(q(account))) is distinct from \(q(furnishingsID)) then raise exception 'Furnishings identity reconciliation mismatch'; end if; end $$;\n"
+    // Retain exact typed source envelopes even when their physical meaning is
+    // unresolved. These rows grant no movement/credit authority by themselves.
+    var retainedMovementSources = 0
+    let copiedItemIDs = Set(items.map { Data($0.documentPathSegments[3].utf8) })
+    for document in documents where document.documentPathSegments.count == 4
+        && document.documentPathSegments[2] == "lineageEdges" {
+        guard let sourceItem = try text(document,"itemId"), copiedItemIDs.contains(Data(sourceItem.utf8)) else { continue }
+        let envelope = try document.canonicalEvidenceData()
+        let hex = envelope.map { String(format:"%02x",$0) }.joined()
+        sql += "insert into ledger_private.imported_item_movement_sources(account_id,item_id,source_account_id,source_item_id,source_document_id,source_bytes,target_placement_id) values(\(q(account)),\(q(try id("item",sourceItem))),\(q(sourceAccount)),\(q(sourceItem)),\(q(document.documentPathSegments[3])),decode(\(q(hex)),'hex'),\(q(movementPlacementIDs[Data(document.documentPathSegments[3].utf8)])));\n"
+        retainedMovementSources += 1
+    }
+    sql += "do $$ begin if (select count(*) from ledger_private.imported_item_movement_sources where account_id=\(q(account)))<>\(retainedMovementSources) then raise exception 'Item movement source reconciliation mismatch'; end if; end $$;\n"
+    try require(consumedPlacementReviews == (placementReview?.mappings.count ?? 0),
+        "Every supplied placement review must belong to an imported Invoice")
     unresolved = excludedTransactions.count
     unresolvedReasons = Dictionary(grouping: excludedTransactions.values, by: { $0 }).mapValues(\.count)
     // A labeled QA dataset is not a migrated Account. Retain the exact source
     // and exclusions before committing; never imply accounting completeness.
-    sql += "do $$ begin if (select count(*) from public.spike_items where account_id=\(q(account)))<>\(items.count) or (select count(*) from public.spike_item_placements where account_id=\(q(account)) and start_evidence='import_observation')<>\(items.count) or (select count(*) from public.spike_transactions where account_id=\(q(account)) and origin='vendor_payment')<>\(eligible) or (select count(*) from public.spike_transactions where account_id=\(q(account)) and origin='firebase_client_payment')<>\(expenseInvoices) or (select count(*) from ledger_private.collected_invoices where account_id=\(q(account)))<>\(expenseInvoices) or (select count(*) from ledger_private.expenses where account_id=\(q(account)))<>\(importedExpenses) then raise exception 'Real copy reconciliation mismatch'; end if; end $$;\n"
+    sql += "do $$ begin if (select count(*) from public.spike_items where account_id=\(q(account)))<>\(items.count) or (select count(*) from public.spike_item_placements where account_id=\(q(account)) and start_evidence='import_observation')<>\(observationPlacementCount) or (select count(*) from public.spike_item_placements where account_id=\(q(account)) and start_evidence='recorded_move')<>\(knownPlacementCount) or (select count(*) from public.spike_item_placements where account_id=\(q(account)) and ended_at is null)<>\(items.count) or (select count(*) from public.spike_transactions where account_id=\(q(account)) and origin='vendor_payment')<>\(eligible) or (select count(*) from public.spike_transactions where account_id=\(q(account)) and origin='firebase_client_payment')<>\(expenseInvoices) or (select count(*) from ledger_private.collected_invoices where account_id=\(q(account)))<>\(expenseInvoices) or (select count(*) from ledger_private.expenses where account_id=\(q(account)))<>\(importedExpenses) then raise exception 'Real copy reconciliation mismatch'; end if; end $$;\n"
     sql += "do $$ begin if (select count(*) from ledger_private.fee_installments where account_id=\(q(account)))<>\(importedFees) then raise exception 'Imported Fee count reconciliation mismatch'; end if; end $$;\n"
+    sql += "do $$ begin if (select count(*) from ledger_private.item_charge_occurrences where account_id=\(q(account)) and price_basis='imported_invoice_amount')<>\(consumedPlacementReviews) then raise exception 'Reviewed Item charge count reconciliation mismatch'; end if; end $$;\n"
+    // Rollback rehearsals must exercise deferred source-evidence constraints too.
+    sql += "set constraints all immediate;\n"
     sql += apply ? "commit;\n" : "rollback;\n"
     let env = ProcessInfo.processInfo.environment
     try require((env["DOCKER_HOST"] ?? "").isEmpty && (env["DOCKER_CONTEXT"] ?? "").isEmpty, "No remote Docker overrides")
@@ -428,17 +517,68 @@ func loadRealProjectCopy(path: String, apply: Bool, mediaDirectory: String? = ni
             && info.st_uid == getuid() && (info.st_mode & 0o077) == 0, "Private copy directory required")
         try retain(bytes, at: directory + "/source.json", directory: directory)
         try retain(Data(sql.utf8), at: directory + "/load.sql", directory: directory)
+        let timelines: [[String:Any]] = items.map { item in
+            let sourceID = item.documentPathSegments[3]
+            let placement = FirebaseCurrentItemPlacement.read(item, accountID: sourceAccount, documents: documents)
+            let edges = lineage.lineage.filter { $0.source.itemID?.utf8.elementsEqual(sourceID.utf8) == true }
+            let timeline = FirebasePhysicalMovementEvidence.timeline(edges, accountID: sourceAccount, itemID: sourceID,
+                currentScope: placement.projectID.map(FirebasePhysicalMovementEvidence.Scope.project) ?? .inventory)
+            func scope(_ value: FirebasePhysicalMovementEvidence.Scope) -> [String:String] {
+                switch value {
+                case .inventory: return ["kind":"inventory"]
+                case .project(let id): return ["kind":"project","sourceProjectID":id]
+                }
+            }
+            return ["sourceItemID":sourceID,"initialStartUnknown":timeline.initialStartIsUnknown,
+                "targetHistoryImported":false,"unresolvedSourceDocumentIDs":timeline.unresolvedDocumentIDs,
+                "transitions":timeline.transitions.map { transition -> [String:Any] in
+                    ["seconds":transition.at.seconds,"nanoseconds":transition.at.nanoseconds,
+                     "from":scope(transition.from),"to":scope(transition.to),
+                     "sourceDocumentIDs":transition.sourceDocumentIDs]
+                }]
+        }
         let manifest: [String:Any] = ["kind":"partial-real-data-qa-copy", "sourceSHA256":sourceHash,
+            "reviewedPaidItemPlacements":consumedPlacementReviews,
+            "lineagePhysicalTimelines":timelines,
+            "retainedMovementSources":retainedMovementSources,
+            "knownPlacementIntervals":knownPlacementCount,"currentObservations":observationPlacementCount,
             "accountID":account, "qaPrincipalID":owner, "selectedSourceProject":selectedProject,
             "projects":projects.count,"spaces":spaces.count,"items":items.count,"vendorPurchases":eligible,
             "excludedTransactions":excludedTransactions,"excludedInvoices":excludedInvoices,
             "expenseInvoices":expenseInvoices,"expenses":importedExpenses,"fees":importedFees,
             "verifiedExpenseReceiptObjects":acceptedReceiptObjects.count,
+            "lineageProjectScopes":lineage.lineage.map { record -> [String:Any] in
+                var row: [String:Any] = ["sourceDocumentID":record.source.lineageDocumentID,
+                    "targetHistoryImported":false]
+                switch record.projectScopeEvidence {
+                case .sameProject(let project):
+                    row["scopeEvidence"] = "same_project"
+                    row["sourceProjectID"] = project
+                case .differentProjects(let from, let to):
+                    row["scopeEvidence"] = "different_projects"
+                    row["fromSourceProjectID"] = from; row["toSourceProjectID"] = to
+                case .unresolved: row["scopeEvidence"] = "unresolved"
+                }
+                func scope(_ value: FirebasePhysicalMovementEvidence.Scope) -> [String:String] {
+                    switch value {
+                    case .inventory: return ["kind":"inventory"]
+                    case .project(let id): return ["kind":"project","sourceProjectID":id]
+                    }
+                }
+                switch FirebasePhysicalMovementEvidence.interpret(record) {
+                case .movement(let from, let to):
+                    row["physicalMeaning"] = "movement"; row["from"] = scope(from); row["to"] = scope(to)
+                case .unchanged(let value):
+                    row["physicalMeaning"] = "unchanged"; row["scope"] = scope(value)
+                case .unresolved: row["physicalMeaning"] = "unresolved"
+                }
+                return row
+            },
             "limitations":["Not accounting/migration acceptance evidence",
                 "Related Projects use separate QA Client identities, not approved production Client mappings",
                 "Category visibility is restricted to company financial access for this QA copy",
                 "Only explicitly verified Expense receipts are loaded here; other media, full historical relationships, Item credits/manual Invoice sources, unresolved settlements and remaining metadata are not loaded",
-                "Physical record timestamps currently describe target creation; original timestamps remain in source.json",
+                "Known movement timestamps retain source precision; unresolved current observations use copy time; unknown initial custody starts remain unknown",
                 "No balance adjustment or tax allocation invented; nonphysical receipt lines await source mapping"]]
         try retain(JSONSerialization.data(withJSONObject: manifest, options: [.sortedKeys]),
             at: directory + "/manifest.json",directory: directory)
@@ -447,5 +587,6 @@ func loadRealProjectCopy(path: String, apply: Bool, mediaDirectory: String? = ni
     print("Private copy \(apply ? "committed (partial QA only)" : "rollback check passed"): \(projects.count) Projects, \(spaces.count) Spaces, \(items.count) Items. Vendor plans \(eligible), Expense Invoices \(expenseInvoices), Expenses \(importedExpenses), unresolved Transactions \(unresolved), unresolved Invoices \(excludedInvoices.count).")
     print(String(decoding: try canonical(unresolvedReasons), as: UTF8.self))
     print("Verified Expense receipt objects: \(acceptedReceiptObjects.count)")
+    print("Known placement intervals: \(knownPlacementCount); current observations: \(observationPlacementCount); retained movement sources: \(retainedMovementSources)")
 }
 #endif

@@ -274,6 +274,7 @@ public struct LedgerPowerSyncCommandAppliers: Sendable {
     var itemPriceEdit: (any EditUncollectedItemPriceApplying)?
     var itemDetailsEdit: (any EditItemDetailsApplying)?
     var uninvoicedReturn: (any ReturnUninvoicedItemsCommandApplying)?
+    var paidReturn: (any ReturnPaidItemsCommandApplying)?
     var expenseCreation: (any CreateExpenseCommandApplying)?
     var expenseEdit: (any EditExpenseCommandApplying)?
     var invoiceCreation: (any CreateInvoiceCommandApplying)?
@@ -290,6 +291,7 @@ public struct LedgerPowerSyncCommandAppliers: Sendable {
                 itemPriceEdit: (any EditUncollectedItemPriceApplying)? = nil,
                 itemDetailsEdit: (any EditItemDetailsApplying)? = nil,
                 uninvoicedReturn: (any ReturnUninvoicedItemsCommandApplying)? = nil,
+                paidReturn: (any ReturnPaidItemsCommandApplying)? = nil,
                 expenseCreation: (any CreateExpenseCommandApplying)? = nil,
                 expenseEdit: (any EditExpenseCommandApplying)? = nil,
                 invoiceCreation: (any CreateInvoiceCommandApplying)? = nil,
@@ -305,6 +307,7 @@ public struct LedgerPowerSyncCommandAppliers: Sendable {
         self.itemPriceEdit = itemPriceEdit
         self.itemDetailsEdit = itemDetailsEdit
         self.uninvoicedReturn = uninvoicedReturn
+        self.paidReturn = paidReturn
         self.expenseCreation = expenseCreation
         self.expenseEdit = expenseEdit
         self.invoiceCreation = invoiceCreation
@@ -330,6 +333,7 @@ final class LedgerPowerSyncUploadConnector: PowerSyncBackendConnectorProtocol, @
     private let itemPriceEditApplier: (any EditUncollectedItemPriceApplying)?
     private let itemDetailsEditApplier: (any EditItemDetailsApplying)?
     private let uninvoicedReturnApplier: (any ReturnUninvoicedItemsCommandApplying)?
+    private let paidReturnApplier: (any ReturnPaidItemsCommandApplying)?
     private let expenseCreationApplier: (any CreateExpenseCommandApplying)?
     private let expenseEditApplier: (any EditExpenseCommandApplying)?
     private let invoiceCreationApplier: (any CreateInvoiceCommandApplying)?
@@ -353,6 +357,7 @@ final class LedgerPowerSyncUploadConnector: PowerSyncBackendConnectorProtocol, @
         itemPriceEditApplier: (any EditUncollectedItemPriceApplying)? = nil,
         itemDetailsEditApplier: (any EditItemDetailsApplying)? = nil,
         uninvoicedReturnApplier: (any ReturnUninvoicedItemsCommandApplying)? = nil,
+        paidReturnApplier: (any ReturnPaidItemsCommandApplying)? = nil,
         expenseCreationApplier: (any CreateExpenseCommandApplying)? = nil,
         invoiceCreationApplier: (any CreateInvoiceCommandApplying)? = nil,
         invoiceRevisionApplier: (any ReviseCreatedInvoiceCommandApplying)? = nil,
@@ -375,6 +380,7 @@ final class LedgerPowerSyncUploadConnector: PowerSyncBackendConnectorProtocol, @
         self.itemPriceEditApplier = itemPriceEditApplier
         self.itemDetailsEditApplier = itemDetailsEditApplier
         self.uninvoicedReturnApplier = uninvoicedReturnApplier
+        self.paidReturnApplier = paidReturnApplier
         self.expenseCreationApplier = expenseCreationApplier
         self.expenseEditApplier = expenseEditApplier
         self.invoiceCreationApplier = invoiceCreationApplier
@@ -452,6 +458,12 @@ final class LedgerPowerSyncUploadConnector: PowerSyncBackendConnectorProtocol, @
             }
             try await ReturnUninvoicedItemsUpload.apply(entry, database: database,
                 accessFence: accessFence, applier: uninvoicedReturnApplier)
+        case LedgerPowerSyncTable.paidReturnCommands:
+            guard let paidReturnApplier else {
+                throw LedgerPowerSyncUploadFailure.unsupportedCommandTable(entry.table)
+            }
+            try await ReturnPaidItemsUpload.apply(entry, database: database,
+                accessFence: accessFence, applier: paidReturnApplier)
         case LedgerPowerSyncTable.categoryCommands:
             guard let categoryManagementApplier else {
                 throw LedgerPowerSyncUploadFailure.unsupportedCommandTable(entry.table)

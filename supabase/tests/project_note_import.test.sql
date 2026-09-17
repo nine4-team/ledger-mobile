@@ -32,7 +32,7 @@ set local timezone='America/Los_Angeles';
 select is(pg_temp.import_note(),'imported-note','Exact retry remains stable across caller timezone');
 set local timezone='UTC';
 select is((select ctid::text from public.spike_project_notes where id='imported-note'),(select version from imported_note_version),'Exact retry performs no update');
-select is((select count(*) from ledger_private.imported_project_note_sources),1::bigint,'Retry adds no evidence');
+select is((select count(*) from ledger_private.imported_project_note_sources where note_id='imported-note'),1::bigint,'Retry adds no evidence for the imported note');
 select throws_ok($$select pg_temp.import_note(p_text=>'Changed')$$,'22000',null,'Changed text conflicts');
 select throws_ok($$select pg_temp.import_note(p_remainder=>123457)$$,'22000',null,'Changed nanosecond conflicts');
 select throws_ok($$select pg_temp.import_note(p_principal=>'principal-owner')$$,'22000',null,'Changed principal attribution conflicts');

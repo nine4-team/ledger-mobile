@@ -23,14 +23,13 @@ test('every checked-in stream output resolves to the native schema', () => {
   const yaml = readFileSync(new URL('../../powersync/sync-streams.yaml', import.meta.url), 'utf8');
   const nativeSchema = readFileSync(new URL('../../LedgeriOS/LedgerTargetPowerSync/LedgerPowerSyncSchema.swift', import.meta.url), 'utf8');
   const count = validateSyncOutputTables(yaml, nativeSchema);
-  // Includes the two Item-scoped Invoice-history projections; they reuse
-  // collected_invoices/collected_invoice_lines rather than new client tables.
-  assert.equal(count, 87);
+  // Item history also retains return-credit links after leaving the Project.
+  assert.equal(count, 89);
   const compiled = SqlSyncRules.fromYaml(yaml, { defaultSchema: 'public', throwOnError: false });
   assert.deepEqual(compiled.errors.map(error => error.message), []);
   const nativeNames = new Set([...nativeSchema.matchAll(/public static let \w+ = "([a-z_]+)"/g)].map(m => m[1]));
   const outputs = Object.keys(compiled.config.debugGetOutputTables());
-  assert.equal(outputs.length, 41);
+  assert.equal(outputs.length, 42);
   for (const output of outputs) assert.ok(nativeNames.has(output), `Service outputs unknown client table ${output}`);
 });
 test('return review outputs exclude money and Invoice identities while retaining category authorization', () => {
@@ -46,6 +45,31 @@ test('return review outputs exclude money and Invoice identities while retaining
     assert.match(query, /category.visibility_class='ordinary' OR membership.financial_access='full'/);
     assert.match(query, /project_id=subscription.parameter\('project_id'\)/);
   }
+});
+
+test('paid return history stays Item-scoped and full-financial, independent of current Project placement', () => {
+  const yaml = readFileSync(new URL('../../powersync/sync-streams.yaml', import.meta.url), 'utf8');
+  const block = yaml.split('  item_invoice_history:')[1].split('  item_return_review:')[0];
+  const credit = block.split('      - |').find(query => query.includes('FROM ledger_private.paid_item_return_credits'));
+  assert.ok(credit);
+  assert.match(credit, /paid_item_return_credits.account_id=subscription.parameter\('account_id'\)/);
+  assert.match(credit, /paid_item_return_credits.item_id=subscription.parameter\('item_id'\)/);
+  assert.match(credit, /principal.auth_user_id=auth.user_id\(\)/);
+  assert.match(credit, /membership.state='active' AND membership.financial_access='full'/);
+  assert.doesNotMatch(credit, /sync_is_current|project_id|amount_minor_units/);
+});
+
+test('Project credit routing and category labels do not expand once per charge', () => {
+  const yaml = readFileSync(new URL('../../powersync/sync-streams.yaml', import.meta.url), 'utf8');
+  const block = yaml.split('  project_invoicing_item_charges:')[1].split('  transaction_receipts:')[0];
+  const queries = block.split('      - |');
+  const credit = queries.find(query => query.includes('FROM ledger_private.paid_item_return_credits'));
+  const categories = queries.find(query => query.includes('FROM spike_budget_categories'));
+  assert.match(credit, /paid_item_return_credits.project_id = subscription.parameter\('project_id'\)/);
+  assert.doesNotMatch(credit, /JOIN ledger_private.item_charge_occurrences/);
+  assert.doesNotMatch(categories, /FROM ledger_private.item_charge_occurrences/);
+  assert.match(categories, /spike_budget_categories.account_id = subscription.parameter\('account_id'\)/);
+  assert.match(categories, /membership.state = 'active' AND membership.financial_access = 'full'/);
 });
 
 test('service parser proves primary aliases change the downloaded table', () => {
