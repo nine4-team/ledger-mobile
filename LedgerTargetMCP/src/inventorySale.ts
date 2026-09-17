@@ -84,8 +84,8 @@ export function validateInventorySaleReview(value: unknown, ids: string[], conte
     || review.items.length !== ids.length || new Set(review.items.map(row => row.itemId)).size !== ids.length
     || new Set(review.items.map(row => row.placementId)).size !== ids.length
     || review.items.some(row => !ids.includes(row.itemId) || row.projectPrice.state === "unavailable"
-      || (row.projectPrice.state === "absent" ? row.priceRevision !== "0"
-        : row.priceRevision === "0" || BigInt(row.projectPrice.amountMinorUnits) <= 0n))) return fail("sale_review_mismatch");
+      || (row.projectPrice.state === "known"
+        && (row.priceRevision === "0" || BigInt(row.projectPrice.amountMinorUnits) < 0n)))) return fail("sale_review_mismatch");
   return review;
 }
 export async function inventorySaleTool(input: InventorySaleInput, context: TargetMCPRequestContext, service: InventorySaleServing) {

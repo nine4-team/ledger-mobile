@@ -13,17 +13,21 @@ enum ItemPriceEditLocalReview {
     }
 
     static func read(_ local: any Transaction, account: AccountID, principal: PrincipalID,
-                     project: ProjectID, item: ItemID, requested: Money) throws -> EditUncollectedItemPriceCommand.Payload {
-        try snapshot(local, account: account, principal: principal, project: project, item: item).payload(requested: requested)
+                     project: ProjectID?, item: ItemID, requested: Money, clear: Bool = false) throws -> EditUncollectedItemPriceCommand.Payload {
+        let review = try snapshot(local, account: account, principal: principal, project: project, item: item)
+        return try clear ? review.clearingInventoryPrice(currency: requested.currency) : review.payload(requested: requested)
     }
 
     static func snapshot(_ local: any Transaction, account: AccountID, principal: PrincipalID,
-                         project: ProjectID, item: ItemID) throws -> ItemPriceEditReview {
+                         project: ProjectID?, item: ItemID) throws -> ItemPriceEditReview {
         guard try CategoryManagementLocalProjection.requireMembership(local, account: account, principal: principal) else {
             throw Failure.unavailable
         }
         _ = try PropertyManagementReportPowerSyncQuery.completedStreamCheckpoint(transaction: local,
             identity: PhysicalIdentity(account))
+        let charge: (String, String, String)?
+        let inventoryPlacement: String?
+        if let project {
         _ = try PropertyManagementReportPowerSyncQuery.completedStreamCheckpoint(transaction: local,
             identity: ItemReturnReviewStreamIdentity(accountId: account, projectId: project))
         guard let destination = try ClientProjectDirectoryPowerSyncQuery.readProject(project,
@@ -44,15 +48,28 @@ enum ItemPriceEditLocalReview {
                 (try $0.getString(index: 0),try $0.getString(index: 1),try $0.getString(index: 2))
             }
         guard charges.count == 1 else { throw Failure.unavailable }
-        let charge = charges[0]
+        charge = charges[0]
+        inventoryPlacement = nil
+        } else {
+            let placements = try local.getAll(sql: """
+                SELECT p.id FROM spike_item_placements p JOIN spike_items i
+                  ON i.account_id=p.account_id AND i.id=p.item_id
+                WHERE p.account_id=? AND p.item_id=? AND p.scope_kind='business_inventory' AND p.ended_at IS NULL
+                """, parameters: [account.rawValue,item.rawValue]) { try $0.getString(index: 0) }
+            guard placements.count == 1 else { throw Failure.unavailable }
+            inventoryPlacement = placements[0]; charge = nil
+        }
         let price = try local.getOptional(sql: "SELECT revision,currency,amount_minor_units FROM item_project_prices WHERE account_id=? AND item_id=?",
             parameters: [account.rawValue,item.rawValue]) {
-                (try $0.getString(index: 0),try $0.getString(index: 1),try $0.getString(index: 2))
+                (try $0.getString(index: 0),try $0.getString(index: 1),try $0.getStringOptional(index: 2))
             }
         let current: Money?
         if let price {
-            guard let amount = Int64(price.2), String(amount) == price.2 else { throw Failure.unavailable }
-            current = Money(minorUnits: amount, currency: try .init(validating: price.1))
+            let currency = try CurrencyCode(validating: price.1)
+            if let text = price.2 {
+                guard let amount = Int64(text), String(amount) == text else { throw Failure.unavailable }
+                current = Money(minorUnits: amount, currency: currency)
+            } else { current = nil }
         } else { current = nil }
         let acquisition = try local.getOptional(sql: "SELECT state,amount_minor_units,currency FROM item_acquisition_reviews WHERE account_id=? AND id=?",
             parameters: [account.rawValue,item.rawValue]) {
@@ -70,10 +87,15 @@ enum ItemPriceEditLocalReview {
             cost = .known(Money(minorUnits: value, currency: try .init(validating: currency)))
         default: throw Failure.unavailable
         }
-        guard let priceRevision = Int64(price?.0 ?? "0"), String(priceRevision) == (price?.0 ?? "0"),
-              let chargeRevision = Int64(charge.2), String(chargeRevision) == charge.2 else { throw Failure.unavailable }
+        guard let priceRevision = Int64(price?.0 ?? "0"), String(priceRevision) == (price?.0 ?? "0") else { throw Failure.unavailable }
+        let priceCurrency = try price.map { try CurrencyCode(validating: $0.1) }
+        if let inventoryPlacement {
+            return try .init(inventoryItemId: item, placementId: .init(validating: inventoryPlacement),
+                priceRevision: priceRevision, currentPrice: current, purchaseCost: cost, priceCurrency: priceCurrency)
+        }
+        guard let project, let charge, let chargeRevision = Int64(charge.2), String(chargeRevision) == charge.2 else { throw Failure.unavailable }
         return try .init(projectId: project, itemId: item, placementId: .init(validating: charge.1),
             occurrenceId: .init(validating: charge.0), priceRevision: priceRevision,
-            chargeRevision: chargeRevision, currentPrice: current, purchaseCost: cost)
+            chargeRevision: chargeRevision, currentPrice: current, purchaseCost: cost, priceCurrency: priceCurrency)
     }
 }

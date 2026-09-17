@@ -183,7 +183,7 @@ export function createTargetServer(reader: PropertyReportReading, context: Targe
   });
   if (itemPriceEdit) {
     server.registerTool("review_item_price_edit", {
-      description: "Review an uncollected Project Item's current price, purchase cost, placement and revisions. Amounts are exact minor-unit strings; absent is not unavailable. Does not reserve the Item or change accounting.",
+      description: "Review an Item's current price, purchase cost, placement and revisions. Supply projectId for an uncollected Project Item, or null for Inventory. Inventory has no charge; currency can be null only when no price or purchase cost establishes it. Amounts are exact minor-unit strings; absent is not unavailable. Does not reserve the Item or change accounting.",
       inputSchema: itemPriceEditReviewInputSchema,
       annotations: { readOnlyHint: true, destructiveHint: false, idempotentHint: true, openWorldHint: false },
     }, async input => {
@@ -192,7 +192,7 @@ export function createTargetServer(reader: PropertyReportReading, context: Targe
         code: error instanceof TargetMCPFailure ? error.code : "price_review_failed" }) }] }; }
     });
     server.registerTool("edit_uncollected_item_price", {
-      description: "Change an uncollected Project Item price with explicit user intent. First review its current context; reviewed price must be max(requested price, known purchase cost, zero) and positive. The server revalidates cost and revisions. Preserve operationUUID, timestamp and entire payload on retry. Updates the open charge/live Invoice, never acquisition or collected history; does not collect payment.",
+      description: "Change an Inventory or uncollected Project Item price with explicit user intent. First review its current context; reviewed price must be max(requested price, known purchase cost, zero). Project price must be positive and updates its open charge/live Invoice. Inventory accepts zero or explicit clearPrice; clearing requests zero and a positive cost floor still applies. Inventory payload omits Project/charge fields. Retain established currency; when absent, supply the user's chosen currency. The server revalidates cost and revisions. Preserve operationUUID, timestamp and entire payload on retry. Never changes acquisition or collected history or collects payment.",
       inputSchema: itemPriceEditInputSchema,
       annotations: { readOnlyHint: false, destructiveHint: true, idempotentHint: true, openWorldHint: false },
     }, async input => {

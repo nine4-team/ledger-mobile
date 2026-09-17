@@ -20,6 +20,29 @@ const edit: ItemPriceEditInput = { operationUUID: "11111111-2222-3333-4444-55555
     expectedPriceRevision: "1", expectedChargeRevision: "2", requestedPriceMinorUnits: "0",
     reviewedPriceMinorUnits: "200", currency: "USD" } };
 const request = makeItemPriceEditRequest(edit, context);
+test("Inventory zero and clear reuse the price endpoint with distinct exact v2 payloads", () => {
+  const hashes: string[] = [];
+  for (const clearPrice of [false, true]) {
+    const inventory: ItemPriceEditInput = { ...edit, payload: { itemId: "item", placementId: "placement",
+      expectedPriceRevision: "2", requestedPriceMinorUnits: "0", reviewedPriceMinorUnits: "0",
+      currency: "USD", clearPrice } };
+    const value = makeItemPriceEditRequest(inventory, context);
+    const wire = JSON.parse(value.commandJSON);
+    assert.equal(wire.contractVersion, "item-inventory-price-edit-v2");
+    assert.equal(wire.clearPrice, String(clearPrice));
+    assert.equal(wire.projectId, undefined);
+    assert.equal(wire.occurrenceId, undefined);
+    assert.equal(wire.expectedChargeRevision, undefined);
+    hashes.push(value.fingerprint);
+    const result = { ...terminal(), contract_version: wire.contractVersion,
+      command_fingerprint: value.fingerprint, envelope_sha256: value.fingerprint };
+    assert.equal(validateItemPriceEditResult(result, value).phase, "applied");
+    assert.throws(() => validateItemPriceEditResult({ ...result, contract_version: "item-uncollected-price-edit-v1" }, value));
+    assert.throws(() => makeItemPriceEditRequest({ ...inventory,
+      payload: { ...inventory.payload, clearPrice: true, requestedPriceMinorUnits: "1" } }, context));
+  }
+  assert.notEqual(hashes[0], hashes[1]);
+});
 const terminal = () => ({ operation_id: request.operationId, account_id: "account", actor_principal_id: "member",
   subject_id: "item", command_type: "edit_uncollected_item_price", contract_version: "item-uncollected-price-edit-v1",
   command_fingerprint: request.fingerprint, envelope_sha256: request.fingerprint, request_sha256: null,
@@ -103,12 +126,14 @@ test("price review preserves exact Int64 and distinguishes absent price/cost", (
     priceRevision: "0", purchaseCost: { state: "absent" } }, input, context);
   assert.equal(absent.currentPrice, null);
   assert.equal(absent.purchaseCost.state, "absent");
+  assert.equal(validateItemPriceEditReview({ ...review(), currentPrice: null,
+    priceRevision: "7" }, input, context).priceRevision, "7");
 });
 test("price review rejects foreign, exhausted, ambiguous and malformed evidence", () => {
   for (const patch of [
     { accountId: "other" }, { principalId: "other" }, { projectId: "other" }, { itemId: "other" },
     { chargeRevision: "0" }, { priceRevision: "9223372036854775807" },
-    { chargeRevision: "9223372036854775807" }, { priceRevision: "0" }, { currentPrice: null },
+    { chargeRevision: "9223372036854775807" }, { priceRevision: "0" },
     { purchaseCost: { state: "unavailable" } },
     { purchaseCost: { state: "absent", amountMinorUnits: "0" } },
     { purchaseCost: { state: "known", amountMinorUnits: "-1", currency: "USD" } },
@@ -116,6 +141,26 @@ test("price review rejects foreign, exhausted, ambiguous and malformed evidence"
     { currentPrice: { amountMinorUnits: "1", currency: "EUR" } },
     { purchaseCost: { state: "known", amountMinorUnits: "200", currency: "EUR" } },
   ]) assert.throws(() => validateItemPriceEditReview({ ...review(), ...patch }, input, context));
+});
+
+test("Inventory review retains cleared currency and rejects invented billing or missing evidence", async () => {
+  const inventoryInput = { projectId: null, itemId: "item" };
+  const inventory = { ...review(), projectId: null, occurrenceId: null, chargeRevision: null,
+    currentPrice: null, priceRevision: "2", purchaseCost: { state: "absent" } };
+  assert.equal(validateItemPriceEditReview(inventory, inventoryInput, context).currency, "USD");
+  assert.equal(validateItemPriceEditReview({ ...inventory, priceRevision: "0", currency: null },
+    inventoryInput, context).currency, null);
+  for (const patch of [{ occurrenceId: "charge" }, { chargeRevision: "1" }, { currency: null },
+    { accountId: "other" }, { projectId: "project" }, { purchaseCost: { state: "unavailable" } }]) {
+    assert.throws(() => validateItemPriceEditReview({ ...inventory, ...patch }, inventoryInput, context));
+  }
+  const service = new SupabaseInventorySaleService(new URL("https://target.invalid"), "public-key", async (_url, init) => {
+    assert.deepEqual(JSON.parse(init?.body as string), {
+      p_account_id: "account", p_project_id: null, p_item_id: "item",
+    });
+    return Response.json(inventory);
+  });
+  assert.equal((await service.reviewItemPriceEdit(inventoryInput, context)).priceRevision, "2");
 });
 
 test("price review uses existing scoped user transport and validates before publishing", async () => {

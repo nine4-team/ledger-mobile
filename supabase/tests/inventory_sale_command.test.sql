@@ -159,5 +159,38 @@ select throws_ok($$select public.spike_sell_inventory_items(pg_temp.sale_command
 select throws_ok($$insert into ledger_private.item_project_prices(account_id,item_id,amount_minor_units,currency,updated_by_principal_id)
  values ('account-primary','sale-item-a',1,'USD','principal-owner')$$,'42501',null,'Command grant does not enable direct price writes');
 reset role;
+-- A cleared current price keeps its revision; sale restores a positive price
+-- from retained purchase evidence without changing that acquisition.
+update public.spike_account_memberships set state='active'
+ where account_id='account-primary' and principal_id='principal-owner';
+select set_config('request.jwt.claims','{"sub":"10000000-0000-0000-0000-000000000001","role":"authenticated"}',true);
+insert into public.spike_items(id,account_id,description,created_by_principal_id)
+values('sale-cleared','account-primary','Cleared price','principal-owner');
+insert into public.spike_item_placements(id,account_id,item_id,scope_kind,started_at,started_by_principal_id)
+values('sale-cleared-old','account-primary','sale-cleared','business_inventory','2026-01-01','principal-owner');
+insert into ledger_private.item_project_prices(account_id,item_id,amount_minor_units,currency,updated_at,updated_by_principal_id)
+values('account-primary','sale-cleared',null,'USD',now(),'principal-owner');
+insert into public.spike_transactions(id,account_id,amount_minor_units,currency,type,origin,scope_kind,category_id)
+values('sale-cleared-acquisition','account-primary',150,'USD','purchase','vendor_payment','business_inventory','category-furnishings');
+insert into public.transaction_receipt_items(id,account_id,transaction_id,item_id,currency,amount_minor_units,membership_kind)
+values('sale-cleared-receipt','account-primary','sale-cleared-acquisition','sale-cleared','USD',150,'linked');
+create function pg_temp.cleared_sale(op text, revision text) returns text language sql as $$
+ select jsonb_set(pg_temp.sale_command(op)::jsonb,'{items}',jsonb_build_array(jsonb_build_object(
+   'itemId','sale-cleared','placementId','sale-cleared-old','priceRevision',revision,
+   'reviewedPriceMinorUnits','150','newPlacementId','sale-cleared-new','occurrenceId','sale-cleared-charge')))::text;
+$$;
+select is(public.spike_read_inventory_sale_review('account-primary',array['sale-cleared'])#>>'{items,0,priceRevision}',
+ '1','Cleared review retains revision');
+select is(public.spike_read_inventory_sale_review('account-primary',array['sale-cleared'])#>'{items,0,projectPrice}',
+ '{"state":"absent"}'::jsonb,'Cleared review is absent, not malformed known money');
+select is((ledger_private.sell_inventory_items(pg_temp.cleared_sale('cleared-stale','0'))).error_code,
+ 'sale_price_stale','Clear cannot revive a pre-existing revision-zero review');
+select is((ledger_private.sell_inventory_items(pg_temp.cleared_sale('cleared-sale','1'))).phase,'applied','Sell cleared-price Item at cost floor');
+select is((select amount_minor_units from ledger_private.item_project_prices where item_id='sale-cleared'),150::bigint,'Null price becomes positive');
+select is((select revision from ledger_private.item_project_prices where item_id='sale-cleared'),2::bigint,'Restored price advances retained revision');
+select is((select amount_minor_units from ledger_private.item_charge_occurrences where id='sale-cleared-charge'),150::bigint,'New charge uses normalized price');
+select is((select amount_minor_units from public.transaction_receipt_items where id='sale-cleared-receipt'),150::bigint,'Acquisition evidence unchanged');
+select is((ledger_private.sell_inventory_items(pg_temp.cleared_sale('cleared-sale','1'))).phase,'applied','Replay remains idempotent');
+select is((select revision from ledger_private.item_project_prices where item_id='sale-cleared'),2::bigint,'Replay does not advance price twice');
 select * from finish();
 rollback;

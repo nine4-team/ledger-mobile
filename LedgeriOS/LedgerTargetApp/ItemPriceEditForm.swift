@@ -3,7 +3,7 @@ import SwiftUI
 
 /// Thin target controller around the original Item editor's form and field.
 struct ItemPriceEditForm: View {
-    let projectId: ProjectID
+    let projectId: ProjectID?
     let itemId: ItemID
     let currency: CurrencyCode
     let service: any ItemPriceEditing
@@ -32,7 +32,9 @@ struct ItemPriceEditForm: View {
                     .disabled(attempt != nil || review == nil)
                     .accessibilityIdentifier("target-item-price-entry")
                 if review == nil && operationId == nil {
-                    Text("Price editing requires downloaded Item and billing records. Collected charges cannot be edited here.")
+                    Text(projectId == nil
+                        ? "Price editing requires downloaded Inventory and purchase-cost records."
+                        : "Price editing requires downloaded Item and billing records. Collected charges cannot be edited here.")
                         .font(Typography.caption)
                 }
             }
@@ -87,8 +89,8 @@ struct ItemPriceEditForm: View {
             default: return "Saved on this device. Waiting to sync; you can close this form."
             }
         }
-        if let review, let requested = try? Money.parseNonnegativeEntry(text, currency: currency),
-           let payload = try? review.payload(requested: requested), payload.reviewedPrice != requested {
+        if let review, let payload = try? proposedPayload(review),
+           payload.reviewedPrice.minorUnits > payload.requestedPrice.minorUnits {
             return "The project price will be raised to \(Self.amount(payload.reviewedPrice)) to match the purchase cost."
         }
         return nil
@@ -99,16 +101,27 @@ struct ItemPriceEditForm: View {
         if attempt == nil {
             guard let review else { return }
             do {
-                let requested = try Money.parseNonnegativeEntry(text, currency: currency)
-                let payload = try review.payload(requested: requested)
-                if payload.reviewedPrice == review.currentPrice { dismiss(); return }
+                let payload = try proposedPayload(review)
+                let effectivePrice: Money? = payload.clearPrice == true && payload.reviewedPrice.minorUnits == 0
+                    ? nil : payload.reviewedPrice
+                if effectivePrice == review.currentPrice { dismiss(); return }
                 attempt = Attempt(payload: payload, id: UUID(), capturedAt: Date())
             } catch {
-                self.error = "Enter a valid project price with no more than two decimal places. A positive price or purchase cost is required."
+                self.error = projectId == nil
+                    ? "Enter a nonnegative price with no more than two decimal places, or leave it blank to clear."
+                    : "Enter a valid project price with no more than two decimal places. A positive price or purchase cost is required."
                 return
             }
         }
         error = nil; saving = true; saveRequest = UUID()
+    }
+
+    private func proposedPayload(_ review: ItemPriceEditReview) throws -> EditUncollectedItemPriceCommand.Payload {
+        let currency = review.priceCurrency ?? currency
+        if projectId == nil && text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+            return try review.clearingInventoryPrice(currency: currency)
+        }
+        return try review.payload(requested: Money.parseNonnegativeEntry(text, currency: currency))
     }
 
     private static func amount(_ money: Money) -> String {

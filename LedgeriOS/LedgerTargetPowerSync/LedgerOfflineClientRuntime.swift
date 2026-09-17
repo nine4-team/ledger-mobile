@@ -271,7 +271,7 @@ public final class LedgerOfflineClientRuntime:
         }
     }
 
-    public func watchItemPriceReview(project: ProjectID, item: ItemID)
+    public func watchItemPriceReview(project: ProjectID?, item: ItemID)
         -> AsyncThrowingStream<ItemPriceEditReview?, Error> {
         trackedStream { id, continuation in
             await self.lifecycleOwner.startItemPriceReviewWatch(id: id, project: project, item: item,

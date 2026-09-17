@@ -3985,6 +3985,8 @@ final class WorkspaceChecklistUITests: XCTestCase {
     func testItemPriceEditorCancelUnchangedAndNormalizedSave() throws {
         try exerciseItemPriceEditor(retry: false)
     }
+    func testInventoryPriceEditorZero() throws { try exerciseItemPriceEditor(retry: false, inventory: true) }
+    func testInventoryPriceEditorClear() throws { try exerciseItemPriceEditor(retry: false, inventory: true, clear: true) }
 
     func testItemMarketValueCancelUnchangedAndSave() throws { try exerciseItemMarketValue(clear: false) }
     func testItemMarketValueExplicitClear() throws { try exerciseItemMarketValue(clear: true) }
@@ -4032,15 +4034,19 @@ final class WorkspaceChecklistUITests: XCTestCase {
         try exerciseItemPriceEditor(retry: false, changed: true)
     }
 
-    private func exerciseItemPriceEditor(retry: Bool, changed: Bool = false) throws {
+    private func exerciseItemPriceEditor(retry: Bool, changed: Bool = false, inventory: Bool = false, clear: Bool = false) throws {
         continueAfterFailure = false
         let app = XCUIApplication()
         app.launchArguments = ["--ledger-ui-test-workspace-checklist", "--ledger-ui-test-item-detail-copy"]
+        if inventory {
+            app.launchArguments += ["--ledger-ui-test-inventory-space", "--ledger-ui-test-reset-inventory-section", "--ledger-ui-test-inventory-price"]
+        }
+        if clear { app.launchArguments.append("--ledger-ui-test-inventory-price-clear") }
         if retry { app.launchArguments.append("--ledger-ui-test-price-retry") }
         if changed { app.launchArguments.append("--ledger-ui-test-price-changed") }
         app.launch()
         defer { app.terminate() }
-        let project = app.buttons["target-active-project-card-project-ui-test"]
+        let project = app.buttons[inventory ? "target-business-inventory-card" : "target-active-project-card-project-ui-test"]
         XCTAssertTrue(project.waitForExistence(timeout: 10)); project.tap()
         let item = app.buttons["target-physical-item-physical-ui-chair"]
         reveal(item, in: app, fullyInsideScrollView: true); item.tap()
@@ -4071,11 +4077,14 @@ final class WorkspaceChecklistUITests: XCTestCase {
         field.tap()
         #if os(macOS)
         field.typeKey("a", modifierFlags: .command)
+        field.typeKey(.delete, modifierFlags: [])
         #else
         field.typeText(String(repeating: XCUIKeyboardKey.delete.rawValue, count: 4))
         #endif
-        field.typeText("1.00")
-        XCTAssertTrue(app.staticTexts["The project price will be raised to 2.00 to match the purchase cost."].waitForExistence(timeout: 5))
+        if !clear { field.typeText(inventory ? "0.00" : "1.00") }
+        if !inventory {
+            XCTAssertTrue(app.staticTexts["The project price will be raised to 2.00 to match the purchase cost."].waitForExistence(timeout: 5))
+        }
         app.buttons["Save Changes"].tap()
         if retry {
             XCTAssertTrue(app.staticTexts["The edit could not be confirmed. Save Changes retries the same edit."].waitForExistence(timeout: 5))

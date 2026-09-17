@@ -2095,6 +2095,7 @@ struct AccountWorkspacePendingWorkRuntimeTests {
         let offline = try await context.openRuntime()
         let amount = Money(minorUnits: 12347, currency: try .init(validating: "USD"))
         let payload = try await offline.reviewItemPrice(project: projectId, item: itemId, requested: amount)
+        let originalChargeRevision = try #require(payload.expectedChargeRevision)
         let uuid = UUID(), capturedAt = Date()
         let receipt = try await offline.editItemPrice(payload, operationUUID: uuid, capturedAt: capturedAt)
         #expect(receipt.localState == .queued)
@@ -2110,7 +2111,7 @@ struct AccountWorkspacePendingWorkRuntimeTests {
         #expect(applied)
         var readback = false
         for try await value in resumed.watchItemPriceReview(project: projectId, item: itemId) {
-            if let value, value.currentPrice == amount, value.chargeRevision == payload.expectedChargeRevision + 1 {
+            if let value, value.currentPrice == amount, value.chargeRevision == originalChargeRevision + 1 {
                 readback = true; break
             }
         }
@@ -2120,7 +2121,7 @@ struct AccountWorkspacePendingWorkRuntimeTests {
         #expect(try await reopened.itemPriceEditStatus(receipt.operationId)?.state.phase == .applied)
         let persisted = try await reopened.reviewItemPrice(project: projectId, item: itemId, requested: amount)
         #expect(persisted.expectedPriceRevision == payload.expectedPriceRevision + 1)
-        #expect(persisted.expectedChargeRevision == payload.expectedChargeRevision + 1)
+        #expect(persisted.expectedChargeRevision == originalChargeRevision + 1)
         try await reopened.close()
         // Both guarded fixtures prove descriptive edits through the real
         // Auth/RPC/Sync stack, including encrypted offline restart.
@@ -2169,6 +2170,47 @@ struct AccountWorkspacePendingWorkRuntimeTests {
             #expect(history.details?.name == "Offline edited Item")
             #expect(history.details?.marketValue == marketValue)
             #expect(try await final.itemDetailsEditStatus(detailsReceipt.operationId)?.state.phase == .applied)
+            try await final.close()
+        }
+        // The same Inventory operation must survive restart on both services.
+        do {
+            let inventoryItem = try ItemID(validating: item + "-inventory")
+            let online = try await context.openRuntime()
+            try await entry.startWorkspaceSync(online, authorization: authorization, powerSyncURL: sync)
+            var baseline: ItemPriceEditReview?
+            for try await review in online.watchItemPriceReview(project: nil, item: inventoryItem) {
+                if let review { baseline = review; break }
+            }
+            let original = try #require(baseline)
+            #expect(original.currentPrice?.minorUnits == 100 && original.priceRevision == 1)
+            try await online.close()
+            let offline = try await context.openRuntime()
+            let clear = try original.clearingInventoryPrice(currency: .init(validating: "USD"))
+            let operationUUID = UUID(), capturedAt = Date()
+            let receipt = try await offline.editItemPrice(clear, operationUUID: operationUUID, capturedAt: capturedAt)
+            #expect(receipt.localState == .queued)
+            try await offline.close()
+            let resumed = try await context.openRuntime()
+            #expect(try await resumed.editItemPrice(clear, operationUUID: operationUUID, capturedAt: capturedAt) == receipt)
+            try await entry.startWorkspaceSync(resumed, authorization: authorization, powerSyncURL: sync)
+            for try await state in resumed.watchItemPriceEdit(receipt.operationId) {
+                if state?.state.phase == .rejected { throw RuntimeInjectedFailure() }
+                if state?.state.phase == .applied { break }
+            }
+            var cleared = false
+            for try await review in resumed.watchItemPriceReview(project: nil, item: inventoryItem) {
+                if let review, review.priceRevision == 2, review.currentPrice == nil {
+                    #expect(review.priceCurrency?.rawValue == "USD")
+                    cleared = true; break
+                }
+            }
+            #expect(cleared)
+            try await resumed.close()
+            let final = try await context.openRuntime()
+            var downloaded = final.watchItemPriceReview(project: nil, item: inventoryItem).makeAsyncIterator()
+            let persisted = try #require(await downloaded.next() ?? nil)
+            #expect(persisted.currentPrice == nil && persisted.priceRevision == 2)
+            #expect(try await final.itemPriceEditStatus(receipt.operationId)?.state.phase == .applied)
             try await final.close()
         }
     }

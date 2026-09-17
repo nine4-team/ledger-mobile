@@ -10,6 +10,50 @@ struct InventorySalePowerSyncStoreTests {
     private let principal = try! PrincipalID(validating: "sale-member")
     private struct InjectedFailure: Error {}
 
+    @Test(arguments: [false, true])
+    func inventoryPriceAdmissionRetainsExactIntentAcrossRestart(clear: Bool) async throws {
+        let fixture = try Fixture(); defer { fixture.remove() }
+        let db = try fixture.open(); try await seed(db)
+        let item = try ItemID(validating: "item")
+        _ = try await db.execute(sql: "INSERT INTO spike_items(id,account_id) VALUES ('item','sale-account')", parameters: nil)
+        _ = try await db.execute(sql: "UPDATE spike_account_memberships SET financial_access='full'", parameters: nil)
+        _ = try await db.execute(sql: "INSERT INTO ps_stream_subscriptions(stream_name,active,is_default,local_params,last_synced_at) VALUES('physical_account_items',1,0,?,1000000)",
+            parameters: [#"{"account_id":"sale-account"}"#])
+        let priceStore = ItemPriceEditPowerSyncStore(database: db, accountId: account, principalId: principal, accessFence: .init())
+        let zero = Money(minorUnits: 0, currency: try .init(validating: "USD"))
+        await #expect(throws: ItemPriceEditLocalReview.Failure.unavailable) {
+            try await priceStore.review(project: nil, item: item, requested: zero, clear: clear)
+        }
+        _ = try await db.execute(sql: "INSERT INTO item_acquisition_reviews(id,account_id,state) VALUES('item','sale-account','absent')", parameters: nil)
+        _ = try await db.execute(sql: "INSERT INTO item_project_prices(id,account_id,item_id,amount_minor_units,currency,revision) VALUES('item','sale-account','item','100','USD','1')", parameters: nil)
+        while let pending = try await db.getNextCrudTransaction() { try await pending.complete() }
+        var reviews = priceStore.watchReview(project: nil, item: item).makeAsyncIterator()
+        let watched = try #require(await reviews.next() ?? nil)
+        #expect(watched.projectId == nil && watched.priceRevision == 1)
+        #expect(watched.priceCurrency?.rawValue == "USD")
+        #expect(try await db.get("SELECT count(*) FROM ps_stream_subscriptions WHERE stream_name='item_return_review'") { try $0.getInt(index: 0) } == 0)
+        let payload = try await priceStore.review(project: nil, item: item, requested: zero, clear: clear)
+        let command = try EditUncollectedItemPriceCommand(
+            operationId: ItemPriceEditOperationIdentity.make(accountId: account, uuid: UUID()), accountId: account,
+            actorPrincipalId: principal, capturedAt: Date(timeIntervalSince1970: 100), payload: payload)
+        #expect(payload.clearPrice == clear && payload.projectId == nil && payload.expectedPriceRevision == 1)
+        #expect(try await priceStore.submit(command).localState == .queued)
+        await priceStore.cancelAndDrainWatches()
+        try await db.close()
+        let reopened = try fixture.open()
+        let resumed = ItemPriceEditPowerSyncStore(database: reopened, accountId: account, principalId: principal, accessFence: .init())
+        #expect(try await resumed.submit(command).localState == .queued)
+        let queued = try #require(await reopened.getNextCrudTransaction())
+        let entry = try #require(queued.crud.first { $0.table == LedgerPowerSyncTable.itemPriceEditCommands })
+        let decoded = try EditUncollectedItemPriceUploadRequest.command(from: entry)
+        #expect(decoded.envelope.payload == payload)
+        #expect(decoded.envelope.contractVersion.rawValue == "item-inventory-price-edit-v2")
+        #expect(try await reopened.get("SELECT count(*) FROM spike_local_operations") { try $0.getInt(index: 0) } == 1)
+        _ = try await reopened.execute(sql: "UPDATE spike_account_memberships SET financial_access='none'", parameters: nil)
+        await #expect(throws: (any Error).self) { try await resumed.submit(command) }
+        try await reopened.close()
+    }
+
     @Test(.timeLimit(.minutes(1))) func priceEditReviewAllowsLiveInvoiceButRequiresCompleteUncollectedEvidence() async throws {
         let fixture = try Fixture(); defer { fixture.remove() }
         let db = try fixture.open(); try await seedReturn(db)
@@ -32,7 +76,7 @@ struct InventorySalePowerSyncStoreTests {
             let review = try await read()
             #expect(review.reviewedPrice.minorUnits == 200)
             #expect(review.expectedPriceRevision == 0 && review.expectedChargeRevision == 1)
-            #expect(review.placementId.rawValue == "old" && review.occurrenceId.rawValue == "charge")
+            #expect(review.placementId.rawValue == "old" && review.occurrenceId?.rawValue == "charge")
             let store = ItemPriceEditPowerSyncStore(database: db, accountId: account,
                 principalId: principal, accessFence: .init())
             var updates = store.watchReview(project: try .init(validating: "destination"),
@@ -759,6 +803,15 @@ struct InventorySalePowerSyncStoreTests {
         _ = try await db.execute(sql: "INSERT INTO item_acquisition_reviews(id,account_id,state,amount_minor_units,currency) VALUES ('item','sale-account','known','9223372036854775807','USD')",parameters: nil)
         let review = try await store(db).review(itemIds: [item])
         #expect(try review.items[0].reviewedPrice(currency: .init(validating: "USD")).minorUnits == Int64.max)
+        _ = try await db.execute(sql: "UPDATE item_project_prices SET revision='2',amount_minor_units='0'", parameters: nil)
+        let zero = try await store(db).review(itemIds: [item])
+        let usd = try CurrencyCode(validating: "USD")
+        #expect(zero.items[0].projectPrice == .known(.init(minorUnits: 0, currency: usd)))
+        _ = try await db.execute(sql: "UPDATE item_project_prices SET revision='3',amount_minor_units=NULL", parameters: nil)
+        let cleared = try await store(db).review(itemIds: [item])
+        #expect(cleared.items[0].projectPrice == .confirmedAbsent)
+        #expect(cleared.items[0].priceRevision == "3")
+        #expect(try cleared.items[0].reviewedPrice(currency: .init(validating: "USD")).minorUnits == Int64.max)
         try await subscription.unsubscribe()
         try await db.close()
         let reopened = try fixture.open()

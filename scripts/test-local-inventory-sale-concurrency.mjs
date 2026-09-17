@@ -133,6 +133,40 @@ try {
   assert.equal(sql(`select scope_kind from public.spike_item_placements where account_id=${q(account)} and item_id=${q(raceItem)} and ended_at is null`),winner==='return'?'business_inventory':'project');
   assert.equal(sql(`select count(*) from public.spike_transactions where account_id=${q(account)}`),'0');
  }
+ // Inventory price edits and sales share the Item lock. Prove both commit
+ // orders reject the stale loser instead of silently changing sold accounting.
+ for (const winner of ['price','sale']) {
+  const raceItem=key+'-price-'+winner, racePlacement=raceItem+'-placement';
+  sql(`begin;
+   insert into public.spike_items(id,account_id,description,created_by_principal_id)
+    values(${q(raceItem)},${q(account)},'Price sale race','principal-owner');
+   insert into public.spike_item_placements(id,account_id,item_id,scope_kind,started_at,started_by_principal_id)
+    values(${q(racePlacement)},${q(account)},${q(raceItem)},'business_inventory','2026-01-01','principal-owner');
+   insert into ledger_private.item_project_prices(account_id,item_id,amount_minor_units,currency,updated_at,updated_by_principal_id)
+    values(${q(account)},${q(raceItem)},100,'USD',now(),'principal-owner'); commit;`);
+  const base={accountId:account,actorPrincipalId:'principal-owner',createdAtMs:'1788523200000',currency:'USD'};
+  const price=JSON.stringify({...base,operationId:raceItem+'-edit',contractVersion:'item-inventory-price-edit-v2',
+   itemId:raceItem,placementId:racePlacement,expectedPriceRevision:'1',requestedPriceMinorUnits:'200',
+   reviewedPriceMinorUnits:'200',clearPrice:'false'});
+  const sale=JSON.stringify({...base,operationId:raceItem+'-sale',contractVersion:'inventory-sale-v1',projectId:project,
+   items:[{itemId:raceItem,placementId:racePlacement,priceRevision:'1',reviewedPriceMinorUnits:'100',
+    newPlacementId:raceItem+'-sold',occurrenceId:raceItem+'-charge'}]});
+  const calls={price:`select (public.spike_edit_uncollected_item_price(${q(price)})).phase;`,
+   sale:`select (public.spike_sell_inventory_items(${q(sale)})).phase;`};
+  const auth=`set role authenticated; set request.jwt.claims='{"sub":"10000000-0000-0000-0000-000000000001","role":"authenticated"}';`;
+  const holding=session();
+  holding.child.stdin.write(`begin; ${auth} ${calls[winner]}\n\\echo PRICE_WINNER_PENDING\n`);
+  await waitFor(()=>holding.output().includes('PRICE_WINNER_PENDING'));
+  assert.match(holding.output(),/applied/);
+  const loser=winner==='price'?'sale':'price', application=key+'-p-'+winner, waiting=session();
+  waiting.child.stdin.end(`set application_name=${q(application)}; ${auth} ${calls[loser]}`);
+  await waitFor(()=>sql(`select count(*) from pg_stat_activity where application_name=${q(application)} and wait_event_type='Lock'`)==='1');
+  holding.child.stdin.end('commit;\n'); await holding.done;
+  assert.equal(await waiting.done,'rejected');
+  assert.equal(sql(`select amount_minor_units from ledger_private.item_project_prices where account_id=${q(account)} and item_id=${q(raceItem)}`),winner==='price'?'200':'100');
+  assert.equal(sql(`select count(*) from ledger_private.item_charge_occurrences where account_id=${q(account)} and item_id=${q(raceItem)}`),winner==='price'?'0':'1');
+  assert.equal(sql(`select scope_kind from public.spike_item_placements where account_id=${q(account)} and item_id=${q(raceItem)} and ended_at is null`),winner==='price'?'business_inventory':'project');
+ }
  // Two independent purchase receipts for one Item must leave ambiguous cost,
  // even when the second statement started before the first committed.
  const reviewItem=key+'-review-item';
@@ -157,6 +191,7 @@ try {
  assert.equal(sql(`select state||':'||amount_minor_units::text from ledger_private.item_acquisition_reviews where id=${q(reviewItem)}`),'known:200');
  console.log(JSON.stringify({twoSessionsObservedBlocked:true,applied:1,rejected:1,currentPlacements:1,charges:1,saleCreatedPayments:0,
    returnSessionsObservedBlocked:true,returnApplied:1,returnRejected:1,returnFacts:1,returnVsInvoiceBothCommitOrders:true,
+   inventoryPriceVsSaleBothCommitOrders:true,
    acquisitionRefreshAfterConcurrentCommit:'unavailable',acquisitionRefreshAfterRemoval:'known:200',fixtureAccount:account}));
 } finally {
  for(const child of children) if(child.exitCode===null) {child.stdin.end();child.kill('SIGTERM');}

@@ -78,18 +78,23 @@ struct EditUncollectedItemPriceUploadRequest: Sendable {
 
     init(_ command: EditUncollectedItemPriceCommand) throws {
         let e = command.envelope, p = e.payload
-        let fields: [String: String] = [
+        var fields: [String: String] = [
             "operationId": e.operationId.rawValue, "accountId": e.accountId.rawValue,
             "actorPrincipalId": e.actorPrincipalId.rawValue, "contractVersion": e.contractVersion.rawValue,
             "createdAtMs": String(Int64((e.clientCreatedAt.timeIntervalSince1970 * 1000).rounded())),
-            "projectId": p.projectId.rawValue, "itemId": p.itemId.rawValue,
-            "placementId": p.placementId.rawValue, "occurrenceId": p.occurrenceId.rawValue,
+            "itemId": p.itemId.rawValue, "placementId": p.placementId.rawValue,
             "expectedPriceRevision": String(p.expectedPriceRevision),
-            "expectedChargeRevision": String(p.expectedChargeRevision),
             "requestedPriceMinorUnits": String(p.requestedPrice.minorUnits),
             "reviewedPriceMinorUnits": String(p.reviewedPrice.minorUnits),
             "currency": p.reviewedPrice.currency.rawValue
         ]
+        if let project = p.projectId, let occurrence = p.occurrenceId, let revision = p.expectedChargeRevision {
+            fields["projectId"] = project.rawValue
+            fields["occurrenceId"] = occurrence.rawValue
+            fields["expectedChargeRevision"] = String(revision)
+        } else if let clear = p.clearPrice {
+            fields["clearPrice"] = clear ? "true" : "false"
+        }
         let bytes = try OperationContractCodec.encode(fields)
         commandJSON = String(decoding: bytes, as: UTF8.self)
         fingerprint = SHA256.hash(data: bytes).map { String(format: "%02x", $0) }.joined()

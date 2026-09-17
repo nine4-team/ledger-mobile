@@ -19,13 +19,13 @@ actor ItemPriceEditPowerSyncStore {
         self.accessFence = accessFence; self.now = now; self.afterOperationWrite = afterOperationWrite
     }
 
-    func review(project: ProjectID, item: ItemID, requested: Money) async throws -> EditUncollectedItemPriceCommand.Payload {
+    func review(project: ProjectID?, item: ItemID, requested: Money, clear: Bool = false) async throws -> EditUncollectedItemPriceCommand.Payload {
         let account = accountId, principal = principalId, fence = accessFence
         return try await database.readTransaction { local in
             try Task.checkCancellation()
             guard !fence.isRemoved else { throw LedgerOfflineClientRuntimeFailure.runtimeClosed }
             return try ItemPriceEditLocalReview.read(local, account: account, principal: principal,
-                project: project, item: item, requested: requested)
+                project: project, item: item, requested: requested, clear: clear)
         }
     }
 
@@ -114,7 +114,7 @@ actor ItemPriceEditPowerSyncStore {
 
     func cancelAndDrainWatches() async { await watchRegistry.cancelAndDrain() }
 
-    nonisolated func watchReview(project: ProjectID, item: ItemID)
+    nonisolated func watchReview(project: ProjectID?, item: ItemID)
         -> AsyncThrowingStream<ItemPriceEditReview?, Error> {
         AsyncThrowingStream { continuation in
             let id = UUID(), handle = BudgetCategoryReferenceWatchTaskHandle()
@@ -126,10 +126,7 @@ actor ItemPriceEditPowerSyncStore {
                         try await database.syncStream(name: "physical_account_items",
                             params: ["account_id": .string(accountId.rawValue)]).subscribe()
                     }, observe: { [self] in
-                        try await withOwnedSyncStreamWatch(subscribe: { [self] in
-                            try await database.syncStream(name: "item_return_review",
-                                params: ["account_id": .string(accountId.rawValue), "project_id": .string(project.rawValue)]).subscribe()
-                        }, observe: { [self] in
+                        let observe: @Sendable () async throws -> Void = { [self] in
                             let changes = try database.watch(sql: """
                                 SELECT (SELECT count(*) FROM return_charge_sources),(SELECT count(*) FROM return_paid_memberships),
                                   (SELECT count(*) FROM item_project_prices),(SELECT count(*) FROM item_acquisition_reviews),
@@ -155,7 +152,15 @@ actor ItemPriceEditPowerSyncStore {
                                 guard !accessFence.isRemoved else { throw LedgerOfflineClientRuntimeFailure.runtimeClosed }
                                 if case .terminated = continuation.yield(value) { break }
                             }
-                        })
+                        }
+                        if let project {
+                            try await withOwnedSyncStreamWatch(subscribe: { [self] in
+                                try await database.syncStream(name: "item_return_review",
+                                    params: ["account_id": .string(accountId.rawValue), "project_id": .string(project.rawValue)]).subscribe()
+                            }, observe: observe)
+                        } else {
+                            try await observe()
+                        }
                     })
                     continuation.finish()
                 } catch is CancellationError { continuation.finish() }
@@ -202,7 +207,8 @@ actor ItemPriceEditPowerSyncStore {
                     }
             }
             let review = try ItemPriceEditLocalReview.read(local, account: account, principal: principal,
-                project: e.payload.projectId, item: e.payload.itemId, requested: e.payload.requestedPrice)
+                project: e.payload.projectId, item: e.payload.itemId, requested: e.payload.requestedPrice,
+                clear: e.payload.clearPrice == true)
             guard review == e.payload else { throw Failure.staleReview }
             let pending = try local.get(sql: """
                 SELECT count(*) FROM spike_local_operations WHERE account_id=? AND subject_id=?
@@ -212,15 +218,15 @@ actor ItemPriceEditPowerSyncStore {
             _ = try local.execute(sql: """
                 INSERT INTO spike_local_operations(id,account_id,actor_principal_id,contract_version,fingerprint,
                   subject_id,local_state,accepted_at_ms,updated_at_ms,command_type,command_envelope_json)
-                VALUES (?,?,?,'item-uncollected-price-edit-v1',?,?,'queued',?,?,'edit_uncollected_item_price',?)
-                """, parameters: [e.operationId.rawValue,account.rawValue,principal.rawValue,request.fingerprint,
+                VALUES (?,?,?,?,?,?,'queued',?,?,'edit_uncollected_item_price',?)
+                """, parameters: [e.operationId.rawValue,account.rawValue,principal.rawValue,e.contractVersion.rawValue,request.fingerprint,
                     e.payload.itemId.rawValue,Int64(instant),Int64(instant),json])
             try checkpoint()
             _ = try local.execute(sql: """
                 INSERT INTO spike_item_price_edit_commands(id,account_id,actor_principal_id,item_id,
-                  contract_version,fingerprint,envelope_json) VALUES (?,?,?,?,'item-uncollected-price-edit-v1',?,?)
+                  contract_version,fingerprint,envelope_json) VALUES (?,?,?,?,?,?,?)
                 """, parameters: [e.operationId.rawValue,account.rawValue,principal.rawValue,
-                    e.payload.itemId.rawValue,request.fingerprint,json])
+                    e.payload.itemId.rawValue,e.contractVersion.rawValue,request.fingerprint,json])
             try Task.checkCancellation()
             guard !fence.isRemoved else { throw LedgerOfflineClientRuntimeFailure.runtimeClosed }
             return OperationReceipt(operationId: e.operationId, localState: .queued)

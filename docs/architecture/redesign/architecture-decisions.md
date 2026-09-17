@@ -4139,3 +4139,22 @@ and readers preserve signed legacy evidence without silently repairing it.
 The existing market-value stream/read entitlement stays unchanged. Purchase,
 project-price and frozen accounting facts are never modified by this operation.
 Evidence and unfinished layers belong to `item-everyday-editing` in the checklist.
+
+### 2026-09-16 — Inventory pricing extends the existing price-edit path
+
+The current-price floor applies to Inventory as well as Project Items. Extend
+the existing price command/provider/editor, preserving the exact v1 Project
+payload and wire encoding. Inventory uses `item-inventory-price-edit-v2`, an
+exact placement and price revision, no Project/charge identity, and explicit
+clear intent distinct from zero. A requested clear still respects a known
+positive cost floor; absence of downloaded evidence never means zero cost.
+Keep the existing positive-value requirement for sale/charge creation.
+
+Clearing a stored price must retain its revision identity rather than delete
+the row and reset the next review to revision zero. Implement that representation
+and update all readers before enabling Inventory submission. Reuse existing
+access, queue, replay and receipt boundaries; no acquisition, frozen Invoice,
+inventory-entry amount or historical payment is rewritten. The tradeoff is a
+versioned scope in the existing operation, not a new screen or parallel history.
+Contract groundwork is not delivery: database concurrency, local admission,
+MCP, UI and actual sync evidence remain required in `item-everyday-editing`.

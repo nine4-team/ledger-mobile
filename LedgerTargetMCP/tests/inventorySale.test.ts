@@ -12,6 +12,15 @@ const input: InventorySaleInput = { operationUUID: "11111111-2222-3333-4444-5555
     { itemId: "item", placementId: "old", priceRevision: "0", reviewedPriceMinorUnits: "9223372036854775807",
       newPlacementId: "new", occurrenceId: "charge" }] } };
 const request = makeInventorySaleRequest(input, context);
+test("sale review preserves cleared revisions and zero without accepting a free sale", () => {
+  for (const projectPrice of [{ state: "absent" }, { state: "known", amountMinorUnits: "0", currency: "USD" }]) {
+    const value = { ...review(), items: [{ ...review().items[0], priceRevision: "4", projectPrice }] };
+    assert.equal(validateInventorySaleReview(value, ["item"], context).items[0].priceRevision, "4");
+  }
+  const invalid = structuredClone(input);
+  invalid.payload.items[0].reviewedPriceMinorUnits = "0";
+  assert.throws(() => makeInventorySaleRequest(invalid, context));
+});
 test("Swift and MCP share the exact sale wire digest and identity", () => {
   const fixture = JSON.parse(readFileSync(new URL("./fixtures/inventory-sale.json", import.meta.url), "utf8"));
   const actual = makeInventorySaleRequest(fixture.input, { ...context, accountId: fixture.accountId, principalId: fixture.principalId });

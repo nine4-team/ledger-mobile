@@ -11,11 +11,11 @@ const integer = z.string().refine(value => /^(0|[1-9][0-9]*)$/.test(value)
 const revision = integer.refine(value => BigInt(value) < 9223372036854775807n);
 const currency = z.string().regex(/^[A-Z]{3}$/);
 const money = z.object({ amountMinorUnits: integer, currency }).strict();
-export const itemPriceEditReviewInputSchema = z.object({ projectId: identifier, itemId: identifier }).strict();
+export const itemPriceEditReviewInputSchema = z.object({ projectId: identifier.nullable(), itemId: identifier }).strict();
 export type ItemPriceEditReviewInput = z.infer<typeof itemPriceEditReviewInputSchema>;
 const reviewSchema = z.object({ accountId: identifier, principalId: identifier,
-  projectId: identifier, itemId: identifier, placementId: identifier, occurrenceId: identifier,
-  currency, priceRevision: revision, chargeRevision: revision.refine(value => BigInt(value) > 0n),
+  projectId: identifier.nullable(), itemId: identifier, placementId: identifier, occurrenceId: identifier.nullable(),
+  currency: currency.nullable(), priceRevision: revision, chargeRevision: revision.refine(value => BigInt(value) > 0n).nullable(),
   currentPrice: money.nullable(), purchaseCost: z.discriminatedUnion("state", [
     z.object({ state: z.literal("absent") }).strict(),
     money.extend({ state: z.literal("known") }).strict(),
@@ -30,7 +30,11 @@ export function validateItemPriceEditReview(value: unknown, input: ItemPriceEdit
   const row = parsed.data;
   if (row.accountId !== context.accountId || row.principalId !== context.principalId
     || row.projectId !== input.projectId || row.itemId !== input.itemId
-    || (row.currentPrice === null) !== (row.priceRevision === "0")
+    || (row.projectId === null
+      ? row.occurrenceId !== null || row.chargeRevision !== null
+      : row.occurrenceId === null || row.chargeRevision === null || row.currency === null)
+    || (row.priceRevision !== "0" && row.currency === null)
+    || (row.priceRevision === "0" && row.currentPrice !== null)
     || (row.currentPrice !== null && row.currentPrice.currency !== row.currency)
     || (row.purchaseCost.state === "known" && row.purchaseCost.currency !== row.currency)) {
     throw new TargetMCPFailure("price_review_mismatch");
@@ -41,11 +45,15 @@ export function validateItemPriceEditReview(value: unknown, input: ItemPriceEdit
 export const itemPriceEditInputSchema = z.object({
   operationUUID: z.string().regex(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/),
   clientCreatedAtMilliseconds: z.number().int().nonnegative().max(999_999_999_999_999),
-  payload: z.object({ projectId: identifier, itemId: identifier, placementId: identifier,
+  payload: z.union([z.object({ projectId: identifier, itemId: identifier, placementId: identifier,
     occurrenceId: identifier, expectedPriceRevision: revision,
     expectedChargeRevision: revision.refine(value => BigInt(value) > 0n),
     requestedPriceMinorUnits: integer, reviewedPriceMinorUnits: integer.refine(value => BigInt(value) > 0n),
-    currency }).strict().refine(value => BigInt(value.reviewedPriceMinorUnits) >= BigInt(value.requestedPriceMinorUnits)),
+    currency }).strict(),
+    z.object({ itemId: identifier, placementId: identifier, expectedPriceRevision: revision,
+      requestedPriceMinorUnits: integer, reviewedPriceMinorUnits: integer, currency,
+      clearPrice: z.boolean() }).strict().refine(value => !value.clearPrice || value.requestedPriceMinorUnits === "0"),
+  ]).refine(value => BigInt(value.reviewedPriceMinorUnits) >= BigInt(value.requestedPriceMinorUnits)),
 }).strict();
 export type ItemPriceEditInput = z.infer<typeof itemPriceEditInputSchema>;
 export type ItemPriceEditRequest = Readonly<{ operationId: string; accountId: string; actorPrincipalId: string;
@@ -60,8 +68,12 @@ export function makeItemPriceEditRequest(input: ItemPriceEditInput, context: Tar
   const accountId = validateIdentifier(context.accountId, "account_not_authorized");
   const actorPrincipalId = validateIdentifier(context.principalId, "account_not_authorized");
   const operationId = `item-price-edit-${createHash("sha256").update(accountId).digest("hex")}-${parsed.data.operationUUID}`;
-  const commandJSON = canonicalJSON({ ...parsed.data.payload, operationId, accountId, actorPrincipalId,
-    contractVersion: "item-uncollected-price-edit-v1", createdAtMs: String(parsed.data.clientCreatedAtMilliseconds) }, "price_payload_invalid");
+  const inventory = "clearPrice" in parsed.data.payload;
+  const payload = "clearPrice" in parsed.data.payload
+    ? { ...parsed.data.payload, clearPrice: String(parsed.data.payload.clearPrice) } : parsed.data.payload;
+  const commandJSON = canonicalJSON({ ...payload, operationId, accountId, actorPrincipalId,
+    contractVersion: inventory ? "item-inventory-price-edit-v2" : "item-uncollected-price-edit-v1",
+    createdAtMs: String(parsed.data.clientCreatedAtMilliseconds) }, "price_payload_invalid");
   return { operationId, accountId, actorPrincipalId, itemId: parsed.data.payload.itemId,
     createdAtMs: parsed.data.clientCreatedAtMilliseconds, commandJSON,
     fingerprint: createHash("sha256").update(commandJSON).digest("hex") };
@@ -76,7 +88,7 @@ export function validateItemPriceEditResult(value: unknown, request: ItemPriceEd
   const row = value as Record<string, unknown>;
   if (row.operation_id !== request.operationId || row.account_id !== request.accountId
     || row.actor_principal_id !== request.actorPrincipalId || row.subject_id !== request.itemId
-    || row.command_type !== "edit_uncollected_item_price" || row.contract_version !== "item-uncollected-price-edit-v1"
+    || row.command_type !== "edit_uncollected_item_price" || row.contract_version !== JSON.parse(request.commandJSON).contractVersion
     || row.command_fingerprint !== request.fingerprint || row.envelope_sha256 !== request.fingerprint
     || row.request_sha256 != null || row.client_created_at_ms !== request.createdAtMs
     || !Number.isSafeInteger(row.server_received_at_ms) || !Number.isSafeInteger(row.completed_at_ms)

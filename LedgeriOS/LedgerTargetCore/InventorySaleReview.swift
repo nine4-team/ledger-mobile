@@ -83,9 +83,9 @@ public struct InventorySaleReview: Decodable, Equatable, Sendable {
                   String(revision) == item.priceRevision else { throw Failure.invalidEvidence }
             switch item.projectPrice {
             case .known(let money):
-                guard revision > 0, money.minorUnits > 0 else { throw Failure.invalidEvidence }
+                guard revision > 0, money.minorUnits >= 0 else { throw Failure.invalidEvidence }
             case .confirmedAbsent:
-                guard revision == 0 else { throw Failure.invalidEvidence }
+                break // A cleared price retains its nonzero revision.
             case .unavailable: throw Failure.invalidEvidence
             }
         }

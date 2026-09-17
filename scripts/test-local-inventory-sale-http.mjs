@@ -617,8 +617,30 @@ try {
         assert.equal(sql(`select revision||':'||amount_minor_units from ledger_private.item_charge_occurrences where id=${q(key+'-charge')}`),'2:12346');
         assert.equal(sql(`select count(*) from public.spike_transactions where account_id=${q(account)}`),'0');
         console.log('PASS actual HTTP price edit: live Invoice readback, exact receipt/replay, no payment');
+        sql(`begin;
+              insert into public.spike_items(id,account_id,description,created_by_principal_id)
+                values(${q(item+'-inventory')},${q(account)},'Synthetic Inventory price',${q(principal)});
+              insert into public.spike_item_placements(id,account_id,item_id,scope_kind,started_at,started_by_principal_id)
+                values(${q(item+'-inventory-placement')},${q(account)},${q(item+'-inventory')},'business_inventory','2026-01-01',${q(principal)});
+              insert into ledger_private.item_project_prices(account_id,item_id,amount_minor_units,currency,updated_at,updated_by_principal_id)
+                values(${q(account)},${q(item+'-inventory')},100,'USD',now(),${q(principal)});
+              commit;`);
+        const inventoryReview = await priceMCP.itemPriceEditReviewTool({projectId:null,itemId:item+'-inventory'},priceContext,service);
+        assert.equal(inventoryReview.currentPrice.amountMinorUnits,'100');
+        assert.equal(inventoryReview.currency,'USD');
+        assert.equal(inventoryReview.occurrenceId,null);
+        assert.equal(inventoryReview.chargeRevision,null);
+        assert.equal(inventoryReview.purchaseCost.state,'absent');
+        console.log('PASS actual MCP Inventory price review through authenticated shared endpoint');
         if(process.argv.includes('--native-price-edit')) {
             await runNative('itemPriceLiveReplication');
+            assert.equal(sql(`select revision||':'||coalesce(amount_minor_units::text,'cleared') from ledger_private.item_project_prices
+              where account_id=${q(account)} and item_id=${q(item+'-inventory')}`),'2:cleared');
+            assert.equal(sql(`select count(*) from ledger_private.item_charge_occurrences where account_id=${q(account)} and item_id=${q(item+'-inventory')}`),'0');
+            const clearedReview=await priceMCP.itemPriceEditReviewTool({projectId:null,itemId:item+'-inventory'},priceContext,service);
+            assert.equal(clearedReview.currentPrice,null);
+            assert.equal(clearedReview.priceRevision,'2');
+            assert.equal(clearedReview.currency,'USD');
             const afterNative=await service.reviewItemPriceEdit({projectId:project,itemId:item},priceContext);
             assert.equal(afterNative.currentPrice.amountMinorUnits,'12347');
             assert.equal(afterNative.chargeRevision,'3');

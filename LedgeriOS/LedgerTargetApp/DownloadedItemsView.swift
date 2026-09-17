@@ -690,9 +690,15 @@ struct DownloadedItemDetailView: View {
             if let service = reader as? any ItemPriceEditing,
                case .downloaded(let history) = model.state,
                history.accountId == accountId, history.itemId == itemId,
-               case .project(let projectId) = history.intervals.first(where: { $0.endedAt == nil })?.scope {
-                ItemPriceEditForm(projectId: projectId, itemId: itemId,
-                    currency: try! CurrencyCode(validating: "USD"), service: service)
+               let scope = history.intervals.first(where: { $0.endedAt == nil })?.scope {
+                switch scope {
+                case .project(let projectId):
+                    ItemPriceEditForm(projectId: projectId, itemId: itemId,
+                        currency: try! CurrencyCode(validating: "USD"), service: service)
+                case .businessInventory:
+                    ItemPriceEditForm(projectId: nil, itemId: itemId,
+                        currency: try! CurrencyCode(validating: "USD"), service: service)
+                }
             }
         }
     }
@@ -875,7 +881,7 @@ struct DownloadedItemDetailView: View {
                     detailField("Bookmarked", details.isBookmarked.map { $0 ? "Yes" : "No" }, id: "target-item-detail-bookmark")
                     detailField("Created", details.createdAt, id: "target-item-detail-created")
                     if reader is any ItemPriceEditing,
-                       case .project = history.intervals.first(where: { $0.endedAt == nil })?.scope {
+                       history.intervals.contains(where: { $0.endedAt == nil }) {
                         Button("Edit Project Price") { showingPriceEdit = true }
                             .accessibilityIdentifier("target-item-edit-price")
                     }

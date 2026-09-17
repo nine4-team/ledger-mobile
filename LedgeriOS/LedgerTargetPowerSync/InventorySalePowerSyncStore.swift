@@ -129,7 +129,7 @@ actor InventorySalePowerSyncStore {
                 guard placements.count == 1 else { throw Failure.stalePlacement }
                 let price = try local.getOptional(sql: "SELECT revision,amount_minor_units,currency FROM item_project_prices WHERE account_id=? AND item_id=?",
                     parameters: [account.rawValue,item.rawValue]) {
-                        (try $0.getString(index: 0),try $0.getString(index: 1),try $0.getString(index: 2))
+                        (try $0.getString(index: 0),try $0.getStringOptional(index: 1),try $0.getString(index: 2))
                     }
                 func money(_ amount: String?, _ currency: String?) throws -> Money {
                     guard let amount, let value = Int64(amount), String(value) == amount, let currency else {
@@ -154,8 +154,10 @@ actor InventorySalePowerSyncStore {
                 guard let revision = Int64(price?.0 ?? "0"), String(revision) == (price?.0 ?? "0") else {
                     throw InventorySaleReview.Failure.invalidEvidence
                 }
+                if let price { _ = try CurrencyCode(validating: price.2) }
                 return .init(itemId: item,placementId: try .init(validating: placements[0]),priceRevision: revision,
-                    projectPrice: try price.map { .known(try money($0.1,$0.2)) } ?? .confirmedAbsent,purchaseCost: cost)
+                    projectPrice: try price.flatMap { row in try row.1.map { .known(try money($0,row.2)) } }
+                        ?? .confirmedAbsent,purchaseCost: cost)
             }
             try Task.checkCancellation()
             guard !fence.isRemoved else { throw LedgerOfflineClientRuntimeFailure.runtimeClosed }

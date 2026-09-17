@@ -35,18 +35,26 @@ public enum InventorySalePrice {
 
     public static func review(projectPrice: Evidence, purchaseCost: Evidence,
                               currency: CurrencyCode) throws -> Money {
-        try resolve(projectPrice: projectPrice.amount(), purchaseCost: purchaseCost.amount(), currency: currency)
+        guard let price = try reviewCurrentPrice(projectPrice: projectPrice, purchaseCost: purchaseCost,
+                                                currency: currency), price.minorUnits > 0 else {
+            throw Failure.priceRequired
+        }
+        return price
     }
 
-    /// Preserve markup and raise a missing/below-cost project price to cost.
-    /// Missing or nonpositive values are not permission to invent a free sale.
-    private static func resolve(projectPrice: Money?, purchaseCost: Money?, currency: CurrencyCode) throws -> Money {
+    /// Current Inventory state can be explicitly zero or unset without creating
+    /// a sale. Sale/charge callers continue to use `review`, which requires a
+    /// positive result. Both paths share the same cost floor and evidence rules.
+    public static func reviewCurrentPrice(projectPrice: Evidence, purchaseCost: Evidence,
+                                          currency: CurrencyCode) throws -> Money? {
+        let projectPrice = try projectPrice.amount()
+        let purchaseCost = try purchaseCost.amount()
         guard projectPrice.map({ $0.currency == currency }) ?? true,
               purchaseCost.map({ $0.currency == currency }) ?? true else {
             throw Failure.currencyMismatch
         }
         let amount = max(0, projectPrice?.minorUnits ?? 0, purchaseCost?.minorUnits ?? 0)
-        guard amount > 0 else { throw Failure.priceRequired }
+        if projectPrice == nil && amount == 0 { return nil }
         return Money(minorUnits: amount, currency: currency)
     }
 }

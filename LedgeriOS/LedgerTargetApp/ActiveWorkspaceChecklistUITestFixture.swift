@@ -843,9 +843,16 @@ private struct UITestFixtureItemReader: DownloadedItemPlacementReading, Download
     private let priceRetry = ExactRetry<EditUncollectedItemPriceCommand.Payload>()
     private let detailsRetry = ExactRetry<EditItemDetailsCommand.Payload>()
     private let bookmarkReadback = UITestFixtureStream<Bool>(initial: false)
-    func watchItemPriceReview(project: ProjectID, item: ItemID) -> AsyncThrowingStream<ItemPriceEditReview?, Error> {
+    func watchItemPriceReview(project: ProjectID?, item: ItemID) -> AsyncThrowingStream<ItemPriceEditReview?, Error> {
         AsyncThrowingStream { continuation in
             do {
+                guard let project else {
+                    continuation.yield(try .init(inventoryItemId: item,
+                        placementId: .init(validating: "history-current"), priceRevision: 1,
+                        currentPrice: Money(minorUnits: 250, currency: .init(validating: "USD")),
+                        purchaseCost: .confirmedAbsent))
+                    return
+                }
                 continuation.yield(try .init(projectId: project, itemId: item,
                     placementId: .init(validating: "history-current"), occurrenceId: .init(validating: "price-charge"),
                     priceRevision: 1, chargeRevision: 1,
@@ -863,7 +870,18 @@ private struct UITestFixtureItemReader: DownloadedItemPlacementReading, Download
     }
     func editItemPrice(_ payload: EditUncollectedItemPriceCommand.Payload,
                        operationUUID: UUID, capturedAt: Date) async throws -> OperationReceipt {
-        guard payload.projectId.rawValue == "project-ui-test", payload.itemId.rawValue == "physical-ui-chair",
+        if ProcessInfo.processInfo.arguments.contains("--ledger-ui-test-inventory-price") {
+            let clear = ProcessInfo.processInfo.arguments.contains("--ledger-ui-test-inventory-price-clear")
+            guard payload.projectId == nil, payload.occurrenceId == nil, payload.expectedChargeRevision == nil,
+                  payload.itemId.rawValue == "physical-ui-chair", payload.placementId.rawValue == "history-current",
+                  payload.expectedPriceRevision == 1, payload.clearPrice == clear,
+                  payload.requestedPrice.minorUnits == 0, payload.reviewedPrice.minorUnits == 0 else {
+                throw InventorySaleReview.Failure.invalidEvidence
+            }
+            await saleAccepted?()
+            return .init(operationId: try .init(validating: operationUUID.uuidString), localState: .queued)
+        }
+        guard payload.projectId?.rawValue == "project-ui-test", payload.itemId.rawValue == "physical-ui-chair",
               payload.placementId.rawValue == "history-current", payload.expectedPriceRevision == 1,
               payload.requestedPrice.minorUnits == 100, payload.reviewedPrice.minorUnits == 200 else {
             throw InventorySaleReview.Failure.invalidEvidence

@@ -2541,7 +2541,7 @@ actor AccountWorkspacePendingWorkRuntime {
             validate: { _ in }, makeStream: { $0.itemPriceEditStore.watch(operationId) })
     }
 
-    func startItemPriceReviewWatch(id: UUID, project: ProjectID, item: ItemID,
+    func startItemPriceReviewWatch(id: UUID, project: ProjectID?, item: ItemID,
         continuation: AsyncThrowingStream<ItemPriceEditReview?, Error>.Continuation) {
         startStream(id: id, operation: .itemPriceEditOperation, continuation: continuation,
             validate: { _ in }, makeStream: { $0.itemPriceEditStore.watchReview(project: project, item: item) })
