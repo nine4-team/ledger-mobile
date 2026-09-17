@@ -1,6 +1,6 @@
 {
   "schemaVersion": 2,
-  "stateVersion": 1489,
+  "stateVersion": 1494,
   "userRequestedPause": {
     "date": "2026-09-15",
     "status": "resumed",
@@ -29,8 +29,8 @@
     "baseCommit": "7ed45e59b406ca9e599eeefa75704abbaee9e559",
     "integrationWorkflowIds": ["downloaded-item-browsing-and-detail", "account-profile-readback", "inventory-return-to-source-project", "item-history-source-reconciliation", "item-space-assignment", "project-invoicing-workspace", "learned-account-removal-enforcement", "transaction-browser-and-detail"],
     "nextActions": [
-      "Checkpoint Transaction descriptive editing: reused controls, pending/rejected recovery, unchanged Save/Cancel, native offline/restart/upload/readback and focused iPhone checks passed. Keep Mac interaction and exact-commit integration acceptance outstanding. Review shared Space dependencies before partial staging; no viewer reconstruction.",
-      "Prior CI failed; preserve integrationCI evidence. No broad context-recovery rerun. Desktop was locked at last check; do not launch waiting Mac UI tests."
+      "Transaction descriptive editing committed16d7bd0c; focused Mac Notes and Details now pass. Commit test-only selector/scroll corrections, then prepare integrated verification. Space code remains dirty; combined local evidence is not clean-commit verification.",
+      "Prior CI failed; preserve integrationCI evidence. Do not repeat passed iPhone/native/SQL checks for context recovery or rerun the passing Mac scenarios."
     ]
   },
   "blockers": [
@@ -59,9 +59,9 @@
     "acceptanceCheckIds": ["TX-DETAIL-EDIT"],
     "meaning": "Transaction descriptive editing is connected through offline Save and reused controls, with local native/MCP/database and focused iPhone evidence. Mac interaction and exact-commit integrated verification remain; broader Transaction financial editing is not claimed complete.",
     "verificationCommands": ["npm run conversion:check","swift test --package-path LedgeriOS --no-parallel --filter EditTransactionDetailsCommandTests"],
-    "lastResult": "iPhone22689 Details Cancel/source/payment clear/No/rejected retention PASS24.809s /tmp/ledger-transaction-edit-details-iphone.log. Prior notes/reopen, actual native sync, queue/MCP/SQL checks passed. Environment85813/conversion/diffPASS. Path review recorded. Desktop locked (ioreg), no Mac UI launched. No active processes/hosted/push/CI.",
+    "lastResult": "Mac Notes46612 PASS20.428s; Details97899 PASS22.287s /tmp/ledger-transaction-edit-macos-details-ax.log. Test-only reveal/menuButtons fixes; captured hierarchy disproved earlier PopUpButton guess. Original failures retained. Both named scenarios executed. No app UI change, hosted write, push or CI. Exact-commit integrated acceptance still outstanding.",
     "activeProcesses": {},
     "integrationCI": {"run":35218414703,"attempt":1,"commit":"7ed45e59b406ca9e599eeefa75704abbaee9e559","status":"failed","meaning":"Completed13:01:47UTC. Provider/conversion PASS; Mac boundary failed (local fix). iOS1hour timeout:73passed,3failed of76finished, remaining unexecuted. Full log /tmp/ledger-ci-35218414703-ios-latest.log: capture first Photos picker still Loading; category reorder order assertion; Invoice cancel picker appears in final AX dump after15s wait failed. Diagnose targeted readiness/drag, no UI rebuild or blanket retry. Live log was incomplete; tests began12:13, not compile hang."},
-    "nextWorkflowDecision": "Prepare coherent checkpoint/integrated verification; retain Mac interaction gap while desktop locked. Transaction descriptive path has local end-to-end/iPhone evidence, not whole Transaction completion: cash/date/type/audit writes remain. Preserve dirty Space work; shared schema/sync/checker/docs contain both scopes, do not blindly stage unrelated hunks. Three Transaction migrations already LOCAL; no replay or blanket context-recovery tests."
+    "nextWorkflowDecision": "Checkpoint Mac test correction and prepare integrated verification. Preserve dirty Space work and shared concurrency runner (includes Transaction races). Do not push a partial integration snapshot missing required evidence code. Three Transaction migrations already LOCAL; do not replay. Cash/date/type/audit writes remain outside descriptive-edit completion."
   }
 }

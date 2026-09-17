@@ -4350,5 +4350,6 @@ Notes/Details controls are now connected. Encrypted restart, exact retry, real
 local upload/readback and focused iPhone interactions pass. Reopening an edit
 recovers its pending or rejected values; applied work is released after a newer
 authoritative revision arrives. Rejected-operation resolution policy is unchanged.
-Mac interaction and exact-commit integration acceptance remain outstanding; the
-workflow checklist owns those gaps. No hosted deployment is implied.
+Focused Mac Notes/retry/reopen and Details/Cancel/clear/rejection interactions
+also pass. Exact-commit integration acceptance remains outstanding; the workflow
+checklist owns that gap. No hosted deployment is implied.

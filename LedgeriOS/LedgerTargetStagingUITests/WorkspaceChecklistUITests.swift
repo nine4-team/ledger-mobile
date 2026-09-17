@@ -635,12 +635,16 @@ final class WorkspaceChecklistUITests: XCTestCase {
         app.staticTexts["$100.00"].coordinate(withNormalizedOffset: CGVector(dx: 1, dy: 0.5))
             .withOffset(CGVector(dx: 8, dy: 0)).tap()
         XCTAssertTrue(app.buttons["Edit Details"].waitForExistence(timeout: 5))
+        reveal(app.buttons["Edit Details"], in: app,
+               fullyInsideScrollView: true, within: app.scrollViews["target-transaction-detail-scroll"])
         app.buttons["Edit Details"].tap()
         let source = app.textFields["target-transaction-source-entry"]
         XCTAssertTrue(source.waitForExistence(timeout: 5))
         source.tap(); source.typeText(" discarded")
         app.buttons["Cancel"].tap()
         XCTAssertTrue(app.buttons["Save Changes"].waitForNonExistence(timeout: 5))
+        reveal(app.buttons["Edit Details"], in: app,
+               fullyInsideScrollView: true, within: app.scrollViews["target-transaction-detail-scroll"])
         app.buttons["Edit Details"].tap()
         XCTAssertTrue(source.waitForExistence(timeout: 5))
         XCTAssertEqual(source.value as? String, "Fixture vendor")
@@ -659,10 +663,11 @@ final class WorkspaceChecklistUITests: XCTestCase {
         #else
         method.typeText(String(repeating: XCUIKeyboardKey.delete.rawValue, count: "Company card".count))
         #endif
-        app.buttons["Email Receipt"].tap()
         #if os(macOS)
+        app.menuButtons["Email Receipt"].tap()
         app.menuItems["No"].tap()
         #else
+        app.buttons["Email Receipt"].tap()
         app.buttons["No"].tap()
         #endif
         app.buttons["Save Changes"].tap()
