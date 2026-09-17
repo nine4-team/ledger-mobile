@@ -27498,6 +27498,7 @@
     {
       "schemaVersion": 1,
       "workflowId": "property-management-report-delivery", "reusePlan": {"decision":"Keep A-023 paginated renderer/owned sharing and A-033 eligibility; adapt original presentation.","sourceComponents":["LedgeriOS/LedgeriOS/Views/Reports/PropertyManagementReportView.swift","LedgeriOS/LedgeriOS/Views/Reports/ReportPDFStyles.swift"],"boundary":"Reuse applicable controls/style tokens/layout with immutable target snapshots. Keep protected native delivery lifetime, exact amounts and incomplete/restricted evidence. Renderer replacement is justified; legacy aggregation/WebKit capture is not reused.","stopBuilding":"No second report renderer or blind legacy aggregator import. Visual fidelity remains pending where not evidenced."},
+      "streamRegressionCorrection": "2026-09-17 CI35217559458 attempt1 at3e1e055a failed before native jobs: test incorrectly required Invoicing-only return credits in the current-property report. Explicit shared-table list retains projection equality, separately checks return-credit absence for unreturned fixtures and validates all Account category IDs rather than assuming one category. Local156 SQL captures PASS; remaining real MCP/HTTP report check PASS under Node24 (/tmp/ledger-resume-report-mcp.log); conversion check PASS. No app/schema/stream behavior changed; this is not a green cumulative gate.",
       "title": "Property Management report preview and delivery",
       "kind": "product_ui",
       "status": "implementation",

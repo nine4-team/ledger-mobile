@@ -11,6 +11,8 @@ const container = "supabase_db_ledger_target_supabase_local";
 const labels = JSON.parse(docker(["inspect", "--format", "{{json .Config.Labels}}", container]));
 assert.equal(labels["com.supabase.cli.project"], "ledger_target_supabase_local");
 assert.equal(realpathSync(labels["com.supabase.cli.workdir"]), realpathSync(process.cwd()));
+const accountCategoryIDs = JSON.parse(docker(["exec", container, "psql", "-X", "-q", "-A", "-t", "-U", "postgres", "-d", "postgres",
+  "-v", "ON_ERROR_STOP=1", "-c", "select coalesce(json_agg(id order by id),'[]'::json) from public.spike_budget_categories where account_id='account-primary'"]));
 const yaml = readFileSync("powersync/sync-streams.yaml", "utf8");
 const block = yaml.match(/^  property_management_report:\n([\s\S]*?)(?=^  \S|$(?![\s\S]))/m)?.[1];
 assert.ok(block);
@@ -52,7 +54,10 @@ const sameProjection = (table, other, message) => {
   assert.deepEqual(projection(reportQueries.get(table)), projection(other.get(table)), message);
 };
 sameProjection("spike_projects", projectQueries, "Report and bootstrap Project values must match exactly");
-for (const table of invoicingQueries.keys()) {
+const sharedInvoicingTables = ["item_charge_occurrences", "collected_invoice_lines", "collected_invoices", "spike_budget_categories"];
+assert.deepEqual([...invoicingQueries.keys()].sort(), [...sharedInvoicingTables, "paid_item_return_credits"].sort(),
+  "Review every Invoicing projection; return credits are not current-property report rows");
+for (const table of sharedInvoicingTables) {
   sameProjection(table, invoicingQueries, `Invoicing and report ${table} projections must agree`);
 }
 sameProjection("spike_projects", noteQueries, "Report and note-history Project values must match exactly");
@@ -162,7 +167,7 @@ sql.push("rollback;");
 const output = execFileSync("docker", ["exec", "-i", container, "psql", "-X", "-q", "-A", "-t", "-U", "postgres", "-d", "postgres", "-v", "ON_ERROR_STOP=1"],
   { input: sql.join("\n"), encoding: "utf8", timeout: 30_000 });
 const results = output.trim().split("\n").map(JSON.parse);
-assert.equal(results.length, 149);
+assert.equal(results.length, 156);
 const columns = {
   spike_transactions: ["id", "account_id", "project_id", "client_id", "type", "role", "amount_minor_units", "currency", "origin",
     "scope_kind", "source", "transaction_date", "created_at_ms", "notes", "payment_method", "has_email_receipt",
@@ -183,11 +188,26 @@ const columns = {
 assert.deepEqual([...reportQueries.keys()].sort(), Object.keys(columns).sort(), "Review every report projection");
 const financialTables = new Set(["spike_transactions", "item_client_payment_connections", "item_charge_occurrences", "collected_invoice_lines", "collected_invoices"]);
 for (const { label, table, rows } of results) {
+  if (table === "paid_item_return_credits") {
+    assert.deepEqual(rows, [], `${label}: these paid Items have not been returned`);
+    continue;
+  }
   if (!["project-a", "project-b", "owner-a", "owner-b", "general-a", "owner-invoicing-a", "owner-invoicing-b"].includes(label)) { assert.deepEqual(rows, [], label); continue; }
   if (financialTables.has(table) && !label.startsWith("owner-")) { assert.deepEqual(rows, [], 'Restricted members receive no financial provenance'); continue; }
   const selected = label.endsWith("-a") ? 0 : 1;
-  assert.equal(rows.length, 1, `${label}: exact Project projection ${table}`);
-  const row = rows[0];
+  const accountCategoryProjection = table === "spike_budget_categories" && label.startsWith("owner-invoicing-");
+  if (accountCategoryProjection) {
+    assert.deepEqual(rows.map(row => row.id).sort(), accountCategoryIDs,
+      "Invoicing downloads all Account categories, including categories seeded by other local checks");
+    for (const category of rows) {
+      assert.equal(category.account_id, "account-primary");
+      assert.deepEqual(Object.keys(category).sort(), [...columns.spike_budget_categories].sort());
+    }
+  } else {
+    assert.equal(rows.length, 1, `${label}: exact Project projection ${table}`);
+  }
+  const row = accountCategoryProjection ? rows.find(row => row.id === "category-furnishings") : rows[0];
+  assert.ok(row, `${label}: expected fixture row ${table}`);
   const expectedIDs = {
     spike_transactions: `payment-${projects[selected]}`,
     item_image_sets: ids[2][selected],
@@ -238,4 +258,4 @@ for (const { label, table, rows } of results) {
     assert.equal(row.market_value_currency, selected === 0 ? "USD" : null);
   }
 }
-console.log("report/Invoicing streams: 149 actual SQL captures pass; overlapping projections agree, Invoicing retains paid charge/line/Invoice/category after physical departure, while current-location report drops them. Financial downgrade, removal, restricted and cross-Account/user reads deny. Fixtures rolled back; not live replication validation.");
+console.log("report/Invoicing streams: 156 actual SQL captures pass; overlapping projections agree, Invoicing retains paid charge/line/Invoice/category after physical departure, while current-location report drops them. Unreturned Items have no return credits. Financial downgrade, removal, restricted and cross-Account/user reads deny. Fixtures rolled back; not live replication validation.");
