@@ -74,8 +74,14 @@ struct NoteVisualReferenceField: View {
                 }
                 .buttonStyle(.plain)
 
+                Text(reference.marker == nil
+                     ? "Optional. Tap Add mark to point out what this note refers to in the photo."
+                     : "Tap Move mark to reposition the note marker.")
+                    .font(Typography.caption)
+                    .foregroundStyle(BrandColors.textSecondary)
+
                 HStack(spacing: Spacing.md) {
-                    Button(reference.marker == nil ? "Mark item" : "Move mark") {
+                    Button(reference.marker == nil ? "Add mark" : "Move mark") {
                         showMarkerEditor = true
                     }
                     Button("Change photo") { showPhotoPicker = true }
@@ -88,9 +94,6 @@ struct NoteVisualReferenceField: View {
                 Button { showPhotoPicker = true } label: {
                     Label("Choose an existing photo", systemImage: "photo.badge.plus")
                 }
-                Text("Optional. Add a red mark if the note refers to something specific in the photo.")
-                    .font(Typography.caption)
-                    .foregroundStyle(BrandColors.textSecondary)
             }
         }
         .disabled(isProcessing)
@@ -230,8 +233,8 @@ struct NoteReferenceViewer: View {
         VStack(alignment: .leading, spacing: Spacing.sm) {
             if isEditing {
                 Text(marker == nil
-                     ? "Tap the item this note refers to, or finish without a mark."
-                     : "Tap elsewhere to move the red mark.")
+                     ? "Tap the part of the photo this note refers to, or finish without a mark."
+                     : "Tap elsewhere to move the note marker.")
                     .font(Typography.small)
             } else if let noteText, !noteText.isEmpty {
                 ScrollView {
