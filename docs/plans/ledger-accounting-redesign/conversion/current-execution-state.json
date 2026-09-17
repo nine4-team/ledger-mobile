@@ -1,6 +1,6 @@
 {
   "schemaVersion": 2,
-  "stateVersion": 1356,
+  "stateVersion": 1358,
   "userRequestedPause": {
     "date": "2026-09-15",
     "status": "resumed",
@@ -60,9 +60,9 @@
     "verificationCommands": ["swift test --package-path LedgeriOS --no-parallel --filter ReturnUninvoicedItemsCommandTests"],
     "lastResult": "Prior CI failures retained. PDF evidence: invoice-report-readback.liveInvoicePDFCaseDiagnosis; logout: session-clean-logout.",
     "activeProcesses": {},
-    "integrationCI": {"run":35182985338,"attempt":1,"commit":"c3b942429662b21b7aedba90bc70cebcd01d4adb","status":"failed","meaning":"Terminal: conversion/provider passed, Mac failed, iOS cancelled, aggregate failed. Mac boundary-validator fixes are in local55521f94, not verified by this run. No live watcher or duplicate dispatch; earlier failures remain."},
+    "integrationCI": {"run":35189334761,"attempt":1,"commit":"770f532e","status":"queued","meaning":"One integration dispatch after coherent Inventory editing batch push; conflictingPR1 prevents automatic CI. Earlier35182985338 failedMac/iOScancelled; validator fixes now included, failures not waived. Continue independent work; no duplicate dispatch."},
     "desktopPrerequisite": "Mac UI70530: runner initialization failed, system authentication running; zero tests. /tmp/ledger-mac-invoice-followup-20260916.{log,xcresult}. Build passed. No unchanged retry; iOS unaffected.",
-    "immediateFollowup": "Inventory hosted17222 PASS27.718s/build56s: clear/restart/replay/sync/offline and SQL2:cleared/nocharge.6698 advisor only existing AuthWARN;56790 boundaryPASS. Evidence:item-everyday-editing.inventoryPriceHostedResult. Ready coherentcommit/push, then next approved Item gap. Migration deployed; no reruns for recovery. O047 unanswered; private files preserved; oldCI failures not waived.",
+    "immediateFollowup": "78791 cost/access races PASS; test followup dirty. CI35189334761 exact770f532e conversionpassed/providerlastlive; no duplicates. Asked purchase-price correction vs current-only cost question; see item-everyday-editing.purchasePriceEditingQuestion. Await only affected edit, continue independent work. VendorO047 open; CopyIDs alreadydone. Private files preserved; oldCI failures retained.",
     "nextVerification": "CI35156566635 failed; no redispatch. Earlier failures retained.",
     "resaleBatchCI": {"run":35094251669,"attempt":1,"commit":"7836695f2a766960a1bd7de2644bc255d6bc63f0","status":"failed","url":"https://github.com/nine4-team/ledger-mobile/actions/runs/35094251669"},
     "returnBatchCI": {"run":35093201085,"attempt":1,"commit":"726431917f3acdd3091e7ca369222c5225c00754","status":"failed","url":"https://github.com/nine4-team/ledger-mobile/actions/runs/35093201085","reason":"PR1 conflicts suppress automatic PR CI.","lastObserved":"Conversion passed; provider failed at outdated physical-query classification; native skipped, aggregate failed. Local consumer fix passed60captures; property consumer149captures. No unchanged rerun."},

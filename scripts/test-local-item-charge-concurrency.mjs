@@ -390,6 +390,37 @@ try {
   await race('price-paid-rollback',collect('price-paid-rollback'),priceEdit('price-paid-rollback'),'rollback');
   assert.equal(sql("select phase from public.spike_operation_results where operation_id='edit-race-price-paid-rollback'"),'applied');
   console.log('PASS 3 price-command/collection races, including collection rollback');
+  for (const name of ['inventory-cost-change','inventory-access-change']) {
+    const id=source(name);
+    sql(`insert into public.spike_items(id,account_id,description,created_by_principal_id)
+      values('${id}','account-primary','Inventory price race','principal-owner');
+      insert into public.spike_item_placements(id,account_id,item_id,scope_kind,started_at,started_by_principal_id)
+      values('${id}','account-primary','${id}','business_inventory','2026-01-01','principal-owner');`);
+  }
+  const inventoryEdit = name => {
+    const id=source(name);
+    const command=JSON.stringify({operationId:'edit-'+id,accountId:'account-primary',actorPrincipalId:'principal-owner',
+      itemId:id,placementId:id,contractVersion:'item-inventory-price-edit-v2',createdAtMs:'1000',
+      expectedPriceRevision:'0',requestedPriceMinorUnits:'100',reviewedPriceMinorUnits:'100',currency:'USD',clearPrice:'false'});
+    return `set local role authenticated;
+      select set_config('request.jwt.claims','{"sub":"10000000-0000-0000-0000-000000000001","role":"authenticated"}',true);
+      select (public.spike_edit_uncollected_item_price('${command}')).phase;`;
+  };
+  sql(`insert into public.spike_transactions(id,account_id,amount_minor_units,currency,type,origin,scope_kind,category_id)
+    values('inventory-price-cost','account-primary',150,'USD','purchase','vendor_payment','business_inventory','category-furnishings');`);
+  await race('inventory-cost-change', `insert into public.transaction_receipt_items
+    (id,account_id,transaction_id,item_id,currency,amount_minor_units,membership_kind)
+    values('inventory-price-cost-line','account-primary','inventory-price-cost','race-inventory-cost-change','USD',150,'linked');`,
+    inventoryEdit('inventory-cost-change'),'commit');
+  assert.equal(sql("select phase||':'||error_code from public.spike_operation_results where operation_id='edit-race-inventory-cost-change'"),
+    'rejected:price_review_stale');
+  assert.equal(sql("select count(*) from ledger_private.item_project_prices where item_id='race-inventory-cost-change'"),'0');
+  await race('inventory-access-change', `update public.spike_account_memberships set financial_access='none'
+    where account_id='account-primary' and principal_id='principal-owner';`,
+    inventoryEdit('inventory-access-change'),'commit','42501');
+  assert.equal(sql("select count(*) from public.spike_operation_results where operation_id='edit-race-inventory-access-change'"),'0');
+  sql("update public.spike_account_memberships set financial_access='full' where account_id='account-primary' and principal_id='principal-owner';");
+  console.log('PASS Inventory edit rechecks committed acquisition cost and access revocation after lock waits');
   for(const [name,expenseFirst,release] of [['total-price-first',false,'commit'],['total-expense-first',true,'commit'],['total-rollback',false,'rollback']]) {
     prepare(name); prepareExpense(name);
     const id=source(name), invoice='live-'+id;
