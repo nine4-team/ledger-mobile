@@ -5,7 +5,7 @@ import PowerSync
 import Testing
 
 struct ItemDetailsEditQueueStorageTests {
-    @Test func encryptedRestartAndQueueValidation() async throws {
+    @Test(arguments: [false, true]) func encryptedRestartAndQueueValidation(market: Bool) async throws {
         let directory = FileManager.default.temporaryDirectory.appendingPathComponent("ledger-details-\(UUID())")
         try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
         defer { try? FileManager.default.removeItem(at: directory) }
@@ -19,7 +19,8 @@ struct ItemDetailsEditQueueStorageTests {
         let command = try EditItemDetailsCommand(operationId: id, accountId: account,
             actorPrincipalId: .init(validating: "actor"), capturedAt: Date(timeIntervalSince1970: 123),
             payload: .init(items: [.init(itemId: .init(validating: "item"), expectedRevision: 7)],
-                           changes: .init(sku: .clear, notes: .set("  notes  "), bookmark: false)))
+                           changes: .init(sku: .clear, notes: .set("  notes  "), bookmark: false,
+                               marketValue: market ? .set(Money(minorUnits: 9007199254740993, currency: try .init(validating: "USD"))) : nil)))
         let request = try EditItemDetailsUploadRequest(command)
         let json = String(decoding: try OperationContractCodec.encode(command.envelope), as: UTF8.self)
         let database = try LedgerPowerSyncDatabaseFactory.open(absolutePath: path, encryptionKey: key)
@@ -27,13 +28,13 @@ struct ItemDetailsEditQueueStorageTests {
             _ = try await database.execute(sql: """
                 INSERT INTO spike_local_operations(id,account_id,actor_principal_id,contract_version,fingerprint,
                   subject_id,local_state,accepted_at_ms,updated_at_ms,command_type,command_envelope_json)
-                VALUES (?,?,'actor','item-details-edit-v1',?,'item','queued',123000,123000,'edit_item_details',?)
-                """, parameters: [id.rawValue, account.rawValue, request.fingerprint, json])
+                VALUES (?,?,'actor',?,?,'item','queued',123000,123000,'edit_item_details',?)
+                """, parameters: [id.rawValue, account.rawValue, command.envelope.contractVersion.rawValue, request.fingerprint, json])
             _ = try await database.execute(sql: """
                 INSERT INTO spike_item_details_edit_commands
                   (id,account_id,actor_principal_id,item_id,contract_version,fingerprint,envelope_json)
-                VALUES (?,?,'actor','item','item-details-edit-v1',?,?)
-                """, parameters: [id.rawValue, account.rawValue, request.fingerprint, json])
+                VALUES (?,?,'actor','item',?,?,?)
+                """, parameters: [id.rawValue, account.rawValue, command.envelope.contractVersion.rawValue, request.fingerprint, json])
             try await database.close()
         } catch { try? await database.close(); throw error }
         let reopened = try LedgerPowerSyncDatabaseFactory.open(absolutePath: path, encryptionKey: key)

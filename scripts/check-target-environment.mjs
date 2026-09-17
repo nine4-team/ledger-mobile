@@ -608,6 +608,9 @@ if (
     ...runtimeSource.matchAll(/public\s+func\s+(\w+)/g),
   ].map((match) => match[1]);
   const expectedPublicRuntimeFunctions = [
+    "withProtectedReportActivity",
+    "itemDetailsEditStatus", "editItemDetails", "watchItemDetailsEdit",
+    "itemPriceEditStatus", "reviewItemPrice", "editItemPrice", "watchItemPriceEdit", "watchItemPriceReview",
     "readInvoicingCharges", "watchInvoicingCharges",
     "watchDownloadedTransactionAttachments", "readDownloadedTransactionAttachments",
     "loadDownloadedTransactionAttachment", "readTransactionExport",
@@ -1940,7 +1943,9 @@ if (
     }
     if (
       /PowerSync|Supabase|Firebase|Firestore|\bSQL\b|credential|\bsynced\b|\buploaded\b|remote(?:ly)? durable|safe to log out/i.test(
-        `${modelWithoutComments ?? ""}\n${viewWithoutComments ?? ""}`,
+        // The approved discard confirmation explicitly warns "not uploaded";
+        // that is not a claim of successful upload.
+        `${modelWithoutComments ?? ""}\n${viewWithoutComments ?? ""}`.replace(/not uploaded/g, "not transferred"),
       )
     ) {
       fail(
@@ -1990,7 +1995,9 @@ if (
         "Every runtime opening must construct exactly one fresh pending-work child inside start.",
       );
     }
-    for (const source of [modelCode ?? "", adapterCode ?? "", viewCode ?? ""]) {
+    // The view now owns approved, explicitly confirmed session-ending UI.
+    // The status model and adapter remain read-only.
+    for (const source of [modelCode ?? "", adapterCode ?? ""]) {
       if (
         /SessionEndDisposition|removeFromDevice|signOut\s*\(|logout\s*\(|delete\w*\s*\(|upload\w*\s*\(|synchroni[sz]e\w*\s*\(|\.close\s*\(/i.test(
           source,
@@ -2001,6 +2008,11 @@ if (
           "Pending-work staging leaves may only read and present local status.",
         );
       }
+    }
+    if (/delete\w*\s*\(|upload\w*\s*\(|\.close\s*\(/i.test(viewCode ?? "") ||
+        !(viewCode ?? "").includes("SessionEndPolicy.makeRequest(") ||
+        !(viewCode ?? "").includes("try await endSession?(request)")) {
+      fail("target_pending_work_session_boundary", "Session ending must use the typed policy and injected coordinator, not direct deletion/upload/close.");
     }
   }
   const clientArchiveStorePath = path.join(
@@ -2140,10 +2152,15 @@ if (
       startBoundary,
       failedCleanupBoundary,
     );
-    const failedCleanupBody = stagingAppSource.slice(
-      failedCleanupBoundary,
-      createClientBoundary,
+    // Follow the shared presentation teardown rather than requiring its body
+    // to be duplicated in every caller. Its ordering is still checked below.
+    const presentationStopBody = swiftFunctionBody(stagingAppSource, "private func stopPresentation(");
+    const expandPresentationStop = (body) => body?.replace(
+      "await stopPresentation()", presentationStopBody ?? "MISSING_PRESENTATION_TEARDOWN",
     );
+    const failedCleanupBody = expandPresentationStop(
+      swiftFunctionBody(stagingAppSource, "private func closeAfterFailedStart("),
+    ) ?? "";
     const stopBeforeClose = (source, closeCall) => {
       const stop = source.indexOf("await projectBrowser.stop()");
       const close = source.indexOf(closeCall);
@@ -2165,8 +2182,8 @@ if (
       return stop >= 0 && close > stop;
     };
     const pendingWorkStopBeforeClose = (signature, compactCloseCall) => {
-      const body = swiftFunctionBody(stagingAppSource, signature);
-      if (body === null) return false;
+      const body = expandPresentationStop(swiftFunctionBody(stagingAppSource, signature));
+      if (body == null) return false;
       const compactBody = body.replace(/\s+/g, "");
       const captureCall = "letpendingWork=self.pendingWork";
       const removeCall = "self.pendingWork=nil";
@@ -2405,9 +2422,15 @@ if (
     }
   }
   if (
-    /ProcessInfo\.processInfo\.environment|UserDefaults\.standard/.test(
-      targetAppSource,
-    )
+    swiftFiles(targetAppRoot).some((filePath) => {
+      const source = fs.readFileSync(filePath, "utf8");
+      // Synthetic UI fixture persistence is not a runtime backend selector.
+      // Only this wholly DEBUG-gated fixture may use UserDefaults.
+      const debugFixture = path.basename(filePath) === "ActiveWorkspaceChecklistUITestFixture.swift" &&
+        source.trim().startsWith("#if DEBUG") && source.trim().endsWith("#endif");
+      return /ProcessInfo\.processInfo\.environment/.test(source) ||
+        (!debugFixture && /UserDefaults\.standard/.test(source));
+    })
   ) {
     fail(
       "target_runtime_environment_toggle",
@@ -2559,6 +2582,7 @@ if (
     "project_expenses",
     "project_invoicing_item_charges",
     "transaction_receipts",
+    "item_invoice_history",
     "item_return_review",
     "physical_account_items",
     "spike_account_bootstrap",
@@ -2654,6 +2678,8 @@ const localOperationAcceptingStores = [
   ["SpaceChecklistRevisionPowerSyncStore", "SpaceChecklistRevisionPowerSyncStore.swift", "reviseSpaceChecklists"],
   ["CategoryManagementPowerSyncStore", "CategoryManagementPowerSyncStore.swift", "manageCategories"],
   ["InventorySalePowerSyncStore", "InventorySalePowerSyncStore.swift", "sellInventoryItems"],
+  ["ItemPriceEditPowerSyncStore", "ItemPriceEditPowerSyncStore.swift", "editUncollectedItemPrice"],
+  ["ItemDetailsEditPowerSyncStore", "ItemDetailsEditPowerSyncStore.swift", "editItemDetails"],
   ["ReturnUninvoicedItemsPowerSyncStore", "ReturnUninvoicedItemsPowerSyncStore.swift", "returnUninvoicedItems"],
   ["ExpenseCreationPowerSyncStore", "ExpenseCreationPowerSyncStore.swift", "createExpense"],
   ["InvoiceCreationPowerSyncStore", "InvoiceCreationPowerSyncStore.swift", "createInvoice"],
@@ -2697,7 +2723,7 @@ if (!fs.existsSync(localOperationGuardPath) || !fs.existsSync(localOperationGuar
   }
   const expectedInsertOnly = [
     "clientCommands", "projectCommands", "projectArchiveCommands", "clientArchiveCommands",
-    "spaceChecklistRevisionCommands", "categoryCommands", "inventorySaleCommands", "uninvoicedReturnCommands", "expenseCommands", "invoiceCommands", "feeCommands",
+    "spaceChecklistRevisionCommands", "categoryCommands", "inventorySaleCommands", "itemPriceEditCommands", "itemDetailsEditCommands", "uninvoicedReturnCommands", "expenseCommands", "invoiceCommands", "feeCommands",
   ];
   const insertOnlyBlock = guardCompact.match(
     /staticletinsertOnlyCommandTables=\[([^\]]*)\]/,
@@ -3151,7 +3177,7 @@ if (
   );
   const closeBody = swiftFunctionBody(
     itemSpaceAssignmentCoordinator,
-    "private func performClose() async",
+    "private func performClose(sessionEndRequest:",
   );
   const facadeSubmitBody = swiftFunctionBody(
     itemSpaceAssignmentRuntime,
@@ -3462,7 +3488,7 @@ if (
   );
   const closeBody = swiftFunctionBody(
     itemSpaceClearingCoordinator,
-    "private func performClose() async",
+    "private func performClose(sessionEndRequest:",
   );
   const facadeSubmitBody = swiftFunctionBody(
     itemSpaceClearingRuntime,

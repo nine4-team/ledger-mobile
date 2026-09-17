@@ -1,6 +1,6 @@
 {
   "schemaVersion": 2,
-  "stateVersion": 1330,
+  "stateVersion": 1343,
   "userRequestedPause": {
     "date": "2026-09-15",
     "status": "resumed",
@@ -58,11 +58,11 @@
     "acceptanceCheckIds": ["SALE-GENERAL","SALE-ATOMIC"],
     "meaning": "Story5 resale follow-up through existing Sell implementation; retain return batch and other workflows under their own acceptance records.",
     "verificationCommands": ["swift test --package-path LedgeriOS --no-parallel --filter ReturnUninvoicedItemsCommandTests"],
-    "lastResult": "CI35094251669 failed; later scoped passes do not waive it. PDF case-only assertion repair evidence: invoice-report-readback.liveInvoicePDFCaseDiagnosis. Current session-ending evidence stays with session-clean-logout.",
+    "lastResult": "Prior CI failures retained. PDF evidence: invoice-report-readback.liveInvoicePDFCaseDiagnosis; logout: session-clean-logout.",
     "activeProcesses": {},
     "integrationCI": {"run":35182985338,"attempt":1,"commit":"c3b942429662b21b7aedba90bc70cebcd01d4adb","status":"in_progress","meaning":"One integrated run after pushing coherent Item-edit+hosted proof batch. PR1 conflict prevents automatic PR checks. Earlier35156566635 failed (Mac count fixed locally/iOS cancelled); not waived. Continue independent work while CI runs; do not repeatedly poll or duplicate dispatch."},
     "desktopPrerequisite": "Mac UI70530: runner initialization failed, system authentication running; zero tests. /tmp/ledger-mac-invoice-followup-20260916.{log,xcresult}. Build passed. No unchanged retry; iOS unaffected.",
-    "immediateFollowup": "48672 price-editor stale stream + exact retry PASS2/45.121s recorded; save followup locally, no extra push/CI. CI35182985338 tests c3b94242 only. Asked O047 vendor question; no answer yet. Continue remaining Item monetary edits: existing ItemPriceEditing handles only positive uncollected Project charge, not inventory/current market value or purchase-cost correction. Read canonical items.md Price Invariant and owning accounting specs before extending; never rewrite original purchase/paid history. Earlier CI failures not waived. Preserve private .native-pdf-*; no local test running.",
+    "immediateFollowup": "Market v2 deployed64881; hosted5534 PASS1/26.690s; security advisor1140 only known password WARN. Evidence item-everyday-editing.marketHostedIntegration. Checkpoint reviewed market+boundary fixes, then continue approved Item gaps; exact-commit integration outstanding. CI35182985338 Mac failed stale checks repaired locally; iOS last live. No duplicate dispatch; O047 unanswered; private files preserved.",
     "nextVerification": "CI35156566635 failed; no redispatch. Earlier failures retained.",
     "resaleBatchCI": {"run":35094251669,"attempt":1,"commit":"7836695f2a766960a1bd7de2644bc255d6bc63f0","status":"failed","url":"https://github.com/nine4-team/ledger-mobile/actions/runs/35094251669"},
     "returnBatchCI": {"run":35093201085,"attempt":1,"commit":"726431917f3acdd3091e7ca369222c5225c00754","status":"failed","url":"https://github.com/nine4-team/ledger-mobile/actions/runs/35093201085","reason":"PR1 conflicts suppress automatic PR CI.","lastObserved":"Conversion passed; provider failed at outdated physical-query classification; native skipped, aggregate failed. Local consumer fix passed60captures; property consumer149captures. No unchanged rerun."},

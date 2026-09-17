@@ -4124,3 +4124,18 @@ within capacity and denies foreign/removed/limited access. Live replication
 delivers imported records and withdraws them after financial access changes.
 The temporary copier apply guard is removed; actual source copying still needs
 the existing explicit scope and isolation checks.
+
+### 2026-09-16 — Market-value edits reuse the Item-details operation
+
+Market value is the existing physical-report estimate, not acquisition cost,
+project charge, or payment evidence. Reuse the Item-details command, local queue,
+revision lock, receipt and editor rather than introduce another operation family.
+Commands containing an explicit market-value set/clear use `item-details-edit-v2`;
+commands without it retain v1 and their exact replay bytes. Keep v1 decoding and
+server handling for pending offline work. This requires corresponding native,
+MCP and Postgres changes before enabling the control; a Core type alone is not
+delivery. Nonnegative new values follow items.md; absence differs from zero,
+and readers preserve signed legacy evidence without silently repairing it.
+The existing market-value stream/read entitlement stays unchanged. Purchase,
+project-price and frozen accounting facts are never modified by this operation.
+Evidence and unfinished layers belong to `item-everyday-editing` in the checklist.

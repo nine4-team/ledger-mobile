@@ -98,6 +98,7 @@ enum LocalOperationIdentityGuard {
         "CategoryManagementPowerSyncStore",
         "InventorySalePowerSyncStore",
         "ItemPriceEditPowerSyncStore",
+        "ItemDetailsEditPowerSyncStore",
         "ReturnUninvoicedItemsPowerSyncStore",
         "ExpenseCreationPowerSyncStore",
         "InvoiceCreationPowerSyncStore",

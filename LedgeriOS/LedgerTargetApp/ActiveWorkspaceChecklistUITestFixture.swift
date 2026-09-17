@@ -757,6 +757,14 @@ private struct UITestFixtureSpaceDetailQuery: SpaceCoreDetailsQuerying {
 private struct UITestFixtureItemReader: DownloadedItemPlacementReading, DownloadedProjectItemsReading, DownloadedItemPlacementHistoryReading, AccountBusinessProfileReading, DownloadedItemImageReading, InventorySaleWorkflowServing, UninvoicedReturnWorkflowServing, ProjectInvoicingReading, ProjectInvoiceCreating, ProjectInvoiceRevising, ProjectFeeInstallmentCreating, ExpenseCreating, ExpenseEditing, ItemPriceEditing, ItemDetailsEditing {
     func editItemDetails(_ payload: EditItemDetailsCommand.Payload, operationUUID: UUID,
                          capturedAt: Date) async throws -> OperationReceipt {
+        if ProcessInfo.processInfo.arguments.contains("--ledger-ui-test-market-edit") {
+            let expected: EditItemDetailsCommand.MarketValueChange = ProcessInfo.processInfo.arguments.contains("--ledger-ui-test-market-clear")
+                ? .clear : .set(Money(minorUnits: 1500, currency: try .init(validating: "USD")))
+            guard payload.items == [.init(itemId: try .init(validating: "physical-ui-chair"), expectedRevision: 1)],
+                  payload.changes == .init(marketValue: expected) else { throw InventorySaleReview.Failure.invalidEvidence }
+            await saleAccepted?()
+            return .init(operationId: try .init(validating: operationUUID.uuidString), localState: .queued)
+        }
         if ProcessInfo.processInfo.arguments.contains("--ledger-ui-test-bulk-status") {
             guard payload.items.map(\.itemId.rawValue) == ["physical-ui-chair", "physical-ui-unassigned"],
                   payload.items.allSatisfy({ $0.expectedRevision == 1 }),
@@ -1459,7 +1467,8 @@ private struct UITestFixtureItemReader: DownloadedItemPlacementReading, Download
                 sku: "CHAIR-001", source: "Original vendor", currentSource: "Design Inventory",
                 notes: "Keep the woven seat dry.\nPlace beside the window.",
                 workflowStatusRaw: "to-purchase", isBookmarked: !bookmarkUpdated,
-                createdAt: "2026-09-01T11:00:00Z", itemRevision: bookmarkUpdated ? 2 : 1),
+                createdAt: "2026-09-01T11:00:00Z", itemRevision: bookmarkUpdated ? 2 : 1,
+                marketValue: Money(minorUnits: 1250, currency: .init(validating: "USD"))),
             currentBudgetCategoryName: inventory || ProcessInfo.processInfo.arguments.contains("--ledger-ui-test-category-unavailable")
                 ? nil : "Furniture",
             currentAccountingResolution: inventory || ProcessInfo.processInfo.arguments.contains("--ledger-ui-test-accounting-unavailable")

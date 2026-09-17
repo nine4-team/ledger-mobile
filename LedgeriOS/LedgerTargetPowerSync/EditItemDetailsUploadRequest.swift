@@ -76,7 +76,7 @@ struct EditItemDetailsUploadRequest: Sendable {
         enum Keys: String, CodingKey {
             case operationId, accountId, actorPrincipalId, contractVersion, createdAtMs, items, changes
         }
-        enum Fields: String, CodingKey { case name, sku, notes, status, bookmark }
+        enum Fields: String, CodingKey { case name, sku, notes, status, bookmark, marketValue }
         func encode(to encoder: Encoder) throws {
             let e = command.envelope
             var c = encoder.container(keyedBy: Keys.self)
@@ -102,6 +102,12 @@ struct EditItemDetailsUploadRequest: Sendable {
                 else { try fields.encode(status.rawValue, forKey: .status) }
             }
             try fields.encodeIfPresent(changes.bookmark, forKey: .bookmark)
+            switch changes.marketValue {
+            case .set(let value):
+                try fields.encode(["minorUnits": String(value.minorUnits), "currency": value.currency.rawValue], forKey: .marketValue)
+            case .clear: try fields.encodeNil(forKey: .marketValue)
+            case nil: break
+            }
         }
     }
 

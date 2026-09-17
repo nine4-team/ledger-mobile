@@ -11,11 +11,19 @@ public struct ItemDetailsEditDraft: Sendable {
     /// Nil preserves the original raw value, including unknown legacy statuses.
     public var selectedStatus: EditItemDetailsCommand.StatusChange?
     public var bookmark: Bool
+    public var marketValueText: String
 
     public init(itemId: ItemID, original: DownloadedItemDescriptiveDetails) {
         self.itemId = itemId; self.original = original
         name = original.displayName; sku = original.sku ?? ""; notes = original.notes ?? ""
         bookmark = original.isBookmarked ?? false
+        marketValueText = Self.marketText(original.marketValue)
+    }
+
+    private static func marketText(_ value: Money?) -> String {
+        guard let value else { return "" }
+        let magnitude = value.minorUnits.magnitude
+        return (value.minorUnits < 0 ? "-" : "") + "\(magnitude / 100)." + String(format: "%02llu", magnitude % 100)
     }
 
     /// Nil means unchanged Save: dismiss without creating an operation.
@@ -45,10 +53,20 @@ public struct ItemDetailsEditDraft: Sendable {
             return selected == original.workflowStatus ? nil : selection
         }
         let bookmarkChange: Bool? = bookmark == (original.isBookmarked ?? false) ? nil : bookmark
-        guard nameChange != nil || skuChange != nil || notesChange != nil || statusChange != nil || bookmarkChange != nil else { return nil }
+        var marketChange: EditItemDetailsCommand.MarketValueChange?
+        if marketValueText != Self.marketText(original.marketValue) {
+            if marketValueText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+                if original.marketValue != nil { marketChange = .clear }
+            } else {
+                let value = try Money.parseNonnegativeEntry(marketValueText,
+                    currency: original.marketValue?.currency ?? CurrencyCode(validating: "USD"))
+                if value != original.marketValue { marketChange = .set(value) }
+            }
+        }
+        guard nameChange != nil || skuChange != nil || notesChange != nil || statusChange != nil || bookmarkChange != nil || marketChange != nil else { return nil }
         guard let revision = original.itemRevision else { throw EditItemDetailsCommand.Failure.invalidSelection }
         return try .init(items: [.init(itemId: itemId, expectedRevision: revision)],
             changes: .init(name: nameChange, sku: skuChange, notes: notesChange,
-                status: statusChange, bookmark: bookmarkChange))
+                status: statusChange, bookmark: bookmarkChange, marketValue: marketChange))
     }
 }

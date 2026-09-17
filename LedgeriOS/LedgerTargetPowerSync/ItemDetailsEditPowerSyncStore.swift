@@ -70,14 +70,14 @@ actor ItemDetailsEditPowerSyncStore {
             _ = try local.execute(sql: """
                 INSERT INTO spike_local_operations(id,account_id,actor_principal_id,contract_version,fingerprint,
                   subject_id,local_state,accepted_at_ms,updated_at_ms,command_type,command_envelope_json)
-                VALUES (?,?,?,'item-details-edit-v1',?,?,'queued',?,?,'edit_item_details',?)
-                """, parameters: [e.operationId.rawValue,account.rawValue,principal.rawValue,request.fingerprint,
+                VALUES (?,?,?,?,?,?,'queued',?,?,'edit_item_details',?)
+                """, parameters: [e.operationId.rawValue,account.rawValue,principal.rawValue,e.contractVersion.rawValue,request.fingerprint,
                     subject,Int64(instant),Int64(instant),json])
             try checkpoint()
             _ = try local.execute(sql: """
                 INSERT INTO spike_item_details_edit_commands(id,account_id,actor_principal_id,item_id,
-                  contract_version,fingerprint,envelope_json) VALUES (?,?,?,?,'item-details-edit-v1',?,?)
-                """, parameters: [e.operationId.rawValue,account.rawValue,principal.rawValue,subject,request.fingerprint,json])
+                  contract_version,fingerprint,envelope_json) VALUES (?,?,?,?,?,?,?)
+                """, parameters: [e.operationId.rawValue,account.rawValue,principal.rawValue,subject,e.contractVersion.rawValue,request.fingerprint,json])
             try Task.checkCancellation()
             guard !fence.isRemoved else { throw LedgerOfflineClientRuntimeFailure.runtimeClosed }
             return OperationReceipt(operationId: e.operationId, localState: .queued)

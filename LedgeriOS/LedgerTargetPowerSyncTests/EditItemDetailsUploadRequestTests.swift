@@ -4,6 +4,27 @@ import LedgerTargetCore
 @testable import LedgerTargetPowerSync
 
 struct EditItemDetailsUploadRequestTests {
+    @Test func marketValueWireDistinguishesExactSetClearAndOmission() throws {
+        for change in [EditItemDetailsCommand.MarketValueChange.clear,
+                       .set(Money(minorUnits: 9007199254740993, currency: try .init(validating: "USD")))] {
+            let command = try EditItemDetailsCommand(operationId: .init(validating: "op"),
+                accountId: .init(validating: "account"), actorPrincipalId: .init(validating: "member"),
+                capturedAt: Date(timeIntervalSince1970: 123), payload: .init(items: [
+                    .init(itemId: .init(validating: "item"), expectedRevision: 3)
+                ], changes: .init(marketValue: change)))
+            let request = try EditItemDetailsUploadRequest(command)
+            let object = try #require(JSONSerialization.jsonObject(with: Data(request.commandJSON.utf8)) as? [String: Any])
+            #expect(object["contractVersion"] as? String == "item-details-edit-v2")
+            let fields = try #require(object["changes"] as? [String: Any])
+            #expect(fields.count == 1)
+            switch change {
+            case .clear: #expect(fields["marketValue"] is NSNull)
+            case .set:
+                #expect(fields["marketValue"] as? [String: String] == ["minorUnits": "9007199254740993", "currency": "USD"])
+            }
+        }
+    }
+
     @Test func sharedMCPDigest() throws {
         let account = try AccountID(validating: "account")
         let command = try EditItemDetailsCommand(operationId: ItemDetailsEditOperationIdentity.make(accountId: account,

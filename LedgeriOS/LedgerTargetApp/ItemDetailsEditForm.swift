@@ -3,7 +3,7 @@ import SwiftUI
 
 /// Target save binding; presentation and fields are the existing Item editor components.
 struct ItemDetailsEditForm: View {
-    enum Fields { case nameAndSKU, notes, workflowStatus }
+    enum Fields { case nameAndSKU, notes, workflowStatus, marketValue }
     let service: any ItemDetailsEditing
     let fields: Fields
     private let bulkRows: [PhysicalItemPlacement]?
@@ -44,7 +44,10 @@ struct ItemDetailsEditForm: View {
         ItemDetailsFormPresentation(title: title, isSaving: saving,
             isSaveDisabled: operationId != nil || draft.original.itemRevision == nil,
             error: error, hint: hint, closeTitle: operationId == nil ? "Cancel" : "Close", onSave: save) {
-                if fields == .notes {
+                if fields == .marketValue {
+                    FormField(label: "Market Value", text: $draft.marketValueText, placeholder: "0.00")
+                        .disabled(attempt != nil).accessibilityIdentifier("target-item-market-entry")
+                } else if fields == .notes {
                     NotesEditorField(text: $draft.notes)
                         .disabled(attempt != nil).accessibilityIdentifier("target-item-notes-entry")
                 } else if fields == .workflowStatus {
@@ -92,6 +95,7 @@ struct ItemDetailsEditForm: View {
         case .nameAndSKU: return "Edit Name and SKU"
         case .notes: return "Edit Notes"
         case .workflowStatus: return "Change Status"
+        case .marketValue: return "Edit Market Value"
         }
     }
 
@@ -125,7 +129,9 @@ struct ItemDetailsEditForm: View {
                 guard let payload else { dismiss(); return }
                 attempt = Attempt(payload: payload, id: UUID(), capturedAt: Date())
             } catch {
-                self.error = "This Item cannot be edited with the downloaded information. Refresh its details and try again."
+                self.error = fields == .marketValue
+                    ? "Enter a nonnegative market value with no more than two decimal places, or leave it blank to clear."
+                    : "This Item cannot be edited with the downloaded information. Refresh its details and try again."
                 return
             }
         }

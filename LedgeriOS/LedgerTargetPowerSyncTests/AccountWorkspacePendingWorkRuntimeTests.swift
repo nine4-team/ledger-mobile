@@ -2134,9 +2134,12 @@ struct AccountWorkspacePendingWorkRuntimeTests {
             let original = try #require(baseline)
             try await online.close()
             let detailsOffline = try await context.openRuntime()
+            let marketValue = Money(
+                minorUnits: 9007199254740993, currency: try .init(validating: "USD"))
             let detailsPayload = try EditItemDetailsCommand.Payload(items: [
                 .init(itemId: itemId, expectedRevision: try #require(original.itemRevision))
-            ], changes: .init(name: .set("Offline edited Item"), sku: .clear, notes: .set("  Kept exact\nnotes  ")))
+            ], changes: .init(name: .set("Offline edited Item"), sku: .clear, notes: .set("  Kept exact\nnotes  "),
+                             marketValue: .set(marketValue)))
             let detailsUUID = UUID(), detailsDate = Date()
             let detailsReceipt = try await detailsOffline.editItemDetails(detailsPayload,
                 operationUUID: detailsUUID, capturedAt: detailsDate)
@@ -2156,6 +2159,7 @@ struct AccountWorkspacePendingWorkRuntimeTests {
                 guard history.details?.name == "Offline edited Item" else { continue }
                 #expect(history.details?.sku == nil)
                 #expect(history.details?.notes == "  Kept exact\nnotes  ")
+                #expect(history.details?.marketValue == marketValue)
                 #expect(history.details?.itemRevision == detailsPayload.items[0].expectedRevision + 1)
                 break
             }
@@ -2163,6 +2167,7 @@ struct AccountWorkspacePendingWorkRuntimeTests {
             let final = try await context.openRuntime()
             let history = try await final.readDownloadedItemPlacementHistory(accountId: context.accountId, itemId: itemId)
             #expect(history.details?.name == "Offline edited Item")
+            #expect(history.details?.marketValue == marketValue)
             #expect(try await final.itemDetailsEditStatus(detailsReceipt.operationId)?.state.phase == .applied)
             try await final.close()
         }

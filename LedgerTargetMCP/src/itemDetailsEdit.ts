@@ -9,6 +9,11 @@ const identifier = z.string().refine(value => {
 const revision = z.string().refine(value => /^[1-9][0-9]*$/.test(value)
   && value.length <= 19 && BigInt(value) < 9223372036854775807n);
 const text = z.string().refine(value => !value.includes("\0")).nullable();
+const marketValue = z.object({
+  minorUnits: z.string().refine(value => /^(0|[1-9][0-9]*)$/.test(value)
+    && value.length <= 19 && BigInt(value) <= 9223372036854775807n),
+  currency: z.string().regex(/^[A-Z]{3}$/),
+}).strict().nullable();
 export const itemDetailsEditInputSchema = z.object({
   operationUUID: z.string().regex(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/),
   clientCreatedAtMilliseconds: z.number().int().nonnegative().max(999_999_999_999_999),
@@ -16,7 +21,7 @@ export const itemDetailsEditInputSchema = z.object({
     items: z.array(z.object({ itemId: identifier, expectedRevision: revision }).strict()).min(1),
     changes: z.object({ name: text.optional(), sku: text.optional(), notes: text.optional(),
       status: z.enum(["to purchase", "purchased", "to return", "returned"]).nullable().optional(),
-      bookmark: z.boolean().optional() }).strict(),
+      bookmark: z.boolean().optional(), marketValue: marketValue.optional() }).strict(),
   }).strict().refine(value => {
     const keys = Object.keys(value.changes).filter(key => value.changes[key as keyof typeof value.changes] !== undefined);
     return keys.length > 0 && new Set(value.items.map(item => item.itemId)).size === value.items.length
@@ -36,7 +41,8 @@ export function makeItemDetailsEditRequest(input: ItemDetailsEditInput, context:
   const actorPrincipalId = validateIdentifier(context.principalId, "account_not_authorized");
   const operationId = `item-details-edit-${createHash("sha256").update(accountId).digest("hex")}-${parsed.data.operationUUID}`;
   const commandJSON = canonicalJSON({ ...parsed.data.payload, operationId, accountId, actorPrincipalId,
-    contractVersion: "item-details-edit-v1", createdAtMs: String(parsed.data.clientCreatedAtMilliseconds) }, "item_edit_invalid");
+    contractVersion: parsed.data.payload.changes.marketValue === undefined ? "item-details-edit-v1" : "item-details-edit-v2",
+    createdAtMs: String(parsed.data.clientCreatedAtMilliseconds) }, "item_edit_invalid");
   return { operationId, accountId, actorPrincipalId, itemId: parsed.data.payload.items[0]!.itemId,
     createdAtMs: parsed.data.clientCreatedAtMilliseconds, commandJSON,
     fingerprint: createHash("sha256").update(commandJSON).digest("hex") };
@@ -48,7 +54,7 @@ export function validateItemDetailsEditResult(value: unknown, request: ItemDetai
   const row = value as Record<string, unknown>;
   if (row.operation_id !== request.operationId || row.account_id !== request.accountId
     || row.actor_principal_id !== request.actorPrincipalId || row.subject_id !== request.itemId
-    || row.command_type !== "edit_item_details" || row.contract_version !== "item-details-edit-v1"
+    || row.command_type !== "edit_item_details" || row.contract_version !== JSON.parse(request.commandJSON).contractVersion
     || row.command_fingerprint !== request.fingerprint || row.envelope_sha256 !== request.fingerprint
     || row.request_sha256 != null || row.client_created_at_ms !== request.createdAtMs
     || !Number.isSafeInteger(row.server_received_at_ms) || !Number.isSafeInteger(row.completed_at_ms)

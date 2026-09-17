@@ -580,6 +580,7 @@ struct DownloadedItemDetailView: View {
     @State private var notesExpanded = true
     @State private var showingNotesEdit = false
     @State private var showingStatusEdit = false
+    @State private var showingMarketEdit = false
     @State private var detailsExpanded = true
     @State private var historyExpanded = true
     @State private var copyFailed = false
@@ -669,6 +670,14 @@ struct DownloadedItemDetailView: View {
                 ItemDetailsEditForm(itemId: itemId, details: details, service: service, fields: .notes)
             }
         }
+        .sheet(isPresented: $showingMarketEdit) {
+            if let service = reader as? any ItemDetailsEditing,
+               case .downloaded(let history) = model.state,
+               history.accountId == accountId, history.itemId == itemId,
+               let details = history.details {
+                ItemDetailsEditForm(itemId: itemId, details: details, service: service, fields: .marketValue)
+            }
+        }
         .sheet(isPresented: $showingDetailsEdit) {
             if let service = reader as? any ItemDetailsEditing,
                case .downloaded(let history) = model.state,
@@ -708,6 +717,8 @@ struct DownloadedItemDetailView: View {
                                 .accessibilityIdentifier("target-item-detail-edit-details")
                             Button("Change Status") { showingStatusEdit = true }
                                 .accessibilityIdentifier("target-item-detail-edit-status")
+                            Button("Edit Market Value") { showingMarketEdit = true }
+                                .accessibilityIdentifier("target-item-edit-market-value")
                         }
                         if reader is any InventorySaleWorkflowServing,
                            case .downloaded(let history) = model.state,
@@ -857,6 +868,9 @@ struct DownloadedItemDetailView: View {
                     detailField("Source / vendor", details.source, id: "target-item-detail-source")
                     detailField("Immediate source", details.displaySource, id: "target-item-detail-current-source")
                     detailField("SKU", details.sku, id: "target-item-detail-sku")
+                    detailField("Market value", details.marketValue.map {
+                        (Decimal($0.minorUnits) / 100).formatted(.currency(code: $0.currency.rawValue))
+                    }, id: "target-item-detail-market-value")
                     detailField("Workflow status", details.workflowStatus.displayLabel, id: "target-item-detail-workflow")
                     detailField("Bookmarked", details.isBookmarked.map { $0 ? "Yes" : "No" }, id: "target-item-detail-bookmark")
                     detailField("Created", details.createdAt, id: "target-item-detail-created")

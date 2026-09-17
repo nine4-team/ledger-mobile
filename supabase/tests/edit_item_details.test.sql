@@ -63,5 +63,32 @@ set local role authenticated;
 select is((public.spike_edit_item_details(pg_temp.details_command('details-endpoint','{"notes":"Member edit"}',
  '[{"itemId":"details-b","expectedRevision":"1"}]'))).phase,'applied','Non-financial member uses actual endpoint');
 reset role;
+insert into public.spike_items(id,account_id,description,created_by_principal_id)
+values('details-market','account-primary','Market estimate','principal-owner');
+create function pg_temp.market_command(op text, fields jsonb, revision text default '1')
+returns text language sql as $$
+ select (pg_temp.details_command(op,fields,jsonb_build_array(jsonb_build_object(
+   'itemId','details-market','expectedRevision',revision)))::jsonb
+   || jsonb_build_object('contractVersion','item-details-edit-v2'))::text;
+$$;
+set local role authenticated;
+select is((public.spike_edit_item_details(pg_temp.market_command('market-set',
+ '{"marketValue":{"minorUnits":"9007199254740993","currency":"USD"}}'))).phase,'applied','Market estimate member edit applies exactly');
+select is((public.spike_edit_item_details(pg_temp.market_command('market-set',
+ '{"marketValue":{"minorUnits":"9007199254740993","currency":"USD"}}'))).contract_version,'item-details-edit-v2','V2 retry preserves receipt version');
+reset role;
+select is((select market_value_minor_units from spike_items where id='details-market'),9007199254740993::bigint,'Market amount does not round');
+select is((select revision from spike_items where id='details-market'),2::bigint,'V2 replay applies once');
+select is((ledger_private.edit_item_details(pg_temp.market_command('market-stale','{"marketValue":null}'))).error_code,'item_edit_stale','Stale clear rejected');
+select is((ledger_private.edit_item_details(pg_temp.market_command('market-zero','{"marketValue":{"minorUnits":"0","currency":"USD"}}','2'))).phase,'applied','Zero is a value');
+select is((select market_value_minor_units from spike_items where id='details-market'),0::bigint,'Zero persisted');
+select is((ledger_private.edit_item_details(pg_temp.market_command('market-clear','{"marketValue":null}','3'))).phase,'applied','Explicit clear applies');
+select ok((select market_value_minor_units is null and market_value_currency is null from spike_items where id='details-market'),'Clear removes amount and currency together');
+select throws_ok(format('select ledger_private.edit_item_details(%L)',pg_temp.market_command('market-negative',
+ '{"marketValue":{"minorUnits":"-1","currency":"USD"}}','4')),'22023','Invalid market value','Negative new estimate refused');
+select throws_ok(format('select ledger_private.edit_item_details(%L)',pg_temp.market_command('market-overflow',
+ '{"marketValue":{"minorUnits":"9223372036854775808","currency":"USD"}}','4')),'22023','Invalid market value','Overflow refused');
+select throws_ok(format('select ledger_private.edit_item_details(%L)',pg_temp.market_command('market-missing-currency',
+ '{"marketValue":{"minorUnits":"1"}}','4')),'22023','Invalid market value','Incomplete money refused');
 select * from finish();
 rollback;

@@ -2,6 +2,27 @@ import Testing
 @testable import LedgerTargetCore
 
 struct ItemDetailsEditDraftTests {
+    @Test func marketDraftDistinguishesClearZeroNoOpAndInvalid() throws {
+        let usd = try CurrencyCode(validating: "USD")
+        var draft = ItemDetailsEditDraft(itemId: try .init(validating: "item"),
+            original: .init(description: "Chair", itemRevision: 3,
+                marketValue: Money(minorUnits: 1250, currency: usd)))
+        #expect(draft.marketValueText == "12.50")
+        draft.marketValueText = "12.5"
+        #expect(try draft.payload() == nil)
+        draft.marketValueText = "0"
+        #expect(try draft.payload()?.changes.marketValue == .set(Money(minorUnits: 0, currency: usd)))
+        draft.marketValueText = ""
+        #expect(try draft.payload()?.changes.marketValue == .clear)
+        draft.marketValueText = "oops"
+        #expect(throws: (any Error).self) { try draft.payload() }
+        let legacy = ItemDetailsEditDraft(itemId: try .init(validating: "legacy"),
+            original: .init(description: "Legacy", itemRevision: 1,
+                marketValue: Money(minorUnits: -1, currency: usd)))
+        #expect(legacy.marketValueText == "-0.01")
+        #expect(try legacy.payload() == nil)
+    }
+
     @Test func bulkStatusKeepsWholeSelectionAndRevisionsAndSkipsNoOp() throws {
         let first = try PhysicalItemPlacement(itemId: .init(validating: "one"), description: "Chair",
             itemRevision: 3, placementId: .init(validating: "p-one"), scope: .businessInventory,

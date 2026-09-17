@@ -240,12 +240,26 @@ struct CurrentItemPlacementLocalReader: Sendable {
         guard bookmark == nil || bookmark == 0 || bookmark == 1 else {
             throw CurrentItemPlacementReadFailure.incompleteOrConflictingPlacement
         }
+        let amountText = try cursor.getStringOptional(name: "market_value_minor_units")
+        let currency = try cursor.getStringOptional(name: "market_value_currency")
+        let marketValue: Money?
+        if let amountText, let currency {
+            guard let amount = Int64(amountText), String(amount) == amountText else {
+                throw CurrentItemPlacementReadFailure.incompleteOrConflictingPlacement
+            }
+            marketValue = try Money(minorUnits: amount, currency: .init(validating: currency))
+        } else {
+            guard amountText == nil && currency == nil else {
+                throw CurrentItemPlacementReadFailure.incompleteOrConflictingPlacement
+            }
+            marketValue = nil
+        }
         let details = try DownloadedItemDescriptiveDetails(name: cursor.getStringOptional(name: "name"),
             description: cursor.getString(name: "raw_description"), sku: cursor.getStringOptional(name: "sku"),
             source: cursor.getStringOptional(name: "source"), currentSource: cursor.getStringOptional(name: "current_source"),
             notes: cursor.getStringOptional(name: "notes"), workflowStatusRaw: cursor.getStringOptional(name: "workflow_status"),
             isBookmarked: bookmark.map { $0 == 1 }, createdAt: cursor.getStringOptional(name: "created_at"),
-            itemRevision: cursor.getInt64(name: "revision"))
+            itemRevision: cursor.getInt64(name: "revision"), marketValue: marketValue)
         guard let id = try cursor.getStringOptional(name: "placement_id") else {
             return HistoryRow(description: description, interval: nil, details: details)
         }
@@ -286,7 +300,8 @@ struct CurrentItemPlacementLocalReader: Sendable {
         SELECT EXISTS(SELECT 1 FROM spike_account_memberships
           WHERE account_id=? AND principal_id=? AND state='active') AS is_active
       ), selected_item AS (
-        SELECT id,account_id,name,description,revision,sku,source,current_source,notes,workflow_status,bookmark,created_at
+        SELECT id,account_id,name,description,revision,sku,source,current_source,notes,workflow_status,bookmark,created_at,
+          market_value_minor_units,market_value_currency
         FROM spike_items WHERE account_id=? AND id=?
       ), placements AS (
         SELECT p.* FROM spike_item_placements p JOIN selected_item i
@@ -303,6 +318,7 @@ struct CurrentItemPlacementLocalReader: Sendable {
       SELECT access.is_active,COALESCE(i.name,i.description) AS description,i.revision,validity.invalid_count,
         (SELECT count(*) FROM spike_local_operations) AS pending_change_signal,
         i.name,i.description AS raw_description,i.sku,i.source,i.current_source,i.notes,i.workflow_status,i.bookmark,i.created_at,
+        i.market_value_minor_units,i.market_value_currency,
         p.id AS placement_id,p.scope_kind,p.project_id,p.space_id,p.started_at,p.ended_at,p.start_evidence,
         project.display_name AS project_name,space.display_name AS space_name,
         i.account_id AS item_account,i.id AS history_item_id,

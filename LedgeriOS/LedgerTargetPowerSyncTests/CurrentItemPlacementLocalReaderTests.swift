@@ -300,6 +300,8 @@ struct CurrentItemPlacementLocalReaderTests {
             #expect(details.name == "" && details.displayName == "")
             #expect(details.description == "Chair")
             #expect(details.itemRevision == 1)
+            #expect(details.marketValue?.minorUnits == 9007199254740993)
+            #expect(details.marketValue?.currency.rawValue == "USD")
             #expect(details.notes == "  Notes\nsecond line  ")
             #expect(details.sku == " SKU " && details.source == " Vendor ")
             #expect(details.currentSource == "" && details.displaySource == "")
@@ -322,7 +324,31 @@ struct CurrentItemPlacementLocalReaderTests {
         }) { db in
             let reader = CurrentItemPlacementLocalReader(database: db)
             #expect(try await reader.readHistory(accountId: account, principalId: principal, itemId: item).details?.notes == nil)
+            _ = try await db.execute(sql: "UPDATE spike_items SET market_value_minor_units='9007199254740993',market_value_currency='USD' WHERE id='chair'", parameters: nil)
             _ = try await db.execute(sql: "UPDATE spike_items SET name='',sku=' SKU ',source=' Vendor ',current_source='',notes=?,workflow_status='to-purchase',bookmark=1,created_at='2026-01-01T12:34:56.123456789Z' WHERE id='chair'", parameters: ["  Notes\nsecond line  "])
+        }
+    }
+
+    @Test("Market estimates preserve absent, zero and signed legacy evidence and reject malformed values")
+    func marketValueEvidence() async throws {
+        try await withDatabase { db in
+            let reader = CurrentItemPlacementLocalReader(database: db)
+            let item = try ItemID(validating: "chair")
+            #expect(try await reader.readHistory(accountId: account, principalId: principal, itemId: item).details?.marketValue == nil)
+            for amount in ["1.5", "1e2", "9223372036854775808", "01"] {
+                _ = try await db.execute(sql: "UPDATE spike_items SET market_value_minor_units=?,market_value_currency='USD' WHERE id='chair'", parameters: [amount])
+                await #expect(throws: CurrentItemPlacementReadFailure.incompleteOrConflictingPlacement) {
+                    try await reader.readHistory(accountId: account, principalId: principal, itemId: item)
+                }
+            }
+            _ = try await db.execute(sql: "UPDATE spike_items SET market_value_minor_units='0',market_value_currency=NULL WHERE id='chair'", parameters: nil)
+            await #expect(throws: CurrentItemPlacementReadFailure.incompleteOrConflictingPlacement) {
+                try await reader.readHistory(accountId: account, principalId: principal, itemId: item)
+            }
+            for amount in ["0", "-1"] {
+                _ = try await db.execute(sql: "UPDATE spike_items SET market_value_minor_units=?,market_value_currency='USD' WHERE id='chair'", parameters: [amount])
+                #expect(try await reader.readHistory(accountId: account, principalId: principal, itemId: item).details?.marketValue?.minorUnits == Int64(amount))
+            }
         }
     }
 

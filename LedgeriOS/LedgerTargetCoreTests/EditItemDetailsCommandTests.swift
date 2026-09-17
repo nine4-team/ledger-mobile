@@ -3,6 +3,21 @@ import Testing
 @testable import LedgerTargetCore
 
 struct EditItemDetailsCommandTests {
+    @Test func marketValueVersionsPreserveOldCommandsAndExactClear() throws {
+        let usd = try CurrencyCode(validating: "USD")
+        for change in [EditItemDetailsCommand.MarketValueChange.clear, .set(Money(minorUnits: 0, currency: usd)),
+                       .set(Money(minorUnits: 9007199254740993, currency: usd))] {
+            let value = try command(.init(marketValue: change))
+            #expect(value.envelope.contractVersion.rawValue == "item-details-edit-v2")
+            let bytes = try OperationContractCodec.encode(value)
+            #expect(try OperationContractCodec.decode(EditItemDetailsCommand.self, from: bytes).envelope.payload.changes.marketValue == change)
+        }
+        #expect(try command(.init(bookmark: true)).envelope.contractVersion.rawValue == "item-details-edit-v1")
+        #expect(throws: EditItemDetailsCommand.Failure.invalidMarketValue) {
+            try command(.init(marketValue: .set(Money(minorUnits: -1, currency: usd))))
+        }
+    }
+
     private func command(_ changes: EditItemDetailsCommand.Changes) throws -> EditItemDetailsCommand {
         try .init(operationId: .init(validating: "edit"), accountId: .init(validating: "account"),
             actorPrincipalId: .init(validating: "actor"), capturedAt: Date(timeIntervalSince1970: 100),

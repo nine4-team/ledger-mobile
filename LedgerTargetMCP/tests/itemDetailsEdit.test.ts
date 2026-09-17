@@ -7,6 +7,19 @@ import { InMemoryTransport } from "@modelcontextprotocol/sdk/inMemory.js";
 import { itemDetailsEditInputSchema, makeItemDetailsEditRequest, validateItemDetailsEditResult } from "../src/itemDetailsEdit.js";
 
 const context = { accountId: "account", principalId: "member", accessToken: "user-token" };
+test("market values use v2 exact amounts and explicit clears without changing v1", () => {
+  for (const marketValue of [null, { minorUnits: "9007199254740993", currency: "USD" }, { minorUnits: "0", currency: "USD" }]) {
+    const value = { ...input, payload: { ...input.payload, changes: { marketValue } } };
+    const request = makeItemDetailsEditRequest(value, context);
+    assert.equal(JSON.parse(request.commandJSON).contractVersion, "item-details-edit-v2");
+    assert.deepEqual(JSON.parse(request.commandJSON).changes, { marketValue });
+  }
+  assert.equal(JSON.parse(makeItemDetailsEditRequest(input, context).commandJSON).contractVersion, "item-details-edit-v1");
+  for (const minorUnits of ["-1", "1.2", "01", "9223372036854775808"]) {
+    assert.equal(itemDetailsEditInputSchema.safeParse({ ...input, payload: { ...input.payload,
+      changes: { marketValue: { minorUnits, currency: "USD" } } } }).success, false);
+  }
+});
 const input = { operationUUID: "11111111-2222-3333-4444-555555555555", clientCreatedAtMilliseconds: 123000,
   payload: { items: [{ itemId: "item", expectedRevision: "9223372036854775806" }],
     changes: { sku: null, notes: "", bookmark: false } } };

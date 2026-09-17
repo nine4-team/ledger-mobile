@@ -107,8 +107,9 @@ try {
     const [facts]=historySQL(`select
       (select amount_minor_units::text from ledger_private.item_project_prices where account_id=${q(account)} and item_id=${q(item)}) as price,
       (select amount_minor_units::text from ledger_private.item_charge_occurrences where id=${q(id+'-charge')}) as charge,
+      (select market_value_minor_units::text from public.spike_items where account_id=${q(account)} and id=${q(item)}) as market,
       (select count(*) from public.spike_transactions where account_id=${q(account)} and project_id=${q(project)}) as payments;`);
-    assert.deepEqual(facts,{price:'12347',charge:'12347',payments:0});
+    assert.deepEqual(facts,{price:'12347',charge:'12347',market:'9007199254740993',payments:0});
     console.log(JSON.stringify({hostedPricePassed:true,project,item,...facts}));
   } else if(sessionFlow) {
     const run=spawnSync('swift',['test','--package-path','LedgeriOS','--no-parallel','--filter','AccountWorkspacePendingWorkRuntimeTests/hostedSessionSyncThenLogout'],{

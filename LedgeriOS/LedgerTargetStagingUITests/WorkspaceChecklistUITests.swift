@@ -3986,6 +3986,44 @@ final class WorkspaceChecklistUITests: XCTestCase {
         try exerciseItemPriceEditor(retry: false)
     }
 
+    func testItemMarketValueCancelUnchangedAndSave() throws { try exerciseItemMarketValue(clear: false) }
+    func testItemMarketValueExplicitClear() throws { try exerciseItemMarketValue(clear: true) }
+
+    private func exerciseItemMarketValue(clear: Bool) throws {
+        continueAfterFailure = false
+        let app = XCUIApplication()
+        app.launchArguments = ["--ledger-ui-test-workspace-checklist", "--ledger-ui-test-item-detail-copy", "--ledger-ui-test-market-edit"]
+        if clear { app.launchArguments.append("--ledger-ui-test-market-clear") }
+        app.launch(); defer { app.terminate() }
+        let project = app.buttons["target-active-project-card-project-ui-test"]
+        XCTAssertTrue(project.waitForExistence(timeout: 10)); project.tap()
+        let item = app.buttons["target-physical-item-physical-ui-chair"]
+        reveal(item, in: app, fullyInsideScrollView: true); item.tap()
+        func openEditor() {
+            app.buttons["target-item-detail-actions"].tap()
+            app.buttons["Edit Market Value"].tap()
+            XCTAssertTrue(app.textFields["0.00"].waitForExistence(timeout: 5))
+            XCTAssertEqual(app.textFields["0.00"].value as? String, "12.50")
+        }
+        openEditor(); app.buttons["Cancel"].tap()
+        XCTAssertTrue(app.buttons["Save Changes"].waitForNonExistence(timeout: 5))
+        openEditor(); app.buttons["Save Changes"].tap()
+        XCTAssertTrue(app.buttons["Save Changes"].waitForNonExistence(timeout: 5))
+        openEditor()
+        let field = app.textFields["0.00"]
+        field.tap()
+        #if os(macOS)
+        field.typeKey("a", modifierFlags: .command); field.typeKey(.delete, modifierFlags: [])
+        #else
+        field.typeText(String(repeating: XCUIKeyboardKey.delete.rawValue, count: 5))
+        #endif
+        if !clear { field.typeText("15.00") }
+        app.buttons["Save Changes"].tap()
+        XCTAssertTrue(app.staticTexts["Saved on this device. Waiting to sync; you can close this form."].waitForExistence(timeout: 5))
+        XCTAssertFalse(app.buttons["Save Changes"].isEnabled)
+        XCTAssertEqual(app.staticTexts["target-ui-fixture-acceptance-count"].value as? String, "1")
+    }
+
     func testItemPriceEditorRetriesSameAcceptedEdit() throws {
         try exerciseItemPriceEditor(retry: true)
     }
