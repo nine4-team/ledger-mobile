@@ -2764,11 +2764,17 @@ if (!fs.existsSync(localOperationGuardPath) || !fs.existsSync(localOperationGuar
     const code = (swiftWithoutComments(source) ?? "").replace(/\s+/g, "");
     const guardIndex = code.indexOf("LocalOperationIdentityGuard.inspect(");
     const firstWriteIndex = code.indexOf("INSERTINTO");
-    // Invoice creation and revision share one guarded writer; both retain their
-    // distinct command family rather than masquerading as a creation.
+    // Shared writers retain distinct command families, not a fixed default.
+    const transactionWork = provider === "TransactionDetailsEditPowerSyncStore"
+      ? (swiftWithoutComments(fs.readFileSync(path.join(powerSyncRoot, "TransactionEditWork.swift"), "utf8")) ?? "").replace(/\s+/g, "")
+      : "";
     const expectedFamilyPresent = provider === "InvoiceCreationPowerSyncStore"
       ? code.includes("letfamily:LocalOperationCommandFamily=revision==nil?.createInvoice:.reviseCreatedInvoice") &&
         code.includes("expectedFamily:family")
+      : provider === "TransactionDetailsEditPowerSyncStore"
+      ? code.includes("expectedFamily:e.kind.family") &&
+        code.includes("submit(.details(command))") && code.includes("submit(.receiptLines(command))") &&
+        transactionWork.includes("self==.details?.editTransactionDetails:.editTransactionReceiptLines")
       : code.includes(`expectedFamily:.${family}`);
     if (
       guardIndex < 0 || firstWriteIndex < 0 || guardIndex >= firstWriteIndex ||
