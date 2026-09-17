@@ -1454,11 +1454,16 @@ final class WorkspaceChecklistUITests: XCTestCase {
         try exerciseInvoicingUnavailable(streamEnds: false)
     }
 
-    private func exerciseInvoicingUnavailable(streamEnds: Bool) throws {
+    func testInvoicingRecoversAfterUnavailableData() throws {
+        try exerciseInvoicingUnavailable(streamEnds: false, recovers: true)
+    }
+
+    private func exerciseInvoicingUnavailable(streamEnds: Bool, recovers: Bool = false) throws {
         continueAfterFailure = false
         let app = XCUIApplication()
         app.launchArguments = ["--ledger-ui-test-workspace-checklist", "--ledger-ui-test-item-credit",
-            "--ledger-ui-test-paid-expense", streamEnds ? "--ledger-ui-test-invoicing-stream-end" : "--ledger-ui-test-expense-withdrawal"]
+            "--ledger-ui-test-paid-expense", recovers ? "--ledger-ui-test-invoicing-readiness-recovery"
+                : streamEnds ? "--ledger-ui-test-invoicing-stream-end" : "--ledger-ui-test-expense-withdrawal"]
         app.launch(); defer { app.terminate() }
         let project = app.buttons["target-active-project-card-project-ui-test"]
         XCTAssertTrue(project.waitForExistence(timeout: 10)); project.tap()
@@ -1478,6 +1483,15 @@ final class WorkspaceChecklistUITests: XCTestCase {
         XCTAssertFalse(credit.exists)
         XCTAssertTrue(app.staticTexts["Invoices are unavailable."].exists)
         XCTAssertFalse(app.progressIndicators["Downloading Invoices"].exists)
+        if recovers {
+            XCUIDevice.shared.press(.home); app.activate()
+            XCTAssertTrue(invoice.waitForExistence(timeout: 5))
+            XCTAssertFalse(app.staticTexts["Invoices are unavailable."].exists)
+            reveal(expense, in: app); XCTAssertTrue(expense.exists)
+            reveal(credit, in: app); XCTAssertTrue(credit.exists)
+            XCTAssertFalse(app.staticTexts["Expenses are unavailable."].exists)
+            XCTAssertFalse(app.staticTexts["Item charges are unavailable."].exists)
+        }
     }
     #endif
 

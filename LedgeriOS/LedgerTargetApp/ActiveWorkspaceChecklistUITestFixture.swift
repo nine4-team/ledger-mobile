@@ -1303,6 +1303,12 @@ private struct UITestFixtureItemReader: DownloadedItemPlacementReading, Download
                             expenseAccess.withdraw()
                             continuation.yield(nil)
                         }
+                    } else if ProcessInfo.processInfo.arguments.contains("--ledger-ui-test-invoicing-readiness-recovery") {
+                        var unavailable = false
+                        for await _ in NotificationCenter.default.notifications(named: UIApplication.didBecomeActiveNotification).map({ _ in true }) {
+                            unavailable.toggle()
+                            continuation.yield(unavailable ? nil : try await readExpenses(accountId: accountId, projectId: projectId))
+                        }
                     } else if ProcessInfo.processInfo.arguments.contains("--ledger-ui-test-invoicing-stream-end") {
                         for await _ in NotificationCenter.default.notifications(named: UIApplication.didBecomeActiveNotification).map({ _ in true }) {
                             continuation.finish()
