@@ -1,6 +1,6 @@
 {
   "schemaVersion": 2,
-  "stateVersion": 1358,
+  "stateVersion": 1360,
   "userRequestedPause": {
     "date": "2026-09-15",
     "status": "resumed",
@@ -62,7 +62,7 @@
     "activeProcesses": {},
     "integrationCI": {"run":35189334761,"attempt":1,"commit":"770f532e","status":"queued","meaning":"One integration dispatch after coherent Inventory editing batch push; conflictingPR1 prevents automatic CI. Earlier35182985338 failedMac/iOScancelled; validator fixes now included, failures not waived. Continue independent work; no duplicate dispatch."},
     "desktopPrerequisite": "Mac UI70530: runner initialization failed, system authentication running; zero tests. /tmp/ledger-mac-invoice-followup-20260916.{log,xcresult}. Build passed. No unchanged retry; iOS unaffected.",
-    "immediateFollowup": "78791 cost/access races PASS; test followup dirty. CI35189334761 exact770f532e conversionpassed/providerlastlive; no duplicates. Asked purchase-price correction vs current-only cost question; see item-everyday-editing.purchasePriceEditingQuestion. Await only affected edit, continue independent work. VendorO047 open; CopyIDs alreadydone. Private files preserved; oldCI failures retained.",
+    "immediateFollowup": "ClientSummary55800 iPhone4states PASS49.165s,54811 model5PASS/.004s. Tests dirty, owner client-summary-physical-readback; next retain coherent checkpoint and resolve remaining whole-workflow evidence/hosted gaps. No newUI. f38435c9 local. CI35189334761 exact770f532e conversion/providerPASS/native lastlive; no duplicates. Purchase-price/vendorO047 unanswered. Private files preserved; priorCI failures retained.",
     "nextVerification": "CI35156566635 failed; no redispatch. Earlier failures retained.",
     "resaleBatchCI": {"run":35094251669,"attempt":1,"commit":"7836695f2a766960a1bd7de2644bc255d6bc63f0","status":"failed","url":"https://github.com/nine4-team/ledger-mobile/actions/runs/35094251669"},
     "returnBatchCI": {"run":35093201085,"attempt":1,"commit":"726431917f3acdd3091e7ca369222c5225c00754","status":"failed","url":"https://github.com/nine4-team/ledger-mobile/actions/runs/35093201085","reason":"PR1 conflicts suppress automatic PR CI.","lastObserved":"Conversion passed; provider failed at outdated physical-query classification; native skipped, aggregate failed. Local consumer fix passed60captures; property consumer149captures. No unchanged rerun."},

@@ -1779,6 +1779,45 @@ final class WorkspaceChecklistUITests: XCTestCase {
         }
     }
 
+    func testClientSummaryLoadingEmptyFailureAndDeniedShare() throws {
+        continueAfterFailure = false
+        for state in ["loading", "empty", "failed", "export-denied"] {
+            let app = XCUIApplication()
+            app.launchArguments = ["--ledger-ui-test-workspace-checklist", "--ledger-ui-test-report-\(state)"]
+            app.launch()
+            defer { app.terminate() }
+            let project = app.buttons["target-active-project-card-project-ui-test"]
+            XCTAssertTrue(project.waitForExistence(timeout: 10))
+            project.tap()
+            let open = app.buttons["target-client-report-open"]
+            reveal(open, in: app)
+            XCTAssertTrue(open.waitForExistence(timeout: 5))
+            open.tap()
+            let share = app.buttons["target-client-report-share"]
+            XCTAssertTrue(share.waitForExistence(timeout: 5))
+            switch state {
+            case "loading":
+                XCTAssertTrue(app.descendants(matching: .any)["target-client-report-loading"].waitForExistence(timeout: 5))
+                XCTAssertFalse(share.isEnabled)
+            case "failed":
+                XCTAssertTrue(app.staticTexts["target-client-report-unavailable"].waitForExistence(timeout: 5))
+                XCTAssertFalse(share.isEnabled)
+                XCTAssertFalse(app.staticTexts["target-client-report-empty"].exists)
+            case "empty":
+                XCTAssertTrue(app.staticTexts["target-client-report-empty"].waitForExistence(timeout: 5))
+                XCTAssertTrue(waitUntil { share.isEnabled })
+            default:
+                XCTAssertTrue(waitUntil { share.isEnabled })
+                share.tap()
+                XCTAssertTrue(app.staticTexts["The report could not be shared. Data or access may have changed. Refresh and try again."].waitForExistence(timeout: 5))
+                XCTAssertTrue(waitUntil { share.isEnabled })
+                #if os(iOS)
+                XCTAssertFalse(app.otherElements["ActivityListView"].exists)
+                #endif
+            }
+        }
+    }
+
     func testCategorySettingsCreateEditArchiveRestoreAndCancel() throws {
         continueAfterFailure = false
         let app = XCUIApplication()

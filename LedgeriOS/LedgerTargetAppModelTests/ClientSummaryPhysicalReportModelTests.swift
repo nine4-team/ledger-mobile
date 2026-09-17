@@ -59,6 +59,27 @@ struct ClientSummaryPhysicalReportModelTests {
         watcher.continuation.finish()
     }
 
+    @Test func refreshIgnoresPreviousWatchFailure() async throws {
+        let model = ClientSummaryPhysicalReportModel()
+        let previous = ClientReportWatcher(), current = ClientReportWatcher()
+        let oldTask = Task { await model.load(accountId: account, projectId: project, watcher: previous) }
+        let report = try snapshot()
+        previous.continuation.yield(.ready(report))
+        await reaches(.ready(report), model: model)
+        let newTask = Task { await model.load(accountId: account, projectId: project, watcher: current) }
+        await reaches(.loading, model: model)
+        current.continuation.yield(.ready(report))
+        await reaches(.ready(report), model: model)
+        previous.continuation.finish(throwing: ClientSummaryPhysicalReportFailure.scopeMismatch)
+        await oldTask.value
+        #expect(model.state == .ready(report))
+        current.continuation.yield(.incomplete)
+        await reaches(.incomplete, model: model)
+        current.continuation.finish()
+        await newTask.value
+        #expect(model.state == .unavailable)
+    }
+
     @Test func cancellationClearsVisibleResult() async throws {
         let model = ClientSummaryPhysicalReportModel(), watcher = ClientReportWatcher()
         let task = Task { await model.load(accountId: account, projectId: project, watcher: watcher) }
