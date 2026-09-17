@@ -843,6 +843,13 @@ private struct UITestFixtureItemReader: DownloadedItemPlacementReading, Download
                     priceRevision: 1, chargeRevision: 1,
                     currentPrice: Money(minorUnits: 250, currency: .init(validating: "USD")),
                     purchaseCost: .known(Money(minorUnits: 200, currency: .init(validating: "USD")))))
+                if ProcessInfo.processInfo.arguments.contains("--ledger-ui-test-price-changed") {
+                    continuation.yield(try .init(projectId: project, itemId: item,
+                        placementId: .init(validating: "history-current"), occurrenceId: .init(validating: "price-charge"),
+                        priceRevision: 2, chargeRevision: 2,
+                        currentPrice: Money(minorUnits: 350, currency: .init(validating: "USD")),
+                        purchaseCost: .known(Money(minorUnits: 200, currency: .init(validating: "USD")))))
+                }
             } catch { continuation.finish(throwing: error) }
         }
     }

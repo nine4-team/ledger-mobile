@@ -3990,11 +3990,16 @@ final class WorkspaceChecklistUITests: XCTestCase {
         try exerciseItemPriceEditor(retry: true)
     }
 
-    private func exerciseItemPriceEditor(retry: Bool) throws {
+    func testItemPriceEditorDoesNotAdoptNewRevisionForOldText() throws {
+        try exerciseItemPriceEditor(retry: false, changed: true)
+    }
+
+    private func exerciseItemPriceEditor(retry: Bool, changed: Bool = false) throws {
         continueAfterFailure = false
         let app = XCUIApplication()
         app.launchArguments = ["--ledger-ui-test-workspace-checklist", "--ledger-ui-test-item-detail-copy"]
         if retry { app.launchArguments.append("--ledger-ui-test-price-retry") }
+        if changed { app.launchArguments.append("--ledger-ui-test-price-changed") }
         app.launch()
         defer { app.terminate() }
         let project = app.buttons["target-active-project-card-project-ui-test"]
@@ -4010,6 +4015,14 @@ final class WorkspaceChecklistUITests: XCTestCase {
             XCTAssertEqual(app.textFields["0.00"].value as? String, "2.50")
         }
         openEditor()
+        if changed {
+            XCTAssertTrue(app.staticTexts["This Item changed while the editor was open. Close and reopen it to review the updated price."].waitForExistence(timeout: 5))
+            XCTAssertFalse(app.buttons["Save Changes"].isEnabled)
+            XCTAssertFalse(app.textFields["0.00"].isEnabled)
+            app.buttons["Cancel"].tap()
+            XCTAssertTrue(app.buttons["Save Changes"].waitForNonExistence(timeout: 5))
+            return
+        }
         app.buttons["Cancel"].tap()
         XCTAssertTrue(app.buttons["Save Changes"].waitForNonExistence(timeout: 5))
         openEditor()

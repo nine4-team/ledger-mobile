@@ -9,6 +9,7 @@ struct ItemPriceEditForm: View {
     let service: any ItemPriceEditing
     @Environment(\.dismiss) private var dismiss
     @State private var review: ItemPriceEditReview?
+    @State private var originalReview: ItemPriceEditReview?
     @State private var text = ""
     @State private var prefilled = false
     @State private var saving = false
@@ -41,8 +42,14 @@ struct ItemPriceEditForm: View {
                     guard value == nil || (value?.projectId == projectId && value?.itemId == itemId) else {
                         review = nil; error = "The downloaded Item does not match this editor."; return
                     }
+                    if let originalReview, let value, value != originalReview {
+                        review = nil
+                        error = "This Item changed while the editor was open. Close and reopen it to review the updated price."
+                        continue
+                    }
                     review = value
                     if !prefilled, let value {
+                        originalReview = value
                         text = value.currentPrice.map(Self.amount) ?? ""
                         prefilled = true
                     }
