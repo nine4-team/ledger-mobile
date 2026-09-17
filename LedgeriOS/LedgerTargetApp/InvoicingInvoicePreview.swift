@@ -38,12 +38,6 @@ struct InvoicingInvoicePreview: View {
                     currencyCode: invoice.total.currency.rawValue, usesCurrentDateWhenMissing: false,
                     suppliedLogo: logo, provenance: provenance(invoice), totalLabel: "Invoice Total")
                     .accessibilityIdentifier("target-invoice-preview")
-                    .safeAreaInset(edge: .bottom) {
-                        if let notice = brandingNotice {
-                            Text(notice).font(.caption).padding().background(.regularMaterial)
-                                .accessibilityIdentifier("target-invoice-branding-notice")
-                        }
-                    }
             } else if let liveInvoice {
                 InvoiceReportView(data: liveReportData(liveInvoice), projectName: projectName,
                     clientName: clientName, businessName: profile?.name.rawValue,
@@ -61,6 +55,12 @@ struct InvoicingInvoicePreview: View {
             }
         }
         .environment(find)
+        .safeAreaInset(edge: .bottom) {
+            if invoice != nil || liveInvoice != nil, let notice = brandingNotice {
+                Text(notice).font(.caption).padding().background(.regularMaterial)
+                    .accessibilityIdentifier("target-invoice-branding-notice")
+            }
+        }
         .toolbar {
             if invoice == nil, let liveInvoice, liveInvoice.status == .created,
                runtime is any ProjectInvoiceCreating, runtime is any ProjectInvoiceRevising {

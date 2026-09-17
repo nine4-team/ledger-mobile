@@ -895,6 +895,7 @@ final class WorkspaceChecklistUITests: XCTestCase {
         reveal(sent, in: app); sent.tap()
         XCTAssertTrue(row.waitForExistence(timeout: 5)); row.tap()
         XCTAssertTrue(app.descendants(matching: .any)["target-live-invoice-preview"].firstMatch.waitForExistence(timeout: 5))
+        XCTAssertTrue(app.staticTexts["Showing saved business profile."].waitForExistence(timeout: 5))
         XCTAssertTrue(app.staticTexts["Invoice Total"].exists)
         XCTAssertTrue(app.staticTexts["Receipt vendor"].exists)
         XCTAssertTrue(waitUntil { app.buttons["target-invoice-download"].isEnabled })
@@ -902,6 +903,7 @@ final class WorkspaceChecklistUITests: XCTestCase {
         XCUIDevice.shared.press(.home); app.activate()
         XCTAssertTrue(app.staticTexts["Invoice unavailable"].waitForExistence(timeout: 5))
         XCTAssertFalse(app.staticTexts["Invoice Total"].exists)
+        XCTAssertFalse(app.staticTexts["Showing saved business profile."].exists)
         #endif
     }
 
