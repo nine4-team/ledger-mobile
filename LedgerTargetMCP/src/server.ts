@@ -19,7 +19,7 @@ import { transactionListInputSchema, type TransactionDetailReading } from "./tra
 import { transactionAttachmentInputSchema } from "./transactionAttachmentRead.js";
 import { inventorySaleInputSchema, inventorySaleReviewInputSchema, inventorySaleTool, inventorySaleReviewTool,
   type InventorySaleServing } from "./inventorySale.js";
-import { expenseCreationInputSchema, expenseCreationTool, expenseEditInputSchema, expenseEditTool, expenseReadInputSchema, expenseReceiptInputSchema, validateExpenseSnapshot, validateExpenseInvoice,
+import { expenseCreationInputSchema, expenseCreationTool, expenseEditInputSchema, expenseEditTool, expenseReadInputSchema, expenseReceiptInputSchema, expenseListInputSchema, validateExpenseList, validateExpenseSnapshot, validateExpenseInvoice,
   type ExpenseCreationServing, type ExpenseReading } from "./expenseCreation.js";
 
 export interface ClientSummaryPhysicalReportReading {
@@ -169,6 +169,17 @@ export function createTargetServer(reader: PropertyReportReading, context: Targe
       } }] };
     } catch (error) { return { isError: true, content: [{ type: "text", text: JSON.stringify({
       code: error instanceof TargetMCPFailure ? error.code : "expense_receipt_failed" }) }] }; }
+  });
+  if (expenseReader?.list) server.registerTool("list_project_expenses", {
+    description: "List authorized Project Expenses using the same records as get_expense, including collected Expenses. Exact amounts and receipt references are preserved. This is not a payment, Invoice-status query or offline pending-work list; use the Invoice readers for billing status.",
+    inputSchema: expenseListInputSchema,
+    annotations: { readOnlyHint: true, destructiveHint: false, idempotentHint: true, openWorldHint: false },
+  }, async input => {
+    try {
+      const result = validateExpenseList(await expenseReader.list!(input, context), input, context);
+      return { content: [{ type: "text", text: JSON.stringify(result) }] };
+    } catch (error) { return { isError: true, content: [{ type: "text", text: JSON.stringify({
+      code: error instanceof TargetMCPFailure ? error.code : "expense_read_failed" }) }] }; }
   });
   if (expenseReader) server.registerTool("get_expense", {
     description: "Read an authorized business-paid Project Expense: exact final amount, vendor/date/category/notes, ordered receipt lines and attachment IDs. This is not a payment or Invoice status. Attachment IDs are references, not public download links; this tool does not return receipt bytes.",

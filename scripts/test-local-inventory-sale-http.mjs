@@ -241,6 +241,9 @@ try {
         assert.deepEqual(snapshot.receiptAttachmentIds,receiptAttachmentIds);
         if(expenseService) {
             assert.deepEqual(await expenseService.read({projectId:project,expenseId:expense},context),snapshot);
+            assert.deepEqual(await expenseService.list({projectId:project},context),[snapshot]);
+            await assert.rejects(expenseService.list({projectId:project},{...context,accountId:key+'-foreign'}),
+                error=>error.statusCode===403);
             assert.deepEqual(await expenseService.invoice({projectId:project,expenseId:expense},context),{expense:snapshot,invoice:null});
             for(const attachmentId of receiptAttachmentIds) {
                 const receipt=await expenseService.receipt({projectId:project,expenseId:expense,attachmentId},context);
@@ -297,6 +300,7 @@ try {
             if(expenseService) {
                 const paid=await expenseService.invoice({projectId:project,expenseId:expense},context);
                 assert.deepEqual(paid.expense,snapshot);
+                assert.deepEqual(await expenseService.list({projectId:project},context),[snapshot]);
                 assert.equal(paid.invoice.purchase_id,invoice.purchase_id);
                 assert.equal(paid.invoice.total_minor_units,intent.amountMinorUnits);
                 assert.equal(paid.invoice.lines[0].source_id,expense);
@@ -452,6 +456,7 @@ try {
         if(editRequest) await assert.rejects(expenseService.edit(editRequest,context),error=>error.statusCode===403);
         if(expenseRequest) await assert.rejects(expenseService.apply(expenseRequest,context),
             error=>error.code==='expense_request_rejected' && error.statusCode===403);
+        if(expenseService) await assert.rejects(expenseService.list({projectId:project},context),error=>error.statusCode===403);
         if(expenseService) await assert.rejects(expenseService.read({projectId:project,expenseId:expense},context),
             error=>error.statusCode===403);
         if(expenseService) await assert.rejects(expenseService.invoice({projectId:project,expenseId:expense},context),

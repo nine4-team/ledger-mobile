@@ -5,7 +5,7 @@ import { Client } from "@modelcontextprotocol/sdk/client/index.js";
 import { InMemoryTransport } from "@modelcontextprotocol/sdk/inMemory.js";
 import { createTargetServer } from "../src/server.js";
 import { makeExpenseCreationRequest, makeExpenseEditRequest, expenseEditInputSchema, validateExpenseEditResult, expenseCreationTool, validateExpenseCreationResult, validateExpenseSnapshot, validateExpenseInvoice,
-  SupabaseExpenseCreationService, type ExpenseCreationInput } from "../src/expenseCreation.js";
+  validateExpenseList, SupabaseExpenseCreationService, type ExpenseCreationInput } from "../src/expenseCreation.js";
 
 const context = { accountId: "account", principalId: "actor", accessToken: "user-token" };
 const input: ExpenseCreationInput = {
@@ -17,6 +17,37 @@ const input: ExpenseCreationInput = {
 };
 const request = makeExpenseCreationRequest(input, context);
 const snapshot = () => ({ ...structuredClone(input.payload), accountId: context.accountId, revision: "1" });
+test("Expense list preserves the individual contract and rejects mixed scope or duplicates", async () => {
+  const query = { projectId: "project" }, rows = [snapshot()];
+  assert.deepEqual(validateExpenseList([], query, context), []);
+  assert.deepEqual(validateExpenseList(rows, query, context), rows);
+  for (const invalid of [[...rows,...rows], [{...snapshot(),accountId:"other"}],
+    [{...snapshot(),projectId:"other"}], [{...snapshot(),amountMinorUnits:123}], {}]) {
+    assert.throws(() => validateExpenseList(invalid, query, context));
+  }
+  const service = new SupabaseExpenseCreationService(new URL("https://example.invalid"),"public-key",async (url,init) => {
+    assert.equal(new URL(String(url)).pathname,"/rest/v1/rpc/spike_list_project_expenses");
+    assert.equal((init?.headers as Record<string,string>).Authorization,"Bearer user-token");
+    assert.equal(init?.redirect,"error");
+    assert.deepEqual(JSON.parse(String(init?.body)),{p_account_id:"account",p_project_id:"project"});
+    return new Response(JSON.stringify(rows),{status:200});
+  });
+  assert.deepEqual(await service.list(query,context),rows);
+  const server = createTargetServer({ read: async () => { throw new Error("unused"); } },context,
+    undefined,undefined,undefined,undefined,undefined,undefined,service);
+  const client = new Client({ name:"expense-list-test",version:"1" });
+  const [a,b] = InMemoryTransport.createLinkedPair();
+  await server.connect(a); await client.connect(b);
+  try {
+    const result = await client.callTool({name:"list_project_expenses",arguments:query});
+    assert.ok(!result.isError);
+    assert.deepEqual(JSON.parse((result.content as {text:string}[])[0].text),rows);
+    service.list = async () => [{...snapshot(),accountId:"other"}];
+    const invalid = await client.callTool({name:"list_project_expenses",arguments:query});
+    assert.equal(invalid.isError,true);
+    assert.equal(JSON.parse((invalid.content as {text:string}[])[0].text).code,"expense_server_result_mismatch");
+  } finally { await client.close(); await server.close(); }
+});
 test("Expense paid read reuses exact Invoice validation and preserves unknown status", async () => {
   const query = { projectId: "project", expenseId: "expense" };
   const value = { expense: snapshot(), invoice: { invoice_id: "invoice", invoice_revision: "1", account_id: "account",

@@ -65,6 +65,13 @@ select lives_ok('set constraints all immediate','Deferred native creation checks
 set constraints all deferred;
 select is(public.spike_read_expense('account-primary','expense-project','expense-test')#>>'{receiptLines,0,description}','Delivery','Embedded receipt evidence read');
 select is(public.spike_read_expense('account-primary','expense-project','expense-test')->'receiptAttachmentIds','[]'::jsonb,'Known empty attachments remain empty');
+select is(jsonb_array_length(public.spike_list_project_expenses('account-primary','expense-project')),3,'List discovers all three Expenses');
+select is(public.spike_list_project_expenses('account-primary','expense-project')->1,
+  public.spike_read_expense('account-primary','expense-project','expense-created'),'List reuses exact individual Expense contract');
+select is(public.spike_list_project_expenses('account-primary','expense-project')->2->>'amountMinorUnits',
+  '9223372036854775807','List preserves exact Int64 amount');
+select throws_ok($$select public.spike_list_project_expenses('account-other','expense-project')$$,'42501','expense_not_available','Cross Account list denied');
+select throws_ok($$select public.spike_list_project_expenses('account-primary','missing-project')$$,'42501','expense_not_available','Unavailable Project is not an empty list');
 select throws_ok($$select public.spike_read_expense('account-other','expense-project','expense-test')$$,'42501','expense_not_available','Cross Account read denied');
 select throws_ok($$select public.spike_read_expense('account-primary','other-project','expense-test')$$,'42501','expense_not_available','Cross Project read denied');
 reset role;
@@ -72,14 +79,19 @@ update public.spike_account_memberships set financial_access='none' where accoun
 select throws_ok($$select ledger_private.create_expense(pg_temp.expense_command('expense-no-access','expense-denied'))$$,'42501','Expense access required','Financial downgrade denies creation');
 set local role authenticated;
 select throws_ok($$select public.spike_read_expense('account-primary','expense-project','expense-test')$$,'42501','expense_not_available','Financial access downgrade denies Expense');
+select throws_ok($$select public.spike_list_project_expenses('account-primary','expense-project')$$,'42501','expense_not_available','Financial downgrade denies list');
 reset role;
 update public.spike_account_memberships set financial_access='full',state='removed' where account_id='account-primary' and principal_id='principal-owner';
 select throws_ok($$select ledger_private.create_expense(pg_temp.expense_command('expense-create-op','expense-created'))$$,'42501','Expense access required','Removed member cannot replay a formerly accepted command');
 set local role authenticated;
 select throws_ok($$select public.spike_read_expense('account-primary','expense-project','expense-test')$$,'42501','expense_not_available','Removed membership denies Expense');
+select throws_ok($$select public.spike_list_project_expenses('account-primary','expense-project')$$,'42501','expense_not_available','Removed membership denies list');
 reset role;
 select set_config('request.jwt.claims','{}',true);
 select throws_ok($$select ledger_private.read_expense('account-primary','expense-project','expense-test')$$,'42501','expense_not_available','Missing authenticated identity denied even with privileged caller');
+select throws_ok($$select ledger_private.list_project_expenses('account-primary','expense-project')$$,'42501','expense_not_available','Anonymous identity cannot list through privileged caller');
+select ok(not has_function_privilege(r,'public.spike_list_project_expenses(text,text)','EXECUTE'),r||' cannot call Expense list')
+  from unnest(array['anon','service_role']) r;
 select ok(not has_function_privilege('anon','public.spike_read_expense(text,text,text)','EXECUTE'),'Anonymous cannot invoke endpoint');
 select ok(not has_function_privilege('service_role','public.spike_read_expense(text,text,text)','EXECUTE'),'No service-role endpoint bypass');
 update public.spike_account_memberships set state='active',financial_access='full'

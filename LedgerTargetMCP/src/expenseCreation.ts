@@ -32,6 +32,8 @@ export const expenseCreationInputSchema = z.object({
   payload: payloadSchema.refine(validReferences),
 }).strict();
 export const expenseReadInputSchema = z.object({ projectId: identifier, expenseId: identifier }).strict();
+export const expenseListInputSchema = expenseReadInputSchema.pick({ projectId: true });
+export type ExpenseListInput = z.infer<typeof expenseListInputSchema>;
 export const expenseEditInputSchema = expenseCreationInputSchema.extend({
   expectedRevision: integer.refine(value => /^[1-9][0-9]*$/.test(value) && BigInt(value) < 9223372036854775807n),
 }).strict();
@@ -43,6 +45,7 @@ const snapshotSchema = payloadSchema.extend({ accountId: identifier,
   revision: integer.refine(value => /^[1-9][0-9]*$/.test(value)) }).strict().refine(validReferences);
 export type ExpenseSnapshot = z.infer<typeof snapshotSchema>;
 export interface ExpenseReading {
+  list?(input: ExpenseListInput, context: TargetMCPRequestContext): Promise<ExpenseSnapshot[]>;
   read(input: ExpenseReadInput, context: TargetMCPRequestContext): Promise<ExpenseSnapshot>;
   receipt?(input: ExpenseReceiptInput, context: TargetMCPRequestContext): Promise<{ mimeType: string; bytes: Uint8Array }>;
   invoice?(input: ExpenseReadInput, context: TargetMCPRequestContext): Promise<ExpenseInvoiceSnapshot>;
@@ -71,6 +74,13 @@ export function validateExpenseSnapshot(value: unknown, input: ExpenseReadInput,
     return fail("expense_server_result_mismatch");
   }
   return snapshot.data;
+}
+export function validateExpenseList(value: unknown, input: ExpenseListInput, context: TargetMCPRequestContext): ExpenseSnapshot[] {
+  const request = expenseListInputSchema.safeParse(input), rows = z.array(snapshotSchema).safeParse(value);
+  if (!request.success || !rows.success) return fail("expense_server_result_mismatch");
+  if (new Set(rows.data.map(row => row.expenseId)).size !== rows.data.length) return fail("expense_server_result_mismatch");
+  return rows.data.map(row => validateExpenseSnapshot(row,
+    { projectId: request.data.projectId, expenseId: row.expenseId }, context));
 }
 export type ExpenseCreationInput = z.input<typeof expenseCreationInputSchema>;
 export type ExpenseCreationRequest = Readonly<{ operationId: string; accountId: string; actorPrincipalId: string;
@@ -180,6 +190,13 @@ export class SupabaseExpenseCreationService implements ExpenseCreationServing, E
     const result = await this.#rpc("spike_read_expense", { p_account_id: context.accountId,
       p_project_id: parsed.data.projectId, p_expense_id: parsed.data.expenseId }, context);
     return validateExpenseSnapshot(result, parsed.data, context);
+  }
+  async list(input: ExpenseListInput, context: TargetMCPRequestContext): Promise<ExpenseSnapshot[]> {
+    const parsed = expenseListInputSchema.safeParse(input);
+    if (!parsed.success) return fail();
+    const result = await this.#rpc("spike_list_project_expenses", { p_account_id: context.accountId,
+      p_project_id: parsed.data.projectId }, context);
+    return validateExpenseList(result, parsed.data, context);
   }
   async invoice(input: ExpenseReadInput, context: TargetMCPRequestContext): Promise<ExpenseInvoiceSnapshot> {
     const parsed = expenseReadInputSchema.safeParse(input);
