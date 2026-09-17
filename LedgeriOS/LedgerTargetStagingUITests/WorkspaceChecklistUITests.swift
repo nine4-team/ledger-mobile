@@ -147,6 +147,14 @@ final class WorkspaceChecklistUITests: XCTestCase {
     }
 
     func testTransactionImagePinKeepsDetailsAndClearsOnWithdrawal() throws {
+        try exerciseTransactionPinWithdrawal(pdf: false)
+    }
+
+    func testTransactionPDFPinClearsOnWithdrawal() throws {
+        try exerciseTransactionPinWithdrawal(pdf: true)
+    }
+
+    private func exerciseTransactionPinWithdrawal(pdf withdrawPDF: Bool) throws {
         continueAfterFailure = false
         let app = XCUIApplication()
         app.launchArguments = ["--ledger-ui-test-transaction-browser", "--ledger-ui-test-transaction-attachments"]
@@ -206,6 +214,13 @@ final class WorkspaceChecklistUITests: XCTestCase {
         XCTAssertFalse(app.buttons["Close PDF"].exists)
         XCTAssertFalse(app.buttons["target-transaction-pinned-images-next"].exists,
             "PDF pages use PDFKit, not photo navigation")
+        if withdrawPDF {
+            app.buttons["Withdraw attachment access"].tap()
+            XCTAssertTrue(panel.waitForNonExistence(timeout: 5), "No pinned PDF after withdrawal")
+            XCTAssertFalse(pinnedPDF.exists)
+            XCTAssertTrue(app.staticTexts["Transaction Unavailable"].waitForExistence(timeout: 5))
+            return
+        }
         unpin.tap()
         XCTAssertTrue(panel.waitForNonExistence(timeout: 5))
         reveal(photo, in: app, within: detail)
