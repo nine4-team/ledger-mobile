@@ -2,6 +2,12 @@ begin;
 select no_plan();
 insert into public.spike_projects(id,account_id,client_id,display_name,created_at,updated_at,created_at_ms,updated_at_ms,created_by_principal_id)
 values('invoice-membership-project','account-primary','client-existing','Membership test',now(),now(),1,1,'principal-owner');
+select set_config('request.jwt.claims','{"sub":"10000000-0000-0000-0000-000000000001","role":"authenticated"}',true);
+set local role authenticated;
+select is(public.spike_list_project_live_invoices('account-primary','invoice-membership-project'),'[]'::jsonb,'Authorized empty Invoice directory');
+select throws_ok($$select public.spike_list_project_live_invoices('account-other','invoice-membership-project')$$,'42501','invoice_not_available','Cross Account Invoice directory denied');
+select throws_ok($$select public.spike_list_project_live_invoices('account-primary','missing-project')$$,'42501','invoice_not_available','Missing Project is not empty Invoice history');
+reset role;
 insert into ledger_private.live_invoices(id,account_id,project_id,created_at,created_by_principal_id)
 values('live-one','account-primary','invoice-membership-project',now(),'principal-owner'),
       ('live-two','account-primary','invoice-membership-project',now(),'principal-owner');
@@ -55,6 +61,30 @@ select is((public.spike_create_invoice(pg_temp.invoice_command('create-invoice')
 select is((public.spike_create_invoice(pg_temp.invoice_command('create-invoice'))).phase,'applied','Identical replay applies once');
 reset role;
 select is((select count(*) from ledger_private.live_invoice_memberships where invoice_id='created-invoice'),1::bigint,'Replay does not duplicate membership');
+select throws_ok($$select public.spike_list_project_live_invoices('account-primary','invoice-membership-project')$$,
+  '55000','invoice_sources_incomplete','List fails closed on incomplete Invoice instead of omitting it');
+savepoint invoice_list_fixture;
+-- Structural fixtures above deliberately have missing sources. Hide them only
+-- within this rollback-scoped read test; this is not a cancellation command.
+update ledger_private.live_invoices set status='canceled' where id in ('live-one','live-two');
+set local role authenticated;
+select is(public.spike_list_project_live_invoices('account-primary','invoice-membership-project'),
+  jsonb_build_array(public.spike_read_live_invoice('account-primary','invoice-membership-project','created-invoice')),
+  'Directory uses exact existing source/amount read and excludes canceled history');
+reset role;
+update ledger_private.live_invoices set status='sent' where id='created-invoice';
+set local role authenticated;
+select is(public.spike_list_project_live_invoices('account-primary','invoice-membership-project')->0->>'status','sent','Sent Invoice remains discoverable');
+reset role;
+update public.spike_account_memberships set financial_access='none' where account_id='account-primary' and principal_id='principal-owner';
+select throws_ok($$select public.spike_list_project_live_invoices('account-primary','invoice-membership-project')$$,'42501','invoice_not_available','Financial downgrade denies directory');
+update public.spike_account_memberships set financial_access='full',state='removed' where account_id='account-primary' and principal_id='principal-owner';
+select throws_ok($$select public.spike_list_project_live_invoices('account-primary','invoice-membership-project')$$,'42501','invoice_not_available','Removed membership denies directory');
+select set_config('request.jwt.claims','{}',true);
+select throws_ok($$select ledger_private.list_project_live_invoices('account-primary','invoice-membership-project')$$,'42501','invoice_not_available','Privileged caller without identity cannot list');
+select ok(not has_function_privilege(r,'public.spike_list_project_live_invoices(text,text)','EXECUTE'),r||' cannot invoke Invoice list')
+  from unnest(array['anon','service_role']) r;
+rollback to savepoint invoice_list_fixture;
 select is((select final_amount_minor_units from ledger_private.expenses where id='invoice-expense'),9007199254740993::bigint,'Creation preserves exact source money');
 select is((select count(*) from public.spike_transactions where project_id='invoice-membership-project'),0::bigint,'Invoice demand creates no payment');
 set local role authenticated;

@@ -214,7 +214,7 @@ try {
           vendor:'Original vendor',date:'2024-02-29',amountMinorUnits:mixedInvoice?'9223372036854775806':'9223372036854775807',currency:'USD',
           categoryId:expenseCategory,notes:'Source notes',receiptAttachmentIds,receiptLines:[
             {id:key+'-line',description:'Delivery',magnitudeMinorUnits:'25',currency:'USD',effect:'increase',quantity:null}]};
-        let expenseRequest, expenseService;
+        let expenseRequest, expenseService, liveInvoiceListReader;
         if(expenseMCP) {
             const {operationId,accountId,actorPrincipalId,contractVersion,createdAtMs,...payload}=intent;
             expenseRequest=expenseMCP.makeExpenseCreationRequest({operationUUID:randomUUID(),
@@ -355,7 +355,15 @@ try {
             const response = await call('/rest/v1/rpc/spike_read_live_invoice',
                 {p_account_id:account,p_project_id:project,p_invoice_id:key+'-invoice'},token);
             assert.equal(response.status,200);
-            assert.equal((await response.json()).totalMinorUnits,mixedInvoice?'9223372036854775807':intent.amountMinorUnits);
+            const liveSnapshot = await response.json();
+            assert.equal(liveSnapshot.totalMinorUnits,mixedInvoice?'9223372036854775807':intent.amountMinorUnits);
+            if(process.argv.includes('--invoice-list-mcp')) {
+                const {SupabaseLiveInvoiceReader} = await import('../LedgerTargetMCP/src/liveInvoiceRead.ts');
+                liveInvoiceListReader = new SupabaseLiveInvoiceReader(new URL(local.API_URL),local.PUBLISHABLE_KEY);
+                assert.deepEqual(await liveInvoiceListReader.list({projectId:project},context),[liveSnapshot]);
+                await assert.rejects(liveInvoiceListReader.list({projectId:project},{...context,accountId:key+'-foreign'}),
+                    error=>error.statusCode===403);
+            }
             if (process.argv.includes('--invoice-revise')) {
                 const edit = {...command, operationId:key+'-invoice-revision', contractVersion:'invoice-revise-created-v1',
                     expectedRevision:'1', name:'Revised Invoice'};
@@ -456,6 +464,7 @@ try {
         if(editRequest) await assert.rejects(expenseService.edit(editRequest,context),error=>error.statusCode===403);
         if(expenseRequest) await assert.rejects(expenseService.apply(expenseRequest,context),
             error=>error.code==='expense_request_rejected' && error.statusCode===403);
+        if(liveInvoiceListReader) await assert.rejects(liveInvoiceListReader.list({projectId:project},context),error=>error.statusCode===403);
         if(expenseService) await assert.rejects(expenseService.list({projectId:project},context),error=>error.statusCode===403);
         if(expenseService) await assert.rejects(expenseService.read({projectId:project,expenseId:expense},context),
             error=>error.statusCode===403);

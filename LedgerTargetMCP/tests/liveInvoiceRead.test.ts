@@ -3,7 +3,7 @@ import test from "node:test";
 import { Client } from "@modelcontextprotocol/sdk/client/index.js";
 import { InMemoryTransport } from "@modelcontextprotocol/sdk/inMemory.js";
 import { createTargetServer } from "../src/server.js";
-import { SupabaseLiveInvoiceReader, validateLiveInvoice, type LiveInvoiceSnapshot } from "../src/liveInvoiceRead.js";
+import { SupabaseLiveInvoiceReader, validateLiveInvoiceList, validateLiveInvoice, type LiveInvoiceSnapshot } from "../src/liveInvoiceRead.js";
 
 const context = { accountId: "account", principalId: "principal", accessToken: "user-token" };
 const input = { projectId: "project", invoiceId: "invoice" };
@@ -11,6 +11,36 @@ const invoice = (): LiveInvoiceSnapshot => ({ accountId: "account", ...input, cl
   status: "created" as const, name: "Invoice", notes: "", currency: "USD", totalMinorUnits: "9007199254740993",
   lines: [{ kind: "expense" as const, sourceId: "expense", sourceRevision: "2",
     amountMinorUnits: "9007199254740993", currency: "USD", categoryId: "category", description: "Vendor" }] });
+
+test("live Invoice list validates every existing detail and transport scope", async () => {
+  const query = {projectId:"project"}, rows = [invoice()];
+  assert.deepEqual(validateLiveInvoiceList([],query,context),[]);
+  assert.deepEqual(validateLiveInvoiceList(rows,query,context),rows);
+  for (const invalid of [[...rows,...rows],[{...invoice(),accountId:"foreign"}],
+    [{...invoice(),projectId:"foreign"}],[{...invoice(),totalMinorUnits:"1"}],[{...invoice(),status:"canceled"}]]) {
+    assert.throws(() => validateLiveInvoiceList(invalid,query,context));
+  }
+  const reader = new SupabaseLiveInvoiceReader(new URL("https://example.invalid"),"public-key",async (url,init) => {
+    assert.equal(String(url),"https://example.invalid/rest/v1/rpc/spike_list_project_live_invoices");
+    assert.equal((init?.headers as Record<string,string>).Authorization,"Bearer user-token");
+    assert.equal(init?.redirect,"error");
+    assert.deepEqual(JSON.parse(String(init?.body)),{p_account_id:"account",p_project_id:"project"});
+    return new Response(JSON.stringify(rows));
+  });
+  assert.deepEqual(await reader.list(query,context),rows);
+  const server = createTargetServer({read:async()=>{throw new Error("unused");}},context,
+    undefined,undefined,undefined,undefined,undefined,undefined,undefined,undefined,reader);
+  const client = new Client({name:"invoice-list-test",version:"1"});
+  const [a,b] = InMemoryTransport.createLinkedPair();
+  await server.connect(a); await client.connect(b);
+  try {
+    const result = await client.callTool({name:"list_project_live_invoices",arguments:query});
+    assert.ok(!result.isError);
+    assert.deepEqual(JSON.parse((result.content as {text:string}[])[0].text),rows);
+    reader.list = async () => [{...invoice(),totalMinorUnits:"1"}];
+    assert.equal((await client.callTool({name:"list_project_live_invoices",arguments:query})).isError,true);
+  } finally {await client.close(); await server.close();}
+});
 
 test("live Invoice validates exact money, current source identity and complete scope", () => {
   assert.deepEqual(validateLiveInvoice(invoice(), input, context), invoice());

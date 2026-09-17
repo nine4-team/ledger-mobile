@@ -8,7 +8,7 @@ import { feeCreationInputSchema, feeCreationTool, type FeeCreationServing } from
 import { feeReadInputSchema, validateFees, type FeeReading } from "./feeRead.js";
 import { invoiceCreationInputSchema, invoiceCreationTool, invoiceRevisionInputSchema, invoiceRevisionTool, type InvoiceCreationServing } from "./invoiceCreation.js";
 import { collectedInvoiceInputSchema, validateCollectedInvoice, type CollectedInvoiceReading } from "./collectedInvoiceRead.js";
-import { liveInvoiceInputSchema, validateLiveInvoice, type LiveInvoiceReading } from "./liveInvoiceRead.js";
+import { liveInvoiceInputSchema, liveInvoiceListInputSchema, validateLiveInvoiceList, validateLiveInvoice, type LiveInvoiceReading } from "./liveInvoiceRead.js";
 import { TargetMCPFailure, type TargetMCPRequestContext } from "./contractSupport.js";
 import { encodePropertyManagementReportSnapshot, type PropertyManagementReportSnapshot } from "./propertyManagementReport.js";
 import { encodeClientSummaryPhysicalReportSnapshot,
@@ -118,6 +118,17 @@ export function createTargetServer(reader: PropertyReportReading, context: Targe
       return { isError: result.phase === "rejected", content: [{ type: "text", text: JSON.stringify(result) }] };
     } catch (error) { return { isError: true, content: [{ type: "text", text: JSON.stringify({
       code: error instanceof TargetMCPFailure ? error.code : "invoice_failed" }) }] }; }
+  });
+  if (liveInvoices?.list) server.registerTool("list_project_live_invoices", {
+    description: "List authorized Created and Sent Project Invoices with current source lines and exact totals. Excludes collected and canceled Invoices; this is not complete Invoice history or offline pending work. Does not change Invoice status.",
+    inputSchema: liveInvoiceListInputSchema,
+    annotations: { readOnlyHint: true, destructiveHint: false, idempotentHint: true, openWorldHint: false },
+  }, async input => {
+    try {
+      const result = validateLiveInvoiceList(await liveInvoices.list!(input, context), input, context);
+      return { content: [{ type: "text", text: JSON.stringify(result) }] };
+    } catch (error) { return { isError: true, content: [{ type: "text", text: JSON.stringify({
+      code: error instanceof TargetMCPFailure ? error.code : "invoice_read_failed" }) }] }; }
   });
   if (liveInvoices) server.registerTool("get_live_invoice", {
     description: "Read one authorized created or sent Invoice with ordered source identities, current revisions and exact current amounts. Live source edits change this total. Does not mark sent, collect payment, confirm external delivery or return paid snapshots.",

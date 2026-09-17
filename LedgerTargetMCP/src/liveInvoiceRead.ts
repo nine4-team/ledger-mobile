@@ -11,6 +11,8 @@ const integer = z.string().refine(value => /^(0|-?[1-9][0-9]*)$/.test(value)
 const revision = integer.refine(value => /^[1-9][0-9]*$/.test(value));
 const currency = z.string().regex(/^[A-Z]{3}$/);
 export const liveInvoiceInputSchema = z.object({ projectId: identifier, invoiceId: identifier }).strict();
+export const liveInvoiceListInputSchema = liveInvoiceInputSchema.pick({ projectId: true });
+export type LiveInvoiceListInput = z.infer<typeof liveInvoiceListInputSchema>;
 export type LiveInvoiceInput = z.infer<typeof liveInvoiceInputSchema>;
 const snapshot = z.object({ accountId: identifier, projectId: identifier, clientId: identifier,
   invoiceId: identifier, revision, status: z.enum(["created", "sent"]), name: z.string(), notes: z.string(),
@@ -21,6 +23,7 @@ const snapshot = z.object({ accountId: identifier, projectId: identifier, client
 }).strict();
 export type LiveInvoiceSnapshot = z.infer<typeof snapshot>;
 export interface LiveInvoiceReading {
+  list?(input: LiveInvoiceListInput, context: TargetMCPRequestContext): Promise<LiveInvoiceSnapshot[]>;
   read(input: LiveInvoiceInput, context: TargetMCPRequestContext): Promise<LiveInvoiceSnapshot>;
 }
 export function validateLiveInvoice(value: unknown, input: LiveInvoiceInput, context: TargetMCPRequestContext): LiveInvoiceSnapshot {
@@ -40,6 +43,11 @@ export function validateLiveInvoice(value: unknown, input: LiveInvoiceInput, con
   if (total !== BigInt(result.totalMinorUnits)) return fail();
   return result;
 }
+export function validateLiveInvoiceList(value: unknown, input: LiveInvoiceListInput, context: TargetMCPRequestContext): LiveInvoiceSnapshot[] {
+  const request = liveInvoiceListInputSchema.safeParse(input), rows = z.array(snapshot).safeParse(value);
+  if (!request.success || !rows.success || new Set(rows.data.map(row => row.invoiceId)).size !== rows.data.length) return fail();
+  return rows.data.map(row => validateLiveInvoice(row, { ...request.data, invoiceId: row.invoiceId }, context));
+}
 
 export class SupabaseLiveInvoiceReader implements LiveInvoiceReading {
   readonly #url: URL;
@@ -53,16 +61,26 @@ export class SupabaseLiveInvoiceReader implements LiveInvoiceReading {
   async read(input: LiveInvoiceInput, context: TargetMCPRequestContext): Promise<LiveInvoiceSnapshot> {
     const parsed = liveInvoiceInputSchema.safeParse(input);
     if (!parsed.success) throw new TargetMCPFailure("invoice_payload_invalid");
+    return validateLiveInvoice(await this.request(this.#url, parsed.data, context), parsed.data, context);
+  }
+  async list(input: LiveInvoiceListInput, context: TargetMCPRequestContext): Promise<LiveInvoiceSnapshot[]> {
+    const parsed = liveInvoiceListInputSchema.safeParse(input);
+    if (!parsed.success) throw new TargetMCPFailure("invoice_payload_invalid");
+    return validateLiveInvoiceList(await this.request(new URL("spike_list_project_live_invoices", this.#url),
+      parsed.data, context), parsed.data, context);
+  }
+  private async request(url: URL, input: LiveInvoiceListInput & { invoiceId?: string }, context: TargetMCPRequestContext): Promise<unknown> {
     userCredential(context.accessToken);
     validateIdentifier(context.accountId, "account_not_authorized");
     validateIdentifier(context.principalId, "account_not_authorized");
-    const response = await this.fetchImplementation(this.#url, { method: "POST", redirect: "error",
+    const response = await this.fetchImplementation(url, { method: "POST", redirect: "error",
       signal: AbortSignal.timeout(15_000), headers: { "Content-Type": "application/json", Accept: "application/json",
         apikey: this.key, Authorization: `Bearer ${context.accessToken}` },
-      body: JSON.stringify({ p_account_id: context.accountId, p_project_id: parsed.data.projectId, p_invoice_id: parsed.data.invoiceId }) });
+      body: JSON.stringify({ p_account_id: context.accountId, p_project_id: input.projectId,
+        ...(input.invoiceId === undefined ? {} : { p_invoice_id: input.invoiceId }) }) });
     if (!response.ok) throw new TargetMCPFailure("invoice_request_rejected", response.status);
     let value: unknown;
     try { value = await response.json(); } catch { return fail(); }
-    return validateLiveInvoice(value, parsed.data, context);
+    return value;
   }
 }
