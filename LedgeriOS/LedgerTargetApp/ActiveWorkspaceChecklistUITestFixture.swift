@@ -718,6 +718,8 @@ private final class UITestFixtureStream<Value: Sendable>: @unchecked Sendable {
     deinit {
         continuation.finish()
     }
+
+    func yield(_ value: Value) { continuation.yield(value) }
 }
 
 private struct UITestFixtureSpaceListQuery: SpaceListQuerying {
@@ -752,10 +754,74 @@ private struct UITestFixtureSpaceDetailQuery: SpaceCoreDetailsQuerying {
         source.stream
     }
 }
-private struct UITestFixtureItemReader: DownloadedItemPlacementReading, DownloadedProjectItemsReading, DownloadedItemPlacementHistoryReading, AccountBusinessProfileReading, DownloadedItemImageReading, InventorySaleWorkflowServing, UninvoicedReturnWorkflowServing, ProjectInvoicingReading, ProjectInvoiceCreating, ProjectInvoiceRevising, ProjectFeeInstallmentCreating, ExpenseCreating, ExpenseEditing, ItemPriceEditing {
-    private actor PriceRetry {
-        var accepted: (EditUncollectedItemPriceCommand.Payload, UUID, Date)?
-        func firstAttempt(_ payload: EditUncollectedItemPriceCommand.Payload, _ id: UUID, _ date: Date) throws -> Bool {
+private struct UITestFixtureItemReader: DownloadedItemPlacementReading, DownloadedProjectItemsReading, DownloadedItemPlacementHistoryReading, AccountBusinessProfileReading, DownloadedItemImageReading, InventorySaleWorkflowServing, UninvoicedReturnWorkflowServing, ProjectInvoicingReading, ProjectInvoiceCreating, ProjectInvoiceRevising, ProjectFeeInstallmentCreating, ExpenseCreating, ExpenseEditing, ItemPriceEditing, ItemDetailsEditing {
+    func editItemDetails(_ payload: EditItemDetailsCommand.Payload, operationUUID: UUID,
+                         capturedAt: Date) async throws -> OperationReceipt {
+        if ProcessInfo.processInfo.arguments.contains("--ledger-ui-test-bulk-status") {
+            guard payload.items.map(\.itemId.rawValue) == ["physical-ui-chair", "physical-ui-unassigned"],
+                  payload.items.allSatisfy({ $0.expectedRevision == 1 }),
+                  payload.changes == .init(status: .returned) else {
+                throw InventorySaleReview.Failure.invalidEvidence
+            }
+            await saleAccepted?()
+            return .init(operationId: try .init(validating: operationUUID.uuidString), localState: .queued)
+        }
+        let expectedNameEdit = payload.changes.name == .set("Updated chair") && payload.changes.notes == nil
+        let expectedNotesEdit = payload.changes.name == nil && payload.changes.notes == .set("Updated notes")
+        let expectedStatusEdit = payload.changes.name == nil && payload.changes.notes == nil &&
+            (payload.changes.status == .returned || payload.changes.status == .clear)
+        let expectedBookmarkEdit = payload.changes.name == nil && payload.changes.notes == nil &&
+            payload.changes.status == nil && payload.changes.bookmark == false
+        guard payload.items.count == 1, payload.items[0].itemId.rawValue == "physical-ui-chair",
+              payload.items[0].expectedRevision == 1,
+              ((((expectedNameEdit || expectedNotesEdit) && payload.changes.status == nil) || expectedStatusEdit)
+                && payload.changes.bookmark == nil) || expectedBookmarkEdit,
+              payload.changes.sku == nil else {
+            throw InventorySaleReview.Failure.invalidEvidence
+        }
+        if ProcessInfo.processInfo.arguments.contains("--ledger-ui-test-bookmark-retry") {
+            if try await detailsRetry.firstAttempt(payload, operationUUID, capturedAt) {
+                await saleAccepted?()
+                throw InventorySaleReview.Failure.invalidEvidence
+            }
+        } else { await saleAccepted?() }
+        return .init(operationId: try .init(validating: operationUUID.uuidString), localState: .queued)
+    }
+    func itemDetailsEditStatus(_ operationId: OperationID) async throws -> OperationSnapshot? { nil }
+    func watchItemDetailsEdit(_ operationId: OperationID) -> AsyncThrowingStream<OperationSnapshot?, Error> {
+        AsyncThrowingStream { continuation in
+            if ProcessInfo.processInfo.arguments.contains("--ledger-ui-test-bookmark-applied") {
+                do {
+                    continuation.yield(try .init(operationId: operationId,
+                        accountId: .init(validating: "account-ui-test"),
+                        contractVersion: .init(validating: "item-details-edit-v1"),
+                        fingerprint: .init(validating: String(repeating: "a", count: 64)),
+                        acceptedAt: Date(), updatedAt: Date(), state: .applied(.init(
+                            resultCode: .init(validating: "item_details_updated"),
+                            serverReceivedAt: Date(), completedAt: Date()))))
+                    if ProcessInfo.processInfo.arguments.contains("--ledger-ui-test-bookmark-readback") {
+                        bookmarkReadback.yield(true)
+                    }
+                } catch { continuation.finish(throwing: error) }
+                return
+            }
+            guard ProcessInfo.processInfo.arguments.contains("--ledger-ui-test-bookmark-rejected") else {
+                continuation.yield(nil); return
+            }
+            do {
+                continuation.yield(try .init(operationId: operationId,
+                    accountId: .init(validating: "account-ui-test"),
+                    contractVersion: .init(validating: "item-details-edit-v1"),
+                    fingerprint: .init(validating: String(repeating: "a", count: 64)),
+                    acceptedAt: Date(), updatedAt: Date(), state: .rejected(.init(
+                        error: .init(code: .init(validating: "stale_revision"), category: .conflict,
+                                     retryDisposition: .never), rejectedAt: Date()))))
+            } catch { continuation.finish(throwing: error) }
+        }
+    }
+    private actor ExactRetry<Payload: Equatable & Sendable> {
+        var accepted: (Payload, UUID, Date)?
+        func firstAttempt(_ payload: Payload, _ id: UUID, _ date: Date) throws -> Bool {
             if let accepted {
                 guard accepted.0 == payload, accepted.1 == id, accepted.2 == date else {
                     throw InventorySaleReview.Failure.invalidEvidence
@@ -766,7 +832,9 @@ private struct UITestFixtureItemReader: DownloadedItemPlacementReading, Download
             return true
         }
     }
-    private let priceRetry = PriceRetry()
+    private let priceRetry = ExactRetry<EditUncollectedItemPriceCommand.Payload>()
+    private let detailsRetry = ExactRetry<EditItemDetailsCommand.Payload>()
+    private let bookmarkReadback = UITestFixtureStream<Bool>(initial: false)
     func watchItemPriceReview(project: ProjectID, item: ItemID) -> AsyncThrowingStream<ItemPriceEditReview?, Error> {
         AsyncThrowingStream { continuation in
             do {
@@ -1354,6 +1422,10 @@ private struct UITestFixtureItemReader: DownloadedItemPlacementReading, Download
     }
 
     func readDownloadedItemPlacementHistory(accountId: AccountID, itemId: ItemID) async throws -> DownloadedItemPlacementHistory {
+        try itemHistory(accountId: accountId, itemId: itemId, bookmarkUpdated: false)
+    }
+
+    private func itemHistory(accountId: AccountID, itemId: ItemID, bookmarkUpdated: Bool) throws -> DownloadedItemPlacementHistory {
         if ProcessInfo.processInfo.arguments.contains("--ledger-ui-test-return-history") {
             return try .init(accountId: accountId, itemId: itemId, description: "Returned chair", intervals: [
                 .init(placementId: .init(validating: "returned-inventory"), scope: .businessInventory, spaceId: nil,
@@ -1379,7 +1451,8 @@ private struct UITestFixtureItemReader: DownloadedItemPlacementReading, Download
             ], details: .init(name: "Downloaded test chair", description: "Oak chair with woven seat",
                 sku: "CHAIR-001", source: "Original vendor", currentSource: "Design Inventory",
                 notes: "Keep the woven seat dry.\nPlace beside the window.",
-                workflowStatusRaw: "to-purchase", isBookmarked: true, createdAt: "2026-09-01T11:00:00Z"),
+                workflowStatusRaw: "to-purchase", isBookmarked: !bookmarkUpdated,
+                createdAt: "2026-09-01T11:00:00Z", itemRevision: bookmarkUpdated ? 2 : 1),
             currentBudgetCategoryName: inventory || ProcessInfo.processInfo.arguments.contains("--ledger-ui-test-category-unavailable")
                 ? nil : "Furniture",
             currentAccountingResolution: inventory || ProcessInfo.processInfo.arguments.contains("--ledger-ui-test-accounting-unavailable")
@@ -1389,6 +1462,12 @@ private struct UITestFixtureItemReader: DownloadedItemPlacementReading, Download
         AsyncThrowingStream { continuation in
             let task = Task {
                 do {
+                    if ProcessInfo.processInfo.arguments.contains("--ledger-ui-test-bookmark-readback") {
+                        for try await updated in bookmarkReadback.stream {
+                            continuation.yield(try itemHistory(accountId: accountId, itemId: itemId, bookmarkUpdated: updated))
+                        }
+                        return
+                    }
                     continuation.yield(try await readDownloadedItemPlacementHistory(accountId: accountId, itemId: itemId))
                     // Remain a live subscription until the Item route cancels.
                 } catch { continuation.finish(throwing: error) }

@@ -4,7 +4,7 @@ import LedgerTargetCore
 /// Transport mappings for the existing Client/Project/category command ports.
 /// Business validation and terminal-result checks stay in their existing owners.
 struct SupabaseWorkspaceCommandRPC: ClientCreationCommandApplying, ProjectCreationCommandApplying,
-    CategoryManagementCommandApplying, InventorySaleCommandApplying, EditUncollectedItemPriceApplying, ReturnUninvoicedItemsCommandApplying, CreateExpenseCommandApplying, EditExpenseCommandApplying, CreateInvoiceCommandApplying, ReviseCreatedInvoiceCommandApplying, CreateFeeInstallmentCommandApplying, InventorySaleReviewReading, TransactionReceiptReading, Sendable {
+    CategoryManagementCommandApplying, InventorySaleCommandApplying, EditUncollectedItemPriceApplying, EditItemDetailsApplying, ReturnUninvoicedItemsCommandApplying, CreateExpenseCommandApplying, EditExpenseCommandApplying, CreateInvoiceCommandApplying, ReviseCreatedInvoiceCommandApplying, CreateFeeInstallmentCommandApplying, InventorySaleReviewReading, TransactionReceiptReading, Sendable {
     enum Failure: Error, Equatable { case scopeMismatch, invalidResponse, rejected(Int) }
     let url: URL
     let key: String
@@ -49,6 +49,15 @@ struct SupabaseWorkspaceCommandRPC: ClientCreationCommandApplying, ProjectCreati
         let result: TransactionReceiptSnapshot = try await call("spike_read_transaction_receipt", body: body)
         try result.validate(accountId: authorization.accountId, principalId: authorization.principalId,
             transactionId: transactionId)
+        return result
+    }
+
+    func apply(_ command: EditItemDetailsCommand) async throws -> EditItemDetailsServerResult {
+        try requireScope(account: command.envelope.accountId.rawValue,
+                         principal: command.envelope.actorPrincipalId.rawValue)
+        let request = try EditItemDetailsUploadRequest(command)
+        let result: EditItemDetailsServerResult = try await call("spike_edit_item_details", body: request.rpcBody)
+        try result.validate(for: command)
         return result
     }
 

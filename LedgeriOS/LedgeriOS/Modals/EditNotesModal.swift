@@ -1,5 +1,23 @@
 import SwiftUI
 
+struct NotesEditorField: View {
+    @Binding var text: String
+
+    var body: some View {
+        TextEditor(text: $text)
+            .font(Typography.body)
+            .foregroundStyle(BrandColors.textPrimary)
+            .scrollContentBackground(.hidden)
+            .padding(Spacing.md)
+            .frame(minHeight: 200)
+            .clipShape(RoundedRectangle(cornerRadius: Dimensions.inputRadius))
+            .overlay(
+                RoundedRectangle(cornerRadius: Dimensions.inputRadius)
+                    .stroke(BrandColors.border, lineWidth: Dimensions.borderWidth)
+            )
+    }
+}
+
 /// Shared bottom sheet for editing free-text notes.
 /// Reusable for transactions, items, spaces — takes a closure for saving.
 struct EditNotesModal: View {
@@ -26,17 +44,7 @@ struct EditNotesModal: View {
                 dismiss()
             }
         ) {
-            TextEditor(text: $currentText)
-                .font(Typography.body)
-                .foregroundStyle(BrandColors.textPrimary)
-                .scrollContentBackground(.hidden)
-                .padding(Spacing.md)
-                .frame(minHeight: 200)
-                .clipShape(RoundedRectangle(cornerRadius: Dimensions.inputRadius))
-                .overlay(
-                    RoundedRectangle(cornerRadius: Dimensions.inputRadius)
-                        .stroke(BrandColors.border, lineWidth: Dimensions.borderWidth)
-                )
+            NotesEditorField(text: $currentText)
         }
     }
 }

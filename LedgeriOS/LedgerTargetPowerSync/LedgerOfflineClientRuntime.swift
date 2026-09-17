@@ -237,6 +237,21 @@ public final class LedgerOfflineClientRuntime:
         try await lifecycleOwner.inventorySaleStatus(operationId)
     }
 
+    public func watchItemDetailsEdit(_ operationId: OperationID) -> AsyncThrowingStream<OperationSnapshot?, Error> {
+        trackedStream { id, continuation in
+            await self.lifecycleOwner.startItemDetailsEditWatch(id: id, operationId: operationId, continuation: continuation)
+        }
+    }
+
+    public func itemDetailsEditStatus(_ operationId: OperationID) async throws -> OperationSnapshot? {
+        try await lifecycleOwner.itemDetailsEditStatus(operationId)
+    }
+
+    public func editItemDetails(_ payload: EditItemDetailsCommand.Payload,
+        operationUUID: UUID, capturedAt: Date) async throws -> OperationReceipt {
+        try await lifecycleOwner.editItemDetails(payload, operationUUID: operationUUID, capturedAt: capturedAt)
+    }
+
     public func itemPriceEditStatus(_ operationId: OperationID) async throws -> OperationSnapshot? {
         try await lifecycleOwner.itemPriceEditStatus(operationId)
     }
@@ -772,5 +787,6 @@ extension LedgerOfflineClientRuntime: SpaceListQuerying {}
 extension LedgerOfflineClientRuntime: InventorySaleReviewReading {}
 extension LedgerOfflineClientRuntime: InventorySaleWorkflowServing {}
 extension LedgerOfflineClientRuntime: ItemPriceEditing {}
+extension LedgerOfflineClientRuntime: ItemDetailsEditing {}
 extension LedgerOfflineClientRuntime: UninvoicedReturnWorkflowServing {}
 extension LedgerOfflineClientRuntime: SpaceCoreDetailsQuerying {}

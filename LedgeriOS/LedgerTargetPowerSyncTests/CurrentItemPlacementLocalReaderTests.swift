@@ -299,6 +299,7 @@ struct CurrentItemPlacementLocalReaderTests {
             let details = try #require(history.details)
             #expect(details.name == "" && details.displayName == "")
             #expect(details.description == "Chair")
+            #expect(details.itemRevision == 1)
             #expect(details.notes == "  Notes\nsecond line  ")
             #expect(details.sku == " SKU " && details.source == " Vendor ")
             #expect(details.currentSource == "" && details.displaySource == "")
@@ -309,6 +310,8 @@ struct CurrentItemPlacementLocalReaderTests {
             let empty = try await reader.readHistory(accountId: account, principalId: principal, itemId: item)
             #expect(empty.details?.notes == "" && empty.details?.displayName == "Chair")
             #expect(empty.details?.displaySource == " Vendor " && empty.details?.isBookmarked == nil)
+            _ = try await db.execute(sql: "UPDATE spike_items SET revision=9223372036854775807 WHERE id='chair'", parameters: nil)
+            #expect(try await reader.readHistory(accountId: account, principalId: principal, itemId: item).details?.itemRevision == Int64.max)
             await #expect(throws: CurrentItemPlacementReadFailure.incompleteOrConflictingPlacement) {
                 try await reader.readHistory(accountId: account, principalId: principal, itemId: ItemID(validating: "missing"))
             }

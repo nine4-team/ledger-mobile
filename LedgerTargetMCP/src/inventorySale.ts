@@ -1,5 +1,6 @@
 import { createHash } from "node:crypto";
 import { z } from "zod";
+import { validateItemDetailsEditResult, type ItemDetailsEditRequest, type ItemDetailsEditServing } from "./itemDetailsEdit.js";
 import { canonicalJSON, TargetMCPFailure, validateIdentifier, type TargetMCPRequestContext } from "./contractSupport.js";
 import { userCredential } from "./categoryManagement.js";
 import { itemPriceEditReviewInputSchema, validateItemPriceEditReview,
@@ -99,7 +100,7 @@ export async function inventorySaleReviewTool(input: { itemIds: string[] }, cont
   return validateInventorySaleReview(await service.review(parsed.data.itemIds, context), parsed.data.itemIds, context);
 }
 
-export class SupabaseInventorySaleService implements InventorySaleServing, ItemPriceEditServing {
+export class SupabaseInventorySaleService implements InventorySaleServing, ItemPriceEditServing, ItemDetailsEditServing {
   readonly #url: URL;
   constructor(url: URL, readonly key: string, readonly fetchImplementation: typeof fetch = fetch) {
     if (!["http:", "https:"].includes(url.protocol) || !url.hostname || url.username || url.password || url.search || url.hash) {
@@ -140,6 +141,12 @@ export class SupabaseInventorySaleService implements InventorySaleServing, ItemP
     if (request.accountId !== context.accountId || request.actorPrincipalId !== context.principalId) return fail("account_not_authorized");
     const result = await this.#rpc("spike_edit_uncollected_item_price", { p_command: request.commandJSON }, context);
     validateItemPriceEditResult(result, request);
+    return result;
+  }
+  async applyItemDetailsEdit(request: ItemDetailsEditRequest, context: TargetMCPRequestContext): Promise<unknown> {
+    if (request.accountId !== context.accountId || request.actorPrincipalId !== context.principalId) return fail("account_not_authorized");
+    const result = await this.#rpc("spike_edit_item_details", { p_command: request.commandJSON }, context);
+    validateItemDetailsEditResult(result, request);
     return result;
   }
 }

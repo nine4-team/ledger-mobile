@@ -2122,6 +2122,50 @@ struct AccountWorkspacePendingWorkRuntimeTests {
         #expect(persisted.expectedPriceRevision == payload.expectedPriceRevision + 1)
         #expect(persisted.expectedChargeRevision == payload.expectedChargeRevision + 1)
         try await reopened.close()
+        // The local fixture also proves descriptive edits through the same real
+        // Auth/RPC/Sync stack. Hosted use waits for the details migration deployment.
+        if !hosted {
+            let online = try await context.openRuntime()
+            try await entry.startWorkspaceSync(online, authorization: authorization, powerSyncURL: sync)
+            var baseline: DownloadedItemDescriptiveDetails?
+            for try await history in online.watchDownloadedItemPlacementHistory(accountId: context.accountId, itemId: itemId) {
+                if let details = history.details, details.itemRevision != nil { baseline = details; break }
+            }
+            let original = try #require(baseline)
+            try await online.close()
+            let detailsOffline = try await context.openRuntime()
+            let detailsPayload = try EditItemDetailsCommand.Payload(items: [
+                .init(itemId: itemId, expectedRevision: try #require(original.itemRevision))
+            ], changes: .init(name: .set("Offline edited Item"), sku: .clear, notes: .set("  Kept exact\nnotes  ")))
+            let detailsUUID = UUID(), detailsDate = Date()
+            let detailsReceipt = try await detailsOffline.editItemDetails(detailsPayload,
+                operationUUID: detailsUUID, capturedAt: detailsDate)
+            #expect(detailsReceipt.localState == .queued)
+            try await detailsOffline.close()
+            let detailsResumed = try await context.openRuntime()
+            #expect(try await detailsResumed.editItemDetails(detailsPayload,
+                operationUUID: detailsUUID, capturedAt: detailsDate) == detailsReceipt)
+            try await entry.startWorkspaceSync(detailsResumed, authorization: authorization, powerSyncURL: sync)
+            var detailsApplied = false
+            for try await state in detailsResumed.watchItemDetailsEdit(detailsReceipt.operationId) {
+                if state?.state.phase == .rejected { throw RuntimeInjectedFailure() }
+                if state?.state.phase == .applied { detailsApplied = true; break }
+            }
+            #expect(detailsApplied)
+            for try await history in detailsResumed.watchDownloadedItemPlacementHistory(accountId: context.accountId, itemId: itemId) {
+                guard history.details?.name == "Offline edited Item" else { continue }
+                #expect(history.details?.sku == nil)
+                #expect(history.details?.notes == "  Kept exact\nnotes  ")
+                #expect(history.details?.itemRevision == detailsPayload.items[0].expectedRevision + 1)
+                break
+            }
+            try await detailsResumed.close()
+            let final = try await context.openRuntime()
+            let history = try await final.readDownloadedItemPlacementHistory(accountId: context.accountId, itemId: itemId)
+            #expect(history.details?.name == "Offline edited Item")
+            #expect(try await final.itemDetailsEditStatus(detailsReceipt.operationId)?.state.phase == .applied)
+            try await final.close()
+        }
     }
 
     @Test("Expense offline commands converge through actual Auth, RPC and PowerSync",
@@ -3411,6 +3455,7 @@ struct AccountWorkspacePendingWorkRuntimeTests {
         let runtime = try await context.openRuntime(dependencies: dependencies)
         let project = try ProjectID(validating: "project"), item = try ItemID(validating: "item")
         let operation = try ItemPriceEditOperationIdentity.make(accountId: context.accountId, uuid: UUID())
+        let detailsOperation = try ItemDetailsEditOperationIdentity.make(accountId: context.accountId, uuid: UUID())
         let ready = AsyncStream<Void>.makeStream()
         let review = Task {
             do {
@@ -3432,15 +3477,28 @@ struct AccountWorkspacePendingWorkRuntimeTests {
                 #expect(failure == .runtimeClosed)
             } catch { Issue.record("Unexpected price status failure: \(error)") }
         }
+        let detailsStatus = Task {
+            do {
+                for try await value in runtime.watchItemDetailsEdit(detailsOperation) {
+                    #expect(value == nil)
+                    ready.continuation.yield(())
+                }
+            } catch is CancellationError {} catch let failure as LedgerOfflineClientRuntimeFailure {
+                #expect(failure == .runtimeClosed)
+            } catch { Issue.record("Unexpected Item details status failure: \(error)") }
+        }
         var signals = ready.stream.makeAsyncIterator()
+        #expect(await signals.next() != nil)
         #expect(await signals.next() != nil)
         #expect(await signals.next() != nil)
         if removing { try await runtime.lockAccessPreservingPendingWork() }
         else { try await runtime.close() }
         await review.value
         await status.value
+        await detailsStatus.value
         try await Self.expectClosed(runtime.watchItemPriceReview(project: project, item: item))
         try await Self.expectClosed(runtime.watchItemPriceEdit(operation))
+        try await Self.expectClosed(runtime.watchItemDetailsEdit(detailsOperation))
         ready.continuation.finish()
     }
 

@@ -19,6 +19,7 @@ struct DownloadedItemsView: View {
     @State private var selectedItem: ItemSelection?
     @State private var saleSelection: SaleSelection?
     @State private var returnSelection: ReturnSelection?
+    @State private var statusSelection: StatusSelection?
     @State private var search = ""
     @State private var order = DownloadedItemOrder.newest
     @State private var filters = DownloadedItemFilters()
@@ -32,6 +33,13 @@ struct DownloadedItemsView: View {
         let accountId: AccountID
         let itemId: ItemID
         var id: String { itemId.rawValue }
+    }
+
+    private struct StatusSelection: Identifiable {
+        let id = UUID()
+        let accountId: AccountID
+        let scope: ItemPlacementScope
+        let rows: [PhysicalItemPlacement]
     }
 
     private struct SaleSelection: Identifiable {
@@ -206,6 +214,12 @@ struct DownloadedItemsView: View {
                     currency: try! CurrencyCode(validating: "USD"), service: service)
             }
         }
+        .sheet(item: $statusSelection) { selected in
+            if selected.accountId == accountId, selected.scope == scope,
+               let service = reader as? any ItemDetailsEditing {
+                ItemDetailsEditForm(bulkRows: selected.rows, service: service)
+            }
+        }
         .sheet(item: $returnSelection) { selected in
             if selected.accountId == accountId, scope == .project(selected.projectId),
                let service = reader as? any UninvoicedReturnWorkflowServing {
@@ -276,9 +290,21 @@ struct DownloadedItemsView: View {
                     copyToClipboard(payload)
                 }
                 .accessibilityIdentifier("target-items-copy-ids")
+                if reader is any ItemDetailsEditing {
+                    Button("Change Status") {
+                        guard let current = selectionEvidence,
+                              case .downloaded(let snapshot) = model.state,
+                              snapshot.accountId == accountId, snapshot.scope == scope else { return }
+                        let ids = selection.ids.intersection(current)
+                        let rows = snapshot.rows.filter { ids.contains($0.itemId) }
+                            .sorted { $0.itemId.rawValue < $1.itemId.rawValue }
+                        guard !rows.isEmpty, rows.count == ids.count else { return }
+                        statusSelection = .init(accountId: accountId, scope: scope, rows: rows)
+                    }.accessibilityIdentifier("target-items-change-status")
+                }
                 Button("Clear selection") { selection.clear() }
                     .accessibilityIdentifier("target-items-selection-clear")
-                Text("Selected price totals and bulk edits are not available yet.")
+                Text("Selected price totals are not available yet.")
                     .font(.caption).foregroundStyle(.secondary)
             }
         }
@@ -500,6 +526,7 @@ struct DownloadedItemsView: View {
     private func resetContext() {
         saleSelection = nil
         returnSelection = nil
+        statusSelection = nil
         selectedItem = nil
         search = ""
         order = .newest
@@ -536,6 +563,7 @@ struct DownloadedItemDetailView: View {
     @State private var showingInventorySale = false
     @State private var showingInventoryReturn = false
     @State private var showingPriceEdit = false
+    @State private var showingDetailsEdit = false
     private struct ReferencedSpaceSelection: Identifiable {
         let id: SpaceID
         let scope: SpaceCreationScope
@@ -550,6 +578,8 @@ struct DownloadedItemDetailView: View {
     @State private var refresh = UUID()
     @State private var mediaExpanded = true
     @State private var notesExpanded = true
+    @State private var showingNotesEdit = false
+    @State private var showingStatusEdit = false
     @State private var detailsExpanded = true
     @State private var historyExpanded = true
     @State private var copyFailed = false
@@ -623,6 +653,30 @@ struct DownloadedItemDetailView: View {
                 UninvoicedReturnForm(accountId: accountId, projectId: projectId, itemIds: [itemId], service: service)
             }
         }
+        .sheet(isPresented: $showingStatusEdit) {
+            if let service = reader as? any ItemDetailsEditing,
+               case .downloaded(let history) = model.state,
+               history.accountId == accountId, history.itemId == itemId,
+               let details = history.details {
+                ItemDetailsEditForm(itemId: itemId, details: details, service: service, fields: .workflowStatus)
+            }
+        }
+        .sheet(isPresented: $showingNotesEdit) {
+            if let service = reader as? any ItemDetailsEditing,
+               case .downloaded(let history) = model.state,
+               history.accountId == accountId, history.itemId == itemId,
+               let details = history.details {
+                ItemDetailsEditForm(itemId: itemId, details: details, service: service, fields: .notes)
+            }
+        }
+        .sheet(isPresented: $showingDetailsEdit) {
+            if let service = reader as? any ItemDetailsEditing,
+               case .downloaded(let history) = model.state,
+               history.accountId == accountId, history.itemId == itemId,
+               let details = history.details {
+                ItemDetailsEditForm(itemId: itemId, details: details, service: service)
+            }
+        }
         .sheet(isPresented: $showingPriceEdit) {
             if let service = reader as? any ItemPriceEditing,
                case .downloaded(let history) = model.state,
@@ -639,8 +693,22 @@ struct DownloadedItemDetailView: View {
             HStack {
                 Text("Item details").font(.headline)
                 Spacer()
+                if let service = reader as? any ItemDetailsEditing,
+                   case .downloaded(let history) = model.state,
+                   let details = history.details {
+                    ItemBookmarkControl(itemId: itemId, details: details, service: service)
+                        .id(itemId)
+                }
                 if hasCurrentItem {
                     Menu("Item actions") {
+                        if reader is any ItemDetailsEditing,
+                           case .downloaded(let history) = model.state,
+                           history.details?.itemRevision != nil {
+                            Button("Edit Name and SKU") { showingDetailsEdit = true }
+                                .accessibilityIdentifier("target-item-detail-edit-details")
+                            Button("Change Status") { showingStatusEdit = true }
+                                .accessibilityIdentifier("target-item-detail-edit-status")
+                        }
                         if reader is any InventorySaleWorkflowServing,
                            case .downloaded(let history) = model.state,
                            history.pendingSale == nil,
@@ -775,6 +843,10 @@ struct DownloadedItemDetailView: View {
                 Text(details.notes.flatMap { $0.isEmpty ? nil : $0 } ?? "No notes")
                     .textSelection(.enabled)
                     .accessibilityIdentifier("target-item-detail-notes")
+                if reader is any ItemDetailsEditing, details.itemRevision != nil {
+                    Button("Edit Notes") { showingNotesEdit = true }
+                        .accessibilityIdentifier("target-item-edit-notes")
+                }
             } else { Text("Notes not downloaded").accessibilityIdentifier("target-item-detail-notes-unavailable") }
         }
         detailSection("Details", id: "target-item-detail-details-section", isExpanded: $detailsExpanded) {

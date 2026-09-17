@@ -244,7 +244,8 @@ struct CurrentItemPlacementLocalReader: Sendable {
             description: cursor.getString(name: "raw_description"), sku: cursor.getStringOptional(name: "sku"),
             source: cursor.getStringOptional(name: "source"), currentSource: cursor.getStringOptional(name: "current_source"),
             notes: cursor.getStringOptional(name: "notes"), workflowStatusRaw: cursor.getStringOptional(name: "workflow_status"),
-            isBookmarked: bookmark.map { $0 == 1 }, createdAt: cursor.getStringOptional(name: "created_at"))
+            isBookmarked: bookmark.map { $0 == 1 }, createdAt: cursor.getStringOptional(name: "created_at"),
+            itemRevision: cursor.getInt64(name: "revision"))
         guard let id = try cursor.getStringOptional(name: "placement_id") else {
             return HistoryRow(description: description, interval: nil, details: details)
         }

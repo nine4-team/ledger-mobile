@@ -569,6 +569,39 @@ struct SupabaseCategoryManagementRPCTests {
         #expect(!signIn.hasStoredSession)
     }
 
+    @Test func itemDetailsTransportPreservesIntentForNonfinancialMember() async throws {
+        let user = UUID()
+        // Auth identity and authorization must refer to the same signed-in user.
+        let client = authClient(storage: CategoryAuthTestStorage(), userId: user)
+        _ = try await client.signIn(email: "fixture@example.invalid", password: "fixture-password")
+        let http = session()
+        defer { http.invalidateAndCancel(); CategoryHTTPProtocol.handler = nil }
+        let access = try WorkspaceMembershipAuthorization(environment: .targetStaging, authUserId: user,
+            principalId: .init(validating: "principal"), accountId: .init(validating: "account"),
+            role: .employee, financialAccess: .none)
+        let rpc = try SupabaseWorkspaceCommandRPC(url: URL(string: "https://target.invalid")!,
+            key: "sb_publishable_fixture", authorization: access,
+            identity: .init(client: client, userId: user), http: http)
+        let command = try EditItemDetailsCommand(operationId: .init(validating: "details"),
+            accountId: access.accountId, actorPrincipalId: access.principalId,
+            capturedAt: Date(timeIntervalSince1970: 123),
+            payload: .init(items: [.init(itemId: .init(validating: "item"), expectedRevision: 1)],
+                           changes: .init(sku: .clear, bookmark: false)))
+        let wire = try EditItemDetailsUploadRequest(command)
+        CategoryHTTPProtocol.handler = { request in
+            #expect(request.url?.path == "/rest/v1/rpc/spike_edit_item_details")
+            #expect(request.value(forHTTPHeaderField: "Authorization") == "Bearer signed-in-token")
+            let body = try JSONDecoder().decode([String: String].self, from: requestBody(request))
+            #expect(body == ["p_command": wire.commandJSON])
+            return try response(request, result: ["operation_id": "details", "account_id": "account",
+                "actor_principal_id": "principal", "command_type": "edit_item_details", "contract_version": "item-details-edit-v1",
+                "command_fingerprint": wire.fingerprint, "envelope_sha256": wire.fingerprint,
+                "subject_id": "item", "phase": "applied", "result_code": "item_details_updated",
+                "client_created_at_ms": 123000, "server_received_at_ms": 123001, "completed_at_ms": 123001])
+        }
+        #expect(try await rpc.apply(command).phase == "applied")
+    }
+
     @Test func workspaceTransportsMapExistingClientAndProjectContracts() async throws {
         let user = UUID()
         let auth = authClient(storage: CategoryAuthTestStorage(), userId: user)

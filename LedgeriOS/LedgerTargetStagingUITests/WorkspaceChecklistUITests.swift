@@ -3784,6 +3784,204 @@ final class WorkspaceChecklistUITests: XCTestCase {
         }
     }
 
+    func testItemDetailBookmarkQueuesExactlyOnce() throws {
+        try exerciseItemBookmark(retry: false)
+    }
+
+    func testBulkItemStatusCancelAndSave() throws {
+        continueAfterFailure = false
+        let app = XCUIApplication()
+        app.launchArguments = ["--ledger-ui-test-workspace-checklist", "--ledger-ui-test-item-detail-copy",
+                               "--ledger-ui-test-bulk-status"]
+        app.launch(); defer { app.terminate() }
+        let project = app.buttons["target-active-project-card-project-ui-test"]
+        XCTAssertTrue(project.waitForExistence(timeout: 10)); project.tap()
+        let chair = app.buttons["target-item-select-physical-ui-chair"]
+        reveal(chair, in: app, fullyInsideScrollView: true); chair.tap()
+        let second = app.buttons["target-item-select-physical-ui-unassigned"]
+        reveal(second, in: app, fullyInsideScrollView: true); second.tap()
+        let change = app.buttons["target-items-change-status"]
+        reveal(change, in: app, fullyInsideScrollView: true); change.tap()
+        XCTAssertTrue(app.buttons["Returned"].waitForExistence(timeout: 5))
+        app.buttons["Returned"].tap(); app.buttons["Cancel"].tap()
+        XCTAssertTrue(app.buttons["Save Changes"].waitForNonExistence(timeout: 5))
+        change.tap()
+        XCTAssertTrue(app.buttons["Returned"].waitForExistence(timeout: 5))
+        app.buttons["Returned"].tap(); app.buttons["Save Changes"].tap()
+        XCTAssertTrue(app.staticTexts["Saved on this device. Waiting to sync; you can close this form."].waitForExistence(timeout: 5))
+        XCTAssertFalse(app.buttons["Save Changes"].isEnabled)
+        XCTAssertEqual(app.staticTexts["target-ui-fixture-acceptance-count"].value as? String, "1")
+    }
+
+    func testItemDetailBookmarkRetriesSameEdit() throws {
+        try exerciseItemBookmark(retry: true)
+    }
+
+    func testItemDetailBookmarkRejectionRetainsWork() throws {
+        try exerciseItemBookmark(retry: false, rejected: true)
+    }
+
+    func testItemDetailBookmarkAppliedWaitsForDownload() throws {
+        try exerciseItemBookmark(retry: false, applied: true)
+    }
+
+    func testItemDetailBookmarkDownloadedResultReenablesEditing() throws {
+        try exerciseItemBookmark(retry: false, applied: true, readback: true)
+    }
+
+    private func exerciseItemBookmark(retry: Bool, rejected: Bool = false,
+                                      applied: Bool = false, readback: Bool = false) throws {
+        continueAfterFailure = false
+        let app = XCUIApplication()
+        app.launchArguments = ["--ledger-ui-test-workspace-checklist", "--ledger-ui-test-item-detail-copy"]
+        if retry { app.launchArguments.append("--ledger-ui-test-bookmark-retry") }
+        if rejected { app.launchArguments.append("--ledger-ui-test-bookmark-rejected") }
+        if applied { app.launchArguments.append("--ledger-ui-test-bookmark-applied") }
+        if readback { app.launchArguments.append("--ledger-ui-test-bookmark-readback") }
+        app.launch(); defer { app.terminate() }
+        let project = app.buttons["target-active-project-card-project-ui-test"]
+        XCTAssertTrue(project.waitForExistence(timeout: 10)); project.tap()
+        let item = app.buttons["target-physical-item-physical-ui-chair"]
+        reveal(item, in: app, fullyInsideScrollView: true); item.tap()
+        let bookmark = app.buttons["target-item-detail-bookmark-toggle"]
+        XCTAssertTrue(bookmark.waitForExistence(timeout: 5))
+        XCTAssertEqual(bookmark.label, "Remove bookmark")
+        bookmark.tap()
+        if retry {
+            let retryButton = app.buttons["Retry bookmark change"]
+            XCTAssertTrue(retryButton.waitForExistence(timeout: 5))
+            XCTAssertEqual(app.staticTexts["target-ui-fixture-acceptance-count"].value as? String, "1")
+            retryButton.tap()
+        }
+        if readback {
+            XCTAssertTrue(waitUntil { bookmark.label == "Add bookmark" && bookmark.isEnabled })
+            XCTAssertFalse(app.staticTexts["target-item-bookmark-pending"].exists)
+        } else {
+            XCTAssertTrue(app.staticTexts["target-item-bookmark-pending"].waitForExistence(timeout: 5))
+            XCTAssertFalse(bookmark.isEnabled)
+            XCTAssertEqual(bookmark.label, "Remove bookmark")
+        }
+        if rejected {
+            XCTAssertTrue(app.staticTexts["Bookmark change was not applied. Saved work is retained for review."].waitForExistence(timeout: 5))
+            XCTAssertFalse(app.buttons["Retry bookmark change"].exists)
+            XCTAssertEqual(bookmark.label, "Remove bookmark")
+        }
+        XCTAssertEqual(app.staticTexts["target-ui-fixture-acceptance-count"].value as? String, "1")
+    }
+
+    func testItemStatusEditorCancelUnchangedAndSave() throws {
+        try exerciseItemStatusEditor(selection: "Returned")
+    }
+
+    func testItemStatusEditorExplicitClear() throws {
+        try exerciseItemStatusEditor(selection: "Clear Status")
+    }
+
+    private func exerciseItemStatusEditor(selection: String) throws {
+        continueAfterFailure = false
+        let app = XCUIApplication()
+        app.launchArguments = ["--ledger-ui-test-workspace-checklist", "--ledger-ui-test-item-detail-copy"]
+        app.launch(); defer { app.terminate() }
+        let project = app.buttons["target-active-project-card-project-ui-test"]
+        XCTAssertTrue(project.waitForExistence(timeout: 10)); project.tap()
+        let item = app.buttons["target-physical-item-physical-ui-chair"]
+        reveal(item, in: app, fullyInsideScrollView: true); item.tap()
+        func openEditor() {
+            app.buttons["target-item-detail-actions"].tap()
+            app.buttons["Change Status"].tap()
+            XCTAssertTrue(app.buttons["To Purchase"].waitForExistence(timeout: 5))
+            XCTAssertEqual(app.buttons["To Purchase"].value as? String, "Selected")
+        }
+        openEditor(); app.buttons[selection].tap(); app.buttons["Cancel"].tap()
+        XCTAssertTrue(app.buttons["Save Changes"].waitForNonExistence(timeout: 5))
+        openEditor(); app.buttons["To Purchase"].tap(); app.buttons["Save Changes"].tap()
+        XCTAssertTrue(app.buttons["Save Changes"].waitForNonExistence(timeout: 5))
+        openEditor(); app.buttons[selection].tap()
+        XCTAssertEqual(app.buttons[selection].value as? String, "Selected")
+        app.buttons["Save Changes"].tap()
+        XCTAssertTrue(app.staticTexts["Saved on this device. Waiting to sync; you can close this form."].waitForExistence(timeout: 5))
+        XCTAssertFalse(app.buttons["Save Changes"].isEnabled)
+        app.buttons["Close"].firstMatch.tap()
+        XCTAssertEqual(app.staticTexts["target-ui-fixture-acceptance-count"].value as? String, "1")
+    }
+
+    func testItemNotesEditorCancelUnchangedAndSave() throws {
+        continueAfterFailure = false
+        let app = XCUIApplication()
+        app.launchArguments = ["--ledger-ui-test-workspace-checklist", "--ledger-ui-test-item-detail-copy"]
+        app.launch(); defer { app.terminate() }
+        let project = app.buttons["target-active-project-card-project-ui-test"]
+        XCTAssertTrue(project.waitForExistence(timeout: 10)); project.tap()
+        let item = app.buttons["target-physical-item-physical-ui-chair"]
+        reveal(item, in: app, fullyInsideScrollView: true); item.tap()
+        func openEditor() {
+            let edit = app.buttons["target-item-edit-notes"]
+            reveal(edit, in: app, fullyInsideScrollView: true); edit.tap()
+            XCTAssertTrue(app.textViews["target-item-notes-entry"].waitForExistence(timeout: 5))
+        }
+        openEditor(); app.buttons["Cancel"].tap()
+        XCTAssertTrue(app.buttons["Save Changes"].waitForNonExistence(timeout: 5))
+        openEditor(); app.buttons["Save Changes"].tap()
+        XCTAssertTrue(app.buttons["Save Changes"].waitForNonExistence(timeout: 5))
+        openEditor()
+        let field = app.textViews["target-item-notes-entry"]
+        field.tap()
+        #if os(macOS)
+        field.typeKey("a", modifierFlags: .command)
+        #else
+        field.press(forDuration: 1)
+        let selectAll = app.menuItems["Select All"].firstMatch
+        if selectAll.waitForExistence(timeout: 2) { selectAll.tap() }
+        else {
+            let button = app.buttons["Select All"].firstMatch
+            XCTAssertTrue(button.waitForExistence(timeout: 2)); button.tap()
+        }
+        #endif
+        field.typeText("Updated notes")
+        XCTAssertEqual(field.value as? String, "Updated notes")
+        app.buttons["Save Changes"].tap()
+        XCTAssertTrue(app.staticTexts["Saved on this device. Waiting to sync; you can close this form."].waitForExistence(timeout: 5))
+        XCTAssertFalse(app.buttons["Save Changes"].isEnabled)
+        app.buttons["Close"].firstMatch.tap()
+        XCTAssertEqual(app.staticTexts["target-ui-fixture-acceptance-count"].value as? String, "1")
+    }
+
+    func testItemDetailsEditorCancelUnchangedAndSave() throws {
+        continueAfterFailure = false
+        let app = XCUIApplication()
+        app.launchArguments = ["--ledger-ui-test-workspace-checklist", "--ledger-ui-test-item-detail-copy"]
+        app.launch(); defer { app.terminate() }
+        let project = app.buttons["target-active-project-card-project-ui-test"]
+        XCTAssertTrue(project.waitForExistence(timeout: 10)); project.tap()
+        let item = app.buttons["target-physical-item-physical-ui-chair"]
+        reveal(item, in: app, fullyInsideScrollView: true); item.tap()
+        func openEditor() {
+            let menu = app.buttons["target-item-detail-actions"]
+            XCTAssertTrue(menu.waitForExistence(timeout: 5)); menu.tap()
+            app.buttons["Edit Name and SKU"].tap()
+            XCTAssertTrue(app.textFields["Item name"].waitForExistence(timeout: 5))
+            XCTAssertEqual(app.textFields["Item name"].value as? String, "Downloaded test chair")
+            XCTAssertEqual(app.textFields["Barcode or SKU number"].value as? String, "CHAIR-001")
+        }
+        openEditor(); app.buttons["Cancel"].tap()
+        XCTAssertTrue(app.buttons["Save Changes"].waitForNonExistence(timeout: 5))
+        openEditor(); app.buttons["Save Changes"].tap()
+        XCTAssertTrue(app.buttons["Save Changes"].waitForNonExistence(timeout: 5))
+        openEditor()
+        let field = app.textFields["Item name"]
+        field.tap()
+        #if os(macOS)
+        field.typeKey("a", modifierFlags: .command)
+        #else
+        field.typeText(String(repeating: XCUIKeyboardKey.delete.rawValue, count: "Downloaded test chair".count))
+        #endif
+        field.typeText("Updated chair"); app.buttons["Save Changes"].tap()
+        XCTAssertTrue(app.staticTexts["Saved on this device. Waiting to sync; you can close this form."].waitForExistence(timeout: 5))
+        XCTAssertFalse(app.buttons["Save Changes"].isEnabled)
+        app.buttons["Close"].firstMatch.tap()
+        XCTAssertEqual(app.staticTexts["target-ui-fixture-acceptance-count"].value as? String, "1")
+    }
+
     func testItemPriceEditorCancelUnchangedAndNormalizedSave() throws {
         try exerciseItemPriceEditor(retry: false)
     }

@@ -379,6 +379,8 @@ public struct PhysicalItemPlacementHistoryInterval: Equatable, Sendable {
 
 /// Raw descriptive physical evidence only; no financial or command authority.
 public struct DownloadedItemDescriptiveDetails: Equatable, Sendable {
+    /// Nil means read-only legacy/fixture evidence, never revision zero for an edit.
+    public let itemRevision: Int64?
     public let name: String?
     public let description: String
     public let sku: String?
@@ -394,7 +396,9 @@ public struct DownloadedItemDescriptiveDetails: Equatable, Sendable {
 
     public init(name: String? = nil, description: String, sku: String? = nil,
                 source: String? = nil, currentSource: String? = nil, notes: String? = nil,
-                workflowStatusRaw: String? = nil, isBookmarked: Bool? = nil, createdAt: String? = nil) {
+                workflowStatusRaw: String? = nil, isBookmarked: Bool? = nil, createdAt: String? = nil,
+                itemRevision: Int64? = nil) {
+        self.itemRevision = itemRevision
         self.name = name; self.description = description; self.sku = sku
         self.source = source; self.currentSource = currentSource; self.notes = notes
         self.workflowStatusRaw = workflowStatusRaw; self.isBookmarked = isBookmarked

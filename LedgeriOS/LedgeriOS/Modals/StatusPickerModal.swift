@@ -1,5 +1,50 @@
 import SwiftUI
 
+/// Backend-independent rows shared by the original and target status pickers.
+struct ItemStatusPickerRows: View {
+    struct Option: Identifiable {
+        let id: String
+        let label: String
+        let icon: String
+    }
+    let options: [Option]
+    let currentID: String?
+    let onSelect: (String) -> Void
+
+    var body: some View {
+        LazyVStack(spacing: 0) {
+            ForEach(options) { option in
+                Button { onSelect(option.id) } label: {
+                    HStack(spacing: Spacing.md) {
+                        Image(systemName: option.icon)
+                            .font(.system(size: 20))
+                            .foregroundStyle(BrandColors.primary)
+                            .frame(width: 28)
+                        Text(option.label)
+                            .font(Typography.body)
+                            .foregroundStyle(BrandColors.textPrimary)
+                        Spacer()
+                        if option.id == currentID {
+                            Image(systemName: "checkmark")
+                                .font(.system(size: 14, weight: .semibold))
+                                .foregroundStyle(BrandColors.primary)
+                        }
+                    }
+                    .padding(.horizontal, Spacing.screenPadding)
+                    .frame(minHeight: 52)
+                    .contentShape(Rectangle())
+                }
+                .buttonStyle(.plain)
+                .accessibilityValue(option.id == currentID ? "Selected" : "Not selected")
+                if option.id != options.last?.id {
+                    Divider().padding(.horizontal, Spacing.screenPadding)
+                }
+            }
+        }
+    }
+}
+
+#if canImport(FirebaseFirestore)
 /// Single-select status picker for item status updates.
 /// Excludes `.sold` — that status is system-set by sale operations.
 struct StatusPickerModal: View {
@@ -34,41 +79,12 @@ struct StatusPickerModal: View {
             .padding(.top, Spacing.screenPadding)
 
             ScrollView {
-                LazyVStack(spacing: 0) {
-                    ForEach(statuses, id: \.status) { option in
-                        Button {
-                            onSelect(option.status)
-                            dismiss()
-                        } label: {
-                            HStack(spacing: Spacing.md) {
-                                Image(systemName: option.icon)
-                                    .font(.system(size: 20))
-                                    .foregroundStyle(BrandColors.primary)
-                                    .frame(width: 28)
-
-                                Text(option.status.displayLabel)
-                                    .font(Typography.body)
-                                    .foregroundStyle(BrandColors.textPrimary)
-
-                                Spacer()
-
-                                if option.status == currentStatus {
-                                    Image(systemName: "checkmark")
-                                        .font(.system(size: 14, weight: .semibold))
-                                        .foregroundStyle(BrandColors.primary)
-                                }
-                            }
-                            .padding(.horizontal, Spacing.screenPadding)
-                            .frame(minHeight: 52)
-                            .contentShape(Rectangle())
-                        }
-                        .buttonStyle(.plain)
-
-                        if option.status != statuses.last?.status {
-                            Divider()
-                                .padding(.horizontal, Spacing.screenPadding)
-                        }
-                    }
+                ItemStatusPickerRows(options: statuses.map {
+                    .init(id: $0.status.rawValue, label: $0.status.displayLabel, icon: $0.icon)
+                }, currentID: currentStatus?.rawValue) { raw in
+                    guard let selected = ItemStatus(rawValue: raw) else { return }
+                    onSelect(selected)
+                    dismiss()
                 }
             }
         }
@@ -78,3 +94,4 @@ struct StatusPickerModal: View {
 #Preview {
     StatusPickerModal(currentStatus: .purchased, onSelect: { _ in })
 }
+#endif

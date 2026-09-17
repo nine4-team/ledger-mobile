@@ -272,6 +272,7 @@ public struct LedgerPowerSyncCommandAppliers: Sendable {
     var categoryManagement: (any CategoryManagementCommandApplying)?
     var inventorySale: (any InventorySaleCommandApplying)?
     var itemPriceEdit: (any EditUncollectedItemPriceApplying)?
+    var itemDetailsEdit: (any EditItemDetailsApplying)?
     var uninvoicedReturn: (any ReturnUninvoicedItemsCommandApplying)?
     var expenseCreation: (any CreateExpenseCommandApplying)?
     var expenseEdit: (any EditExpenseCommandApplying)?
@@ -287,6 +288,7 @@ public struct LedgerPowerSyncCommandAppliers: Sendable {
                 categoryManagement: (any CategoryManagementCommandApplying)? = nil,
                 inventorySale: (any InventorySaleCommandApplying)? = nil,
                 itemPriceEdit: (any EditUncollectedItemPriceApplying)? = nil,
+                itemDetailsEdit: (any EditItemDetailsApplying)? = nil,
                 uninvoicedReturn: (any ReturnUninvoicedItemsCommandApplying)? = nil,
                 expenseCreation: (any CreateExpenseCommandApplying)? = nil,
                 expenseEdit: (any EditExpenseCommandApplying)? = nil,
@@ -301,6 +303,7 @@ public struct LedgerPowerSyncCommandAppliers: Sendable {
         self.categoryManagement = categoryManagement
         self.inventorySale = inventorySale
         self.itemPriceEdit = itemPriceEdit
+        self.itemDetailsEdit = itemDetailsEdit
         self.uninvoicedReturn = uninvoicedReturn
         self.expenseCreation = expenseCreation
         self.expenseEdit = expenseEdit
@@ -325,6 +328,7 @@ final class LedgerPowerSyncUploadConnector: PowerSyncBackendConnectorProtocol, @
     private let categoryManagementApplier: (any CategoryManagementCommandApplying)?
     private let inventorySaleApplier: (any InventorySaleCommandApplying)?
     private let itemPriceEditApplier: (any EditUncollectedItemPriceApplying)?
+    private let itemDetailsEditApplier: (any EditItemDetailsApplying)?
     private let uninvoicedReturnApplier: (any ReturnUninvoicedItemsCommandApplying)?
     private let expenseCreationApplier: (any CreateExpenseCommandApplying)?
     private let expenseEditApplier: (any EditExpenseCommandApplying)?
@@ -347,6 +351,7 @@ final class LedgerPowerSyncUploadConnector: PowerSyncBackendConnectorProtocol, @
         categoryManagementApplier: (any CategoryManagementCommandApplying)? = nil,
         inventorySaleApplier: (any InventorySaleCommandApplying)? = nil,
         itemPriceEditApplier: (any EditUncollectedItemPriceApplying)? = nil,
+        itemDetailsEditApplier: (any EditItemDetailsApplying)? = nil,
         uninvoicedReturnApplier: (any ReturnUninvoicedItemsCommandApplying)? = nil,
         expenseCreationApplier: (any CreateExpenseCommandApplying)? = nil,
         invoiceCreationApplier: (any CreateInvoiceCommandApplying)? = nil,
@@ -368,6 +373,7 @@ final class LedgerPowerSyncUploadConnector: PowerSyncBackendConnectorProtocol, @
         self.categoryManagementApplier = categoryManagementApplier
         self.inventorySaleApplier = inventorySaleApplier
         self.itemPriceEditApplier = itemPriceEditApplier
+        self.itemDetailsEditApplier = itemDetailsEditApplier
         self.uninvoicedReturnApplier = uninvoicedReturnApplier
         self.expenseCreationApplier = expenseCreationApplier
         self.expenseEditApplier = expenseEditApplier
@@ -428,6 +434,12 @@ final class LedgerPowerSyncUploadConnector: PowerSyncBackendConnectorProtocol, @
             }
             try await InventorySaleUpload.apply(entry, database: database,
                 accessFence: accessFence, applier: inventorySaleApplier)
+        case LedgerPowerSyncTable.itemDetailsEditCommands:
+            guard let itemDetailsEditApplier else {
+                throw LedgerPowerSyncUploadFailure.unsupportedCommandTable(entry.table)
+            }
+            try await ItemDetailsEditUpload.apply(entry, database: database,
+                accessFence: accessFence, applier: itemDetailsEditApplier)
         case LedgerPowerSyncTable.itemPriceEditCommands:
             guard let itemPriceEditApplier else {
                 throw LedgerPowerSyncUploadFailure.unsupportedCommandTable(entry.table)

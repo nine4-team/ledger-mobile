@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict';
 import {randomUUID, createHash} from 'node:crypto';
-import {execFileSync} from 'node:child_process';
+import {execFile, execFileSync} from 'node:child_process';
+import {promisify} from 'node:util';
 import {realpathSync} from 'node:fs';
 
 assert.ok(!process.env.DOCKER_HOST && !process.env.DOCKER_CONTEXT);
@@ -122,8 +123,9 @@ try {
       insert into public.spike_projects(id,account_id,client_id,display_name,created_at,updated_at,created_at_ms,updated_at_ms,created_by_principal_id)
         values(${q(key+'-native-project')},${q(account)},${q(key+'-native-client')},'Other native Project',now(),now(),1,1,${q(principal)});
       commit;`);
-    const runNative = (test, selectedProject=project, selectedItem=item) => {
-        const output=execFileSync('swift',['test','--package-path','LedgeriOS','--no-parallel','--filter',
+    const runNative = async (test, selectedProject=project, selectedItem=item) => {
+        // Keep processing HTTP socket closures while Swift builds/tests run.
+        const {stdout: output}=await promisify(execFile)('swift',['test','--package-path','LedgeriOS','--no-parallel','--filter',
             test==='actualLocalExpense' ? `SupabaseTransactionAttachmentUploadTests/${test}` : `AccountWorkspacePendingWorkRuntimeTests/${test}`],{encoding:'utf8',timeout:120000,
             env:{...process.env,LEDGER_SALE_LOCAL_ACCOUNT:account,LEDGER_SALE_LOCAL_PRINCIPAL:principal,
                 LEDGER_SALE_LOCAL_ITEM:selectedItem,LEDGER_SALE_LOCAL_PROJECT:selectedProject,LEDGER_SALE_LOCAL_KEY:local.PUBLISHABLE_KEY,
@@ -157,7 +159,7 @@ try {
         const expense=key+'-expense', expenseCategory=key+'-expense-category';
         const receiptAttachmentIds=[];
         if(process.argv.includes('--native-expense-media')) {
-            runNative('actualLocalExpense',project,expense);
+            await runNative('actualLocalExpense',project,expense);
             receiptAttachmentIds.push(key+'-native-receipt');
         }
         async function uploadExpenseReceipt(attachment, expectedExpenseCount) {
@@ -399,7 +401,7 @@ try {
         if(process.argv.includes('--native-expense') || process.argv.includes('--native-expense-edit') || process.argv.includes('--native-live-invoice') || process.argv.includes('--native-fee-create')) {
             assert.ok(!(process.argv.includes('--native-expense-edit') && (process.argv.includes('--expense-edit') || process.argv.includes('--expense-paid') || process.argv.includes('--native-expense'))),
                 'Native edit uses its own uncollected revision1 fixture');
-            runNative('expenseLiveReplication',project,expense);
+            await runNative('expenseLiveReplication',project,expense);
         }
         if(process.argv.includes('--native-invoice-create')) {
             assert.equal(sql(`select count(*) from ledger_private.live_invoices where account_id=${q(account)}`),'1');
@@ -523,7 +525,7 @@ try {
                 sql(`update ledger_private.live_invoices set status='sent' where id=${q(command.invoiceId)}`);
                 assert.equal(history(),before,'Live membership must not rewrite earlier paid history');
             }
-            runNative('invoicingHistoricalLiveReplication',sourceProject,originItem);
+            await runNative('invoicingHistoricalLiveReplication',sourceProject,originItem);
             assert.equal(history(),before);
         }
         console.log(JSON.stringify({mcpMixedOriginSale:true,items:3,charges:3,totalMinorUnits:400,
@@ -531,7 +533,7 @@ try {
     } else if(process.argv.includes('--native')) {
         const ports=JSON.parse(docker(['inspect','--format','{{json .NetworkSettings.Ports}}','ledger_powersync_local']));
         assert.deepEqual(ports['8080/tcp'],[{HostIp:'127.0.0.1',HostPort:'5590'}]);
-        runNative('inventorySaleLiveReplication');
+        await runNative('inventorySaleLiveReplication');
         const resold=process.argv.includes('--native-resale');
         assert.equal(sql(`select count(*) from ledger_private.item_charge_occurrences where account_id=${q(account)}`),String(returnScale+(resold?1:0)));
         assert.equal(sql(`select count(*) from ledger_private.item_charge_occurrences where account_id=${q(account)} and item_id=${q(item)} and amount_minor_units=9223372036854775807`),resold?'2':'1');
@@ -616,7 +618,7 @@ try {
         assert.equal(sql(`select count(*) from public.spike_transactions where account_id=${q(account)}`),'0');
         console.log('PASS actual HTTP price edit: live Invoice readback, exact receipt/replay, no payment');
         if(process.argv.includes('--native-price-edit')) {
-            runNative('itemPriceLiveReplication');
+            await runNative('itemPriceLiveReplication');
             const afterNative=await service.reviewItemPriceEdit({projectId:project,itemId:item},priceContext);
             assert.equal(afterNative.currentPrice.amountMinorUnits,'12347');
             assert.equal(afterNative.chargeRevision,'3');

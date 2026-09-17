@@ -414,6 +414,29 @@ try {
     if(release==='rollback') assert.equal(total,'24691');
   }
   console.log('PASS mixed Item/Expense Invoice edits serialize in both orders and recover after rollback');
+  const detailsEdit = (name, operation, label) => {
+    const command = JSON.stringify({ operationId: operation, accountId: 'account-primary',
+      actorPrincipalId: 'principal-owner', contractVersion: 'item-details-edit-v1', createdAtMs: '1000',
+      items: [{ itemId: source(name), expectedRevision: '1' }], changes: { name: label } });
+    return `select set_config('request.jwt.claims','{"sub":"10000000-0000-0000-0000-000000000001","role":"authenticated"}',true);
+      select (ledger_private.edit_item_details('${command}')).phase;`;
+  };
+  for (const release of ['commit', 'rollback']) {
+    const name = `details-${release}`;
+    prepare(name, false);
+    await race(name, detailsEdit(name, `${name}-first`, 'First'),
+      detailsEdit(name, `${name}-second`, 'Second'), release);
+    assert.equal(sql(`select name||':'||revision from public.spike_items where id='${source(name)}'`),
+      release === 'commit' ? 'First:2' : 'Second:2');
+    assert.equal(sql(`select phase||coalesce(':'||error_code,'') from public.spike_operation_results where operation_id='${name}-second'`),
+      release === 'commit' ? 'rejected:item_edit_stale' : 'applied');
+  }
+  prepare('details-retry', false);
+  const retry = detailsEdit('details-retry', 'details-same-operation', 'Once');
+  await race('details-retry', retry, retry, 'commit');
+  assert.equal(sql("select name||':'||revision from public.spike_items where id='race-details-retry'"), 'Once:2');
+  assert.equal(sql("select count(*) from public.spike_operation_results where operation_id='details-same-operation'"), '1');
+  console.log('PASS Item details competing edits, rollback and identical-operation races; no lost update or double revision');
 } finally {
   for (const child of sessions) if (!child.stdin.destroyed && !child.stdin.writableEnded) child.stdin.end('rollback;\n');
   if (created) {
