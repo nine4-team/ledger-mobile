@@ -425,6 +425,55 @@ struct AccountWorkspacePendingWorkRuntimeTests {
         context.remove()
     }
 
+    @Test("Client Summary downloads hosted physical facts and survives encrypted offline reopening",
+          .enabled(if: ProcessInfo.processInfo.environment["LEDGER_CLIENT_REPORT_HOSTED_QA"] == "1"), .timeLimit(.minutes(1)))
+    func clientSummaryHostedReplication() async throws {
+        let env = ProcessInfo.processInfo.environment
+        guard let account = env["LEDGER_SALE_LOCAL_ACCOUNT"], account == "realcopy-b9d236394770-account",
+              let principal = env["LEDGER_SALE_LOCAL_PRINCIPAL"], principal == "upload-http-owner-4b1e9766-5791-48a9-a7b1-15a541807e64",
+              let project = env["LEDGER_SALE_LOCAL_PROJECT"], project.hasPrefix("hosted-price-flow-"),
+              let item = env["LEDGER_SALE_LOCAL_ITEM"], item.hasPrefix("hosted-price-flow-"),
+              let key = env["LEDGER_SALE_LOCAL_KEY"], let email = env["LEDGER_SALE_LOCAL_EMAIL"],
+              email.hasSuffix("@ledger-tests.invalid"), let password = env["LEDGER_SALE_LOCAL_PASSWORD"] else {
+            throw RuntimeInjectedFailure()
+        }
+        let context = try RuntimeTestContext(suffix: "client-summary-hosted", accountId: .init(validating: account), principalId: .init(validating: principal))
+        defer { context.remove() }
+        let url = URL(string: "https://ybwviepljilrkrjoahbl.supabase.co")!
+        let auth = AuthClient(configuration: .init(url: url.appendingPathComponent("auth/v1"), headers: ["apikey": key],
+            storageKey: "client-summary-hosted", localStorage: CategoryAuthTestStorage(), fetch: { try await URLSession.shared.data(for: $0) },
+            autoRefreshToken: false, emitLocalSessionAsInitialSession: true))
+        let entry = await SupabaseOnlineSignIn(client: auth, supabaseURL: url, publishableKey: key)
+        try await entry.signIn(email: email, password: password)
+        let directory = try await entry.accounts(environment: context.environment.manifest.environment)
+        let authorization = try await entry.authorize(AccountSelectionPolicy.makeIntent(selecting: context.accountId,
+            from: directory.snapshot, requestedAt: Date()))
+        let runtime = try await context.openRuntime(), projectId = try ProjectID(validating: project)
+        try await entry.startWorkspaceSync(runtime, authorization: authorization,
+            powerSyncURL: URL(string: "https://6aa8966802481fb31b96942c.powersync.journeyapps.com")!)
+        var downloaded: ClientSummaryPhysicalReportSnapshot?
+        for try await update in runtime.watchClientSummaryPhysicalReport(accountId: context.accountId, projectId: projectId) {
+            guard case .ready(let report) = update, report.isComplete,
+                  report.items.contains(where: { $0.itemId.rawValue == item }) else { continue }
+            #expect(report.items.map { $0.itemId.rawValue } == [item])
+            #expect(report.items.first?.name == "QA synthetic price Item")
+            #expect(report.items.first?.accounting?.resolution == .accountedFor)
+            downloaded = report; break
+        }
+        let report = try #require(downloaded)
+        try await runtime.close()
+        let reopened = try await context.openRuntime()
+        let offline = try await reopened.readDownloadedClientSummaryPhysicalReport(accountId: context.accountId,
+            projectId: projectId, asOf: report.provenance.asOf)
+        #expect(offline.reference == report.reference && offline.isComplete)
+        #expect(offline.items.map { $0.itemId.rawValue } == [item])
+        try await reopened.lockAccessPreservingPendingWork()
+        await #expect(throws: LedgerOfflineClientRuntimeFailure.runtimeClosed) {
+            try await reopened.readDownloadedClientSummaryPhysicalReport(accountId: context.accountId,
+                projectId: projectId, asOf: report.provenance.asOf)
+        }
+    }
+
     @Test("Client physical report uses runtime access and retains incomplete evidence across encrypted restart")
     func clientPhysicalReportFacade() async throws {
         let context = try RuntimeTestContext(suffix: "client-physical-report")

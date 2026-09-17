@@ -12,11 +12,12 @@ const feeFlow=process.argv.includes('--fee-flow');
 const returnFlow=process.argv.includes('--return-flow');
 const historyFlow=process.argv.includes('--history-flow');
 const sessionFlow=process.argv.includes('--session-flow');
-const priceFlow=process.argv.includes('--price-flow');
+const clientReportFlow=process.argv.includes('--client-report-flow');
+const priceFlow=clientReportFlow||process.argv.includes('--price-flow');
 const onboardingFlow=process.argv.includes('--onboarding-flow');
 const expenseFlow=feeFlow||invoiceFlow||expenseEditFlow||process.argv.includes('--expense-flow');
 const expenseMode=expenseFlow||process.argv.includes('--expense');
-assert.deepEqual(process.argv.slice(2),onboardingFlow?['--apply','--onboarding-flow']:priceFlow?['--apply','--price-flow']:sessionFlow?['--apply','--session-flow']:historyFlow?['--apply','--history-flow']:returnFlow?['--apply','--return-flow']:expenseMode?['--apply',feeFlow?'--fee-flow':invoiceFlow?'--invoice-flow':expenseEditFlow?'--expense-edit-flow':expenseFlow?'--expense-flow':'--expense']:['--apply']);
+assert.deepEqual(process.argv.slice(2),clientReportFlow?['--apply','--client-report-flow']:onboardingFlow?['--apply','--onboarding-flow']:priceFlow?['--apply','--price-flow']:sessionFlow?['--apply','--session-flow']:historyFlow?['--apply','--history-flow']:returnFlow?['--apply','--return-flow']:expenseMode?['--apply',feeFlow?'--fee-flow':invoiceFlow?'--invoice-flow':expenseEditFlow?'--expense-edit-flow':expenseFlow?'--expense-flow':'--expense']:['--apply']);
 // Load the existing MCP implementations before opening a QA session.
 const expenseAPI=expenseFlow?await import('../LedgerTargetMCP/src/expenseCreation.ts'):null;
 const projectAPI=expenseFlow?await import('../LedgerTargetMCP/src/projectCreation.ts'):null;
@@ -91,6 +92,8 @@ try {
         values(${q(item)},${q(account)},'QA synthetic price Item',${q(auth.principalId)});
       insert into public.spike_item_placements(id,account_id,item_id,scope_kind,project_id,started_at,started_by_principal_id,start_evidence)
         values(${q(id+'-placement')},${q(account)},${q(item)},'project',${q(project)},now(),${q(auth.principalId)},'import_observation');
+      insert into public.spike_item_project_categories(id,account_id,project_id,item_id,category_id)
+        values(${q(id+'-placement')},${q(account)},${q(project)},${q(item)},${q(accounts[0].furnishings_category_id)});
       insert into ledger_private.item_project_prices(account_id,item_id,amount_minor_units,currency,updated_at,updated_by_principal_id)
         values(${q(account)},${q(item)},12346,'USD',now(),${q(auth.principalId)});
       insert into ledger_private.item_charge_occurrences(id,account_id,project_id,item_id,placement_id,category_id,amount_minor_units,currency,created_by_principal_id)
@@ -103,12 +106,13 @@ try {
         values(${q(account)},${q(item+'-inventory')},100,'USD',now(),${q(auth.principalId)});
       commit; select true as seeded;`);
     const run=spawnSync('swift',['test','--package-path','LedgeriOS','--no-parallel','--filter',
-      'AccountWorkspacePendingWorkRuntimeTests/itemPriceLiveReplication'],{encoding:'utf8',timeout:180000,env:{...process.env,
+      clientReportFlow?'AccountWorkspacePendingWorkRuntimeTests/clientSummaryHostedReplication':'AccountWorkspacePendingWorkRuntimeTests/itemPriceLiveReplication'],{encoding:'utf8',timeout:180000,env:{...process.env,
+        LEDGER_CLIENT_REPORT_HOSTED_QA:clientReportFlow?'1':'0',
         LEDGER_PRICE_LOCAL:'1',LEDGER_PRICE_HOSTED_QA:'1',LEDGER_SALE_LOCAL_ACCOUNT:account,
         LEDGER_SALE_LOCAL_PRINCIPAL:auth.principalId,LEDGER_SALE_LOCAL_ITEM:item,LEDGER_SALE_LOCAL_PROJECT:project,
         LEDGER_SALE_LOCAL_KEY:apikey,LEDGER_SALE_LOCAL_EMAIL:auth.email,LEDGER_SALE_LOCAL_PASSWORD:auth.password}});
     process.stdout.write(run.stdout??'');process.stderr.write(run.stderr??'');
-    assert.equal(run.status,0,'Hosted price edit failed');
+    assert.equal(run.status,0,clientReportFlow?'Hosted Client Summary failed':'Hosted price edit failed');
     assert.match(run.stdout+run.stderr,/Test run with 1 test.*passed/);
     const [facts]=historySQL(`select
       (select amount_minor_units::text from ledger_private.item_project_prices where account_id=${q(account)} and item_id=${q(item)}) as price,
@@ -118,8 +122,10 @@ try {
         where account_id=${q(account)} and item_id=${q(item+'-inventory')}) as inventory,
       (select count(*) from ledger_private.item_charge_occurrences where account_id=${q(account)} and item_id=${q(item+'-inventory')}) as inventory_charges,
       (select count(*) from public.spike_transactions where account_id=${q(account)} and project_id=${q(project)}) as payments;`);
-    assert.deepEqual(facts,{price:'12347',charge:'12347',market:'9007199254740993',inventory:'2:cleared',inventory_charges:0,payments:0});
-    console.log(JSON.stringify({hostedPricePassed:true,project,item,...facts}));
+    assert.deepEqual(facts,clientReportFlow
+      ? {price:'12346',charge:'12346',market:null,inventory:'1:100',inventory_charges:0,payments:0}
+      : {price:'12347',charge:'12347',market:'9007199254740993',inventory:'2:cleared',inventory_charges:0,payments:0});
+    console.log(JSON.stringify({hostedPricePassed:!clientReportFlow,hostedClientReportPassed:clientReportFlow,project,item,...facts}));
   } else if(sessionFlow) {
     const run=spawnSync('swift',['test','--package-path','LedgeriOS','--no-parallel','--filter','AccountWorkspacePendingWorkRuntimeTests/hostedSessionSyncThenLogout'],{
       encoding:'utf8',timeout:180000,env:{...process.env,LEDGER_SESSION_HOSTED_QA:'1',

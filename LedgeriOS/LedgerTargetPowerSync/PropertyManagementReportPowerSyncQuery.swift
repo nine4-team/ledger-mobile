@@ -17,6 +17,12 @@ struct PropertyManagementReportStreamIdentity: SyncStreamDescription, Sendable {
 struct PropertyManagementReportPowerSyncQuery: Sendable {
     let database: any PowerSyncDatabaseProtocol
 
+    private static func knownRemoved(_ transaction: any Transaction, accountId: AccountID,
+                                     principalId: PrincipalID) throws -> Bool {
+        try transaction.get(sql: "SELECT count(*) FROM spike_account_memberships WHERE account_id=? AND principal_id=? AND state='removed'",
+            parameters: [accountId.rawValue, principalId.rawValue]) { try $0.getInt(index: 0) > 0 }
+    }
+
     // Both report kinds consume the same scoped physical download. Client
     // Summary reads no money fields and cannot export missing category or
     // accounting evidence merely because the physical stream completed.
@@ -25,9 +31,12 @@ struct PropertyManagementReportPowerSyncQuery: Sendable {
         -> ClientSummaryPhysicalReportSnapshot {
         let identity = PropertyManagementReportStreamIdentity(accountId: accountId, projectId: projectId)
         return try await database.readTransaction { transaction in
+            if try Self.knownRemoved(transaction, accountId: accountId, principalId: principalId) {
+                throw ClientSummaryPhysicalReportLocalReadFailure.accountUnavailable
+            }
+            let checkpoint = try Self.completedCheckpoint(transaction: transaction, identity: identity)
             let inputs = try ClientSummaryPhysicalReportLocalReader.read(transaction: transaction,
                 accountId: accountId, principalId: principalId, projectId: projectId)
-            let checkpoint = try Self.completedCheckpoint(transaction: transaction, identity: identity)
             let encoder = JSONEncoder()
             encoder.outputFormatting = [.sortedKeys, .withoutEscapingSlashes]
             let version = try ProtectedArtifactSHA256.make(bytes: encoder.encode(inputs))
@@ -48,9 +57,12 @@ struct PropertyManagementReportPowerSyncQuery: Sendable {
         -> PropertyManagementReportSnapshot {
         let identity = PropertyManagementReportStreamIdentity(accountId: accountId, projectId: projectId)
         return try await database.readTransaction { transaction in
+            if try Self.knownRemoved(transaction, accountId: accountId, principalId: principalId) {
+                throw PropertyManagementReportLocalReadFailure.accountUnavailable
+            }
+            let checkpoint = try Self.completedCheckpoint(transaction: transaction, identity: identity)
             let inputs = try PropertyManagementReportLocalReader.read(transaction: transaction,
                 accountId: accountId, principalId: principalId, projectId: projectId)
-            let checkpoint = try Self.completedCheckpoint(transaction: transaction, identity: identity)
             let encoder = JSONEncoder()
             encoder.outputFormatting = [.sortedKeys, .withoutEscapingSlashes]
             let version = try ProtectedArtifactSHA256.make(bytes: encoder.encode(inputs))

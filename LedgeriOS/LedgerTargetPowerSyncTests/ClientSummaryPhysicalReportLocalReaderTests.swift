@@ -129,6 +129,21 @@ struct ClientSummaryPhysicalReportLocalReaderTests {
         }
     }
 
+    @Test func initialDownloadIsIncompleteButCompletedDownloadStillRequiresMembership() async throws {
+        try await withDatabase { db in
+            _ = try await db.execute(sql: "DELETE FROM spike_account_memberships", parameters: nil)
+            func report() async throws -> ClientSummaryPhysicalReportSnapshot {
+                try await PropertyManagementReportPowerSyncQuery(database: db)
+                    .readDownloadedClientSummary(accountId: account, principalId: principal,
+                        projectId: project, asOf: .init(validating: 1_800_000_000_000))
+            }
+            await #expect(throws: PropertyManagementReportFailure.incompleteReadiness) { try await report() }
+            _ = try await db.execute(sql: "INSERT INTO ps_stream_subscriptions(stream_name,active,is_default,local_params,last_synced_at) VALUES('property_management_report',1,0,?,1000000)",
+                parameters: [#"{"account_id":"summary-account","project_id":"summary-project"}"#])
+            await #expect(throws: ClientSummaryPhysicalReportLocalReadFailure.accountUnavailable) { try await report() }
+        }
+    }
+
     @Test func reportRequiresExactDownloadAndBindsClientChanges() async throws {
         try await withDatabase { db in
             func report() async throws -> ClientSummaryPhysicalReportSnapshot {
