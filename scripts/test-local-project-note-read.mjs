@@ -3,8 +3,18 @@ import crypto from "node:crypto";
 import { execFileSync } from "node:child_process";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import { mkdtempSync, writeFileSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { tsImport } from "../LedgerTargetMCP/node_modules/tsx/dist/esm/api/index.mjs";
+
+const { listProjectNotesTool, SupabaseProjectNotePageReader } = await tsImport(
+  "../LedgerTargetMCP/src/projectArchivalReview.ts", import.meta.url,
+);
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
+const swiftParity = process.argv.includes("--swift-parity");
+assert.ok(process.argv.slice(2).every((arg) => arg === "--swift-parity"), "Unknown argument");
+if (swiftParity) assert.equal(process.platform, "darwin", "Swift PowerSync parity requires macOS");
 const OWNER_AUTH_USER_ID = "10000000-0000-0000-0000-000000000001";
 const EMPLOYEE_AUTH_USER_ID = "10000000-0000-0000-0000-000000000002";
 const OTHER_AUTH_USER_ID = "10000000-0000-0000-0000-000000000003";
@@ -509,9 +519,50 @@ try {
   );
   assert.deepEqual(other.rows.map((row) => row.id), [ids.otherNote]);
 
+  // Exercise the actual MCP adapter against PostgREST, not a copied decoder.
+  // Keep these historical rows in the existing isolated fixture and cleanup.
+  const historicalIDs = ["dated", "undated-z", "undated-a"].map((id) => `note-${id}-${suffix}`);
+  localSQL(`insert into public.spike_project_notes
+    (id,account_id,project_id,content_kind,note_text,source,created_by_principal_id,
+     original_creator_id,created_at,created_at_ms,created_at_submillis,revision)
+    values
+    (${sqlLiteral(historicalIDs[0])},${sqlLiteral(ids.primaryAccount)},${sqlLiteral(ids.emptyProject)},
+     'visible','Exact historical time','mcp',null,'mcp-agent',
+     '2026-09-05T12:00:00Z',1788609600000,2,0),
+    (${sqlLiteral(historicalIDs[1])},${sqlLiteral(ids.primaryAccount)},${sqlLiteral(ids.emptyProject)},
+     'visible','Unknown historical time','mcp',null,'mcp-agent',null,null,0,0),
+    (${sqlLiteral(historicalIDs[2])},${sqlLiteral(ids.primaryAccount)},${sqlLiteral(ids.emptyProject)},
+     'visible','Older undated note','mcp',null,'mcp-agent',null,null,0,0);`);
+  const context = { accountId: ids.primaryAccount, principalId: "principal-owner",
+    accessToken: jwt(status.JWT_SECRET, OWNER_AUTH_USER_ID) };
+  const reader = new SupabaseProjectNotePageReader(new URL(status.REST_URL), status.PUBLISHABLE_KEY);
+  const input = { projectId: ids.emptyProject, pageSize: 2 };
+  const historical = await listProjectNotesTool(input, context, reader);
+  assert.deepEqual(historical.rows.map((row) => row.id), historicalIDs.slice(0, 2));
+  assert.deepEqual(historical.rows[0].createdTimestamp, { secondsSince1970: 1788609600, nanoseconds: 2 });
+  assert.equal(historical.rows[1].createdTimestamp, null);
+  assert.equal(historical.rows[1].createdByPrincipalId, null);
+  assert.equal(historical.rows[1].originalCreatorId, "mcp-agent");
+  const continuation = await listProjectNotesTool({ ...input, after: historical.nextCursor }, context, reader);
+  assert.deepEqual(continuation.rows.map((row) => row.id), [historicalIDs[2]]);
+  assert.equal(continuation.nextCursor, null);
+  const rawHistory = assertPage(await listNotes(status, OWNER_AUTH_USER_ID,
+    ids.primaryAccount, ids.emptyProject, 20), ids.primaryAccount, ids.emptyProject, 20);
+  const parityPath = path.join(mkdtempSync(path.join(tmpdir(), "ledger-note-parity-")), "capture.json");
+  writeFileSync(parityPath, JSON.stringify({ accountId: ids.primaryAccount, projectId: ids.emptyProject,
+    rawRows: rawHistory.rows, pages: [historical, continuation] }), { mode: 0o600 });
+  if (swiftParity) execFileSync("swift", ["test", "--package-path", "LedgeriOS", "--no-parallel",
+    "--filter", "ProjectNotePowerSyncQueryTests/capturedMCPParity"],
+    { cwd: ROOT, stdio: "inherit", timeout: 120_000,
+      env: { ...process.env, LEDGER_NOTE_PARITY_INPUT: parityPath } });
+  await assert.rejects(listProjectNotesTool(input,
+    { ...context, accessToken: jwt(status.JWT_SECRET, OTHER_AUTH_USER_ID) }, reader),
+    /project_note_request_denied/);
+
   console.log(
     "local-project-note-read: bounded active/archived/empty pages, archival continuity, and UInt64 exact; "
-      + "anonymous/removed/cross-account/missing/write denied",
+      + "anonymous/removed/cross-account/missing/write denied; actual MCP historical pagination passed"
+      + (swiftParity ? "; Swift captured-row parity passed" : "; Swift parity not requested (use --swift-parity on macOS)"),
   );
 } finally {
   localSQL(cleanupSQL);

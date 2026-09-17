@@ -6,6 +6,67 @@ import Testing
 
 @Suite("Project note PowerSync query", .serialized)
 struct ProjectNotePowerSyncQueryTests {
+    @Test("Captured server notes agree across Swift and the actual MCP reader",
+          .enabled(if: ProcessInfo.processInfo.environment["LEDGER_NOTE_PARITY_INPUT"] != nil))
+    func capturedMCPParity() async throws {
+        let path = try #require(ProcessInfo.processInfo.environment["LEDGER_NOTE_PARITY_INPUT"])
+        let capture = try #require(JSONSerialization.jsonObject(with: Data(contentsOf:
+            URL(fileURLWithPath: path))) as? [String: Any])
+        let account = try AccountID(validating: #require(capture["accountId"] as? String))
+        let project = try ProjectID(validating: #require(capture["projectId"] as? String))
+        let raw = try #require(capture["rawRows"] as? [[String: Any]])
+        let pages = try #require(capture["pages"] as? [[String: Any]])
+        let rows = raw.map { row in
+            ProjectNotePowerSyncRow(scopeIsActive: 1, projectIsVisible: 1,
+                id: row["id"] as? String, accountId: row["account_id"] as? String,
+                projectId: row["project_id"] as? String, contentKind: row["content_kind"] as? String,
+                noteText: row["note_text"] as? String, source: row["source"] as? String,
+                createdByPrincipalId: row["created_by_principal_id"] as? String,
+                creatorDisplayName: row["creator_display_name"] as? String,
+                createdAtMilliseconds: (row["created_at_ms"] as? NSNumber)?.int64Value,
+                revisionText: row["revision"] as? String,
+                lastEditedByPrincipalId: row["last_edited_by_principal_id"] as? String,
+                lastEditedAtMilliseconds: (row["last_edited_at_ms"] as? NSNumber)?.int64Value,
+                deletedByPrincipalId: row["deleted_by_principal_id"] as? String,
+                deletedAtMilliseconds: (row["deleted_at_ms"] as? NSNumber)?.int64Value,
+                createdAtSubmillis: (row["created_at_submillis"] as? NSNumber)?.int64Value,
+                lastEditedAtSubmillis: (row["last_edited_at_submillis"] as? NSNumber)?.int64Value,
+                deletedAtSubmillis: (row["deleted_at_submillis"] as? NSNumber)?.int64Value,
+                originalCreatorId: row["original_creator_id"] as? String)
+        }
+        var after: ProjectNoteCursor?
+        for (index, expected) in pages.enumerated() {
+            let request = try ProjectNotePageRequest(accountId: account, projectId: project, pageSize: 2, after: after)
+            let reader = ControlledProjectNoteReader(initialRows: Array(rows.dropFirst(index * 2)), hasLastSyncedAt: false)
+            let query = ProjectNotePowerSyncQuery(localReader: reader, principalId: Self.principalId,
+                accountId: account, completenessObservation: { _, _ in Self.fixedStream(true) }, now: { Self.observedAt })
+            let page = try await Self.firstPage(query, request: request)
+            let expectedRows = try #require(expected["rows"] as? [[String: Any]])
+            #expect(page.local.rows.map(\.id.rawValue) == expectedRows.compactMap { $0["id"] as? String })
+            #expect(request.queryFingerprint.sha256 == expected["queryFingerprint"] as? String)
+            #expect(page.isCompleteForProjectHistory == expected["isCompleteForProjectHistory"] as? Bool)
+            for (note, expectedRow) in zip(page.local.rows, expectedRows) {
+                #expect(note.accountId.rawValue == expectedRow["accountId"] as? String)
+                #expect(note.projectId.rawValue == expectedRow["projectId"] as? String)
+                #expect(note.source.rawValue == expectedRow["source"] as? String)
+                let content = try #require(expectedRow["content"] as? [String: String])
+                if case .visible(let text) = note.content {
+                    #expect(content["kind"] == "visible")
+                    #expect(text.rawValue == content["text"])
+                } else { Issue.record("Expected visible historical note") }
+                #expect(note.originalCreatorId == expectedRow["originalCreatorId"] as? String)
+                #expect(note.createdByPrincipalId?.rawValue == expectedRow["createdByPrincipalId"] as? String)
+                let timestamp = expectedRow["createdTimestamp"] as? [String: Int64]
+                #expect(note.createdTimestamp?.secondsSince1970 == timestamp?["secondsSince1970"])
+                #expect(note.createdTimestamp.map { Int64($0.nanoseconds) } == timestamp?["nanoseconds"])
+                #expect(String(note.revision) == expectedRow["revision"] as? String)
+            }
+            after = page.nextCursor
+            #expect((after == nil) == (expected["nextCursor"] is NSNull))
+        }
+        #expect(after == nil)
+    }
+
     @Test("Exact stream identity and freshness reject retained or non-explicit evidence")
     func exactStreamFreshnessEvidence() async throws {
         let identity = ProjectNoteSyncStreamIdentity(

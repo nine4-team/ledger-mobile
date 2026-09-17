@@ -1,6 +1,6 @@
 {
   "schemaVersion": 2,
-  "stateVersion": 1364,
+  "stateVersion": 1367,
   "userRequestedPause": {
     "date": "2026-09-15",
     "status": "resumed",
@@ -59,10 +59,10 @@
     "meaning": "Story5 resale follow-up through existing Sell implementation; retain return batch and other workflows under their own acceptance records.",
     "verificationCommands": ["swift test --package-path LedgeriOS --no-parallel --filter ReturnUninvoicedItemsCommandTests"],
     "lastResult": "Prior CI failures retained. PDF evidence: invoice-report-readback.liveInvoicePDFCaseDiagnosis; logout: session-clean-logout.",
-    "activeProcesses": {},
-    "integrationCI": {"run":35189334761,"attempt":1,"commit":"770f532e","status":"queued","meaning":"One integration dispatch after coherent Inventory editing batch push; conflictingPR1 prevents automatic CI. Earlier35182985338 failedMac/iOScancelled; validator fixes now included, failures not waived. Continue independent work; no duplicate dispatch."},
+    "activeProcesses": {"ciCompletionWatcher":{"sessionId":32153,"run":35189334761,"attempt":1,"log":"/tmp/ledger-ci-35189334761-watch.log","instruction":"Reuse watcher; no duplicate. Goal continuation must review completion."}},
+    "integrationCI": {"run":35189334761,"attempt":1,"commit":"770f532e","status":"in_progress","meaning":"Observed2026-09-17T06:58Z: conversion/provider passed; iOS UI since06:29Z, Mac UI since06:40Z; native jobs started06:23Z with60min job limits. No duplicate dispatch. Excludes newer fc931380 report fix. Earlier failures not waived."},
     "desktopPrerequisite": "Mac UI70530: runner initialization failed, system authentication running; zero tests. /tmp/ledger-mac-invoice-followup-20260916.{log,xcresult}. Build passed. No unchanged retry; iOS unaffected.",
-    "immediateFollowup": "25825 hosted ClientSummary PASS20.802s, exact snapshot offline/locked denial/unchanged accounting; QA access restored. Owner client-summary-physical-readback.hostedReadbackResult. Shared startup fix23testsPASS; ready review/commit changedreport query+tests. No live local process. CI35189334761 exact770f532e native lastlive. Purchase-price/vendorO047 unanswered; private files preserved; earlier failures retained.",
+    "immediateFollowup": "fc931380 reportfix pushed; hosted/offline testsPASS. Local payment-note recovery32811 exit0; scoped evidence saved under item-history-source-reconciliation. CI35189334761 tests770f532e, excludes reportfix; reuse watcher32153. Transfer Space/tag/sentInvoice, purchase-price/vendor questions pending. Continue authorized work; preserve private files.",
     "nextVerification": "CI35156566635 failed; no redispatch. Earlier failures retained.",
     "resaleBatchCI": {"run":35094251669,"attempt":1,"commit":"7836695f2a766960a1bd7de2644bc255d6bc63f0","status":"failed","url":"https://github.com/nine4-team/ledger-mobile/actions/runs/35094251669"},
     "returnBatchCI": {"run":35093201085,"attempt":1,"commit":"726431917f3acdd3091e7ca369222c5225c00754","status":"failed","url":"https://github.com/nine4-team/ledger-mobile/actions/runs/35093201085","reason":"PR1 conflicts suppress automatic PR CI.","lastObserved":"Conversion passed; provider failed at outdated physical-query classification; native skipped, aggregate failed. Local consumer fix passed60captures; property consumer149captures. No unchanged rerun."},

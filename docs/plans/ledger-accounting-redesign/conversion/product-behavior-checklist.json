@@ -17541,6 +17541,7 @@
     },
     {
       "storyId": "same-client-transfer",
+      "implementationReadiness": "2026-09-16: existing TransferDestinationSelection handles same-Client destination evidence; no target paired-transfer command/migration found. Canonical client-identity-and-project-transfers.md requires preserved open occurrence identity, paid paired reallocation, atomic mixed batches and no manufactured cash/demand. Do not mistake required story status for resolution of its explicit edge decisions. Asked O-011/O-012 destination Space/tag choice and O-002 sent-live-Invoice removal; existing O-010 final-line/zero-Invoice and O-013/O-014 reversal/later-credit rules remain separate dependencies. No restricted Transfer writer or new scaffolding introduced while these choices are pending.",
       "scopeReview": {"classification":"approved_redesign","evidence":["D-003","D-005"]},
       "title": "Transfer Items between same-Client Projects",
       "outcome": "One authorized app/MCP command atomically moves source Items to another active Project in the same Account with the same non-null Client ID, writing both records and current accounting/placement. No Inventory hop or invented cash/demand. Retries return the original result; stale concurrent changes fail closed.",
@@ -26812,7 +26813,7 @@
         {"id":"CLIENT-PHYSICAL-UI","risk":"ui_fidelity","expected":"Project Reports entry and Share preserve navigation and distinguish loading, empty, incomplete, ready and error states.","command":"Client Summary native UI tests (pending integration)","status":"planned"},
         {"id":"CLIENT-PHYSICAL-AUTH","risk":"tenant_authorization","expected":"Reject removed membership and foreign Account relationships at read and delivery.","command":"Client Summary reader and protected delivery tests (pending integration)","status":"planned"},
         {"id":"CLIENT-PHYSICAL-SYNC","risk":"sync_visibility","expected":"Require complete authorized Client/category/Space/Item download evidence before export.","command":"Client Summary scoped stream readiness tests (pending integration)","status":"planned"},
-        {"id":"CLIENT-PHYSICAL-OFFLINE","risk":"offline_durability","expected":"Read a coherent retained authorized snapshot after encrypted database restart, without treating missing downloads as empty.","command":"Client Summary encrypted restart tests (pending integration)","status":"planned"},
+        {"id":"CLIENT-PHYSICAL-OFFLINE","risk":"offline_durability","expected":"Read a coherent retained authorized snapshot after encrypted database restart, without treating missing downloads as empty.","command":"fc9313800d2d18836ca80a4b42a84e75421f3306: hosted clientSummaryHostedReplication PASS1/20.802s (/tmp/ledger-client-summary-hosted-category-fixed-20260916.log), complete real-sync snapshot/reference retained across encrypted offline reopen and denied after lock. Focused clientPhysicalReportFacade PASS1/.316s (/tmp/ledger-client-summary-offline-incomplete-20260916.log), incomplete nonempty snapshot/reference survives encrypted restart, foreign Account and closed/locked access rejected. Scoped offline proof, not whole-report or full CI acceptance.","status":"passed"},
         {"id":"CLIENT-PHYSICAL-MEDIA","risk":"media_durability","expected":"Deliver protected report bytes with current verified branding and reject changed or revoked snapshots.","command":"Client Summary protected delivery tests (pending integration)","status":"planned"},
         {"id":"CLIENT-PHYSICAL-READ","risk":"general","expected":"Exact authorized Project/Client and eligible physical rows preserve identity, names, category and Space evidence; missing data is not empty or uncategorized. Derive report eligibility from authoritative accounting relationships, exclude Unaccounted For Items and reject unknown eligibility; category alone is not eligibility.","command":"swift test --package-path LedgeriOS --filter ClientSummaryPhysicalReport","status":"planned","coversStoryIds":["client-summary-report-readback"]},
         {"id":"CLIENT-PHYSICAL-DELIVERY","risk":"general","expected":"Project entry, loading/empty/error/incomplete/ready preview and Share use one coherent authorized snapshot; changed or revoked data blocks stale delivery. No budget/financial total or receipt-link substitution.","command":"Integrated Client Summary native UI and delivery tests (not implemented)","status":"planned","coversStoryIds":["client-summary-report-readback"]}
@@ -30528,7 +30529,7 @@
           "id": "LEGACY-NOTES-MIGRATION-FIDELITY",
           "risk": "migration_fidelity",
           "expected": "Retain exact legacy text and source document with reconciled source-to-target scope; import must not duplicate individual notes.",
-          "command": "Conversion/parameter tests and existing payment source fixtures pass. Private SQL importer and existing synthetic runner now load text/source atomically; expanded before/after-commit recovery harness awaits an available local database. No production migration claim.",
+          "command": "fc931380: test-local-payment-import-recovery.mjs exit0 on2026-09-17 (/tmp/ledger-payment-note-recovery-20260917.log). Actual separate Swift processes interrupted before/after commit recover exact legacy text and individual-note metadata without duplicate payments/notes; completed replay preserves journal bytes. Altered source/mappings/plan rejected; payment/legacy-note/individual-note conflicts roll back the batch. Synthetic recovery proof only; complete source-document migration/reconciliation remains unclaimed.",
           "status": "planned"
         },
         {
@@ -30556,15 +30557,15 @@
           "id": "INDIVIDUAL-NOTES-EXACT-MCP-PARITY",
           "risk": "app_mcp_parity",
           "expected": "App and MCP retain unknown historical metadata and exact timestamp ordering with identical request fingerprints and authorized page boundaries, including undated continuation.",
-          "command": "ProjectNoteDataTests, ProjectNotePowerSyncQueryTests, projectArchivalReview.test.ts and test-local-project-note-read.mjs; exact cross-runtime integration remains pending.",
-          "status": "planned"
+          "command": "2026-09-17 test-local-project-note-read.mjs --swift-parity PASS (/tmp/ledger-project-note-parity-final-20260917.log): actual MCP reader through local PostgREST and Swift ProjectNotePowerSyncQuery on captured server rows agree on scope, IDs/order, text/source, revision, exact2nanosecond timestamp, unknown creator/date, original creator, query fingerprints, undated continuation and completeness. Swift1test/.009s. Existing raw HTTP/archive/UInt64/authorization checks also pass. First compile failed on test fingerprint property rawValue, corrected to sha256; preserved /tmp/ledger-project-note-parity-20260917.log. macOS comparison opt-in; Linux default retains MCP checks. This is reader parity, not hosted stream or full migration proof.",
+          "status": "passed"
         },
         {
           "id": "LEGACY-NOTES-PAYMENT-IMPORT-COMPATIBILITY",
           "risk": "accounting",
           "expected": "Sharing canonical source-envelope encoding preserves existing payment bytes and exact cents. The synthetic runner commits two payments and one parent legacy-note fact atomically, with separate journal counts and independent committed readback.",
-          "command": "Existing FirebaseClientPaymentImportParametersTests golden fixture passed unchanged. Expanded test-local-payment-import-recovery.mjs checks2payments/60cents plus1legacy note, both interruption boundaries and rollback on conflicting notes; runtime execution pending local Docker availability.",
-          "status": "planned"
+          "command": "fc931380: node scripts/test-local-payment-import-recovery.mjs exit0 on2026-09-17; /tmp/ledger-payment-note-recovery-20260917.log. Independent committed SQL readback verifies2payments/60cents,1legacy note and1individual note after before/after-commit interruptions and replay. Conflicting payment/legacy/individual notes roll back provisional writes together; changed artifacts, terminal failed/blocked journals and remote Docker rejected. Existing golden source-envelope fixture unchanged. Local synthetic proof, not production migration or server-power-loss proof.",
+          "status": "passed"
         }
       ],
       "deferredBehaviors": [
