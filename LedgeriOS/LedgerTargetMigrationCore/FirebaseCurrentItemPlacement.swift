@@ -11,14 +11,14 @@ package enum FirebaseCurrentItemPlacement {
     package static func read(_ item: FirebaseSourceDocument, accountID: String,
                              documents: [FirebaseSourceDocument]) -> Result {
         var issues = Set<String>()
-        guard item.accountScopeID == accountID, item.documentPathSegments.count == 4,
-              item.documentPathSegments[0] == "accounts", item.documentPathSegments[1] == accountID,
+        guard exact(item.accountScopeID, accountID), item.documentPathSegments.count == 4,
+              item.documentPathSegments[0] == "accounts", exact(item.documentPathSegments[1], accountID),
               item.documentPathSegments[2] == "items", item.evidenceKind == .record,
               (try? item.fields.validated()) != nil, case .map(let fields) = item.fields else {
             return .init(source: item, projectID: nil, spaceID: nil, issues: ["invalid_item"])
         }
         func field(_ key: String) -> FirebaseSourceValue? { fields.first { $0.key == key }?.value }
-        if let embedded = field("accountId"), embedded != .string(accountID) { issues.insert("account_conflict") }
+        if let embedded = field("accountId"), !matchesIdentifier(embedded, accountID) { issues.insert("account_conflict") }
         let project: String?
         switch field("projectId") {
         case .null: project = nil
@@ -33,9 +33,9 @@ package enum FirebaseCurrentItemPlacement {
         }
         func matches(_ path: [String]) -> [FirebaseSourceDocument] {
             documents.filter {
-                guard $0.documentPathSegments == path, $0.accountScopeID == accountID, $0.evidenceKind == .record,
+                guard $0.documentPathSegments.elementsEqual(path, by: exact), exact($0.accountScopeID, accountID), $0.evidenceKind == .record,
                       (try? $0.fields.validated()) != nil, case .map(let values) = $0.fields else { return false }
-                return !values.contains(where: { $0.key == "accountId" && $0.value != .string(accountID) })
+                return !values.contains(where: { $0.key == "accountId" && !matchesIdentifier($0.value, accountID) })
             }
         }
         if let project, matches(["accounts", accountID, "projects", project]).count != 1 { issues.insert("unresolved_project") }
@@ -44,12 +44,22 @@ package enum FirebaseCurrentItemPlacement {
             if candidates.count != 1 { issues.insert("unresolved_space") }
             else if case .map(let spaceFields) = candidates[0].fields,
                     (try? candidates[0].fields.validated()) != nil {
-                let expected: FirebaseSourceValue = project.map(FirebaseSourceValue.string) ?? .null
-                if spaceFields.first(where: { $0.key == "projectId" })?.value != expected { issues.insert("space_scope_conflict") }
+                let scope = spaceFields.first(where: { $0.key == "projectId" })?.value
+                let scopeMatches = project.map { matchesIdentifier(scope, $0) } ?? (scope == .null)
+                if !scopeMatches { issues.insert("space_scope_conflict") }
                 if let embedded = spaceFields.first(where: { $0.key == "accountId" })?.value,
-                   embedded != .string(accountID) { issues.insert("space_account_conflict") }
+                   !matchesIdentifier(embedded, accountID) { issues.insert("space_account_conflict") }
             } else { issues.insert("invalid_space") }
         }
         return .init(source: item, projectID: project, spaceID: space, issues: issues)
+    }
+
+    private static func exact(_ lhs: String, _ rhs: String) -> Bool {
+        lhs.utf8.elementsEqual(rhs.utf8)
+    }
+
+    private static func matchesIdentifier(_ value: FirebaseSourceValue?, _ expected: String) -> Bool {
+        guard case .string(let actual) = value else { return false }
+        return exact(actual, expected)
     }
 }
