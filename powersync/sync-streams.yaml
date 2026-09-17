@@ -105,6 +105,16 @@ streams:
   property_management_report:
     queries:
       - |
+        SELECT item_placement_versions.id, item_placement_versions.account_id,
+          item_placement_versions.revision::text AS revision,
+          item_placement_versions.placement_id, item_placement_versions.space_id, item_placement_versions.project_id
+        FROM item_placement_versions
+        JOIN spike_account_memberships AS membership ON membership.account_id=item_placement_versions.account_id
+        JOIN spike_principals AS principal ON principal.id=membership.principal_id
+        WHERE item_placement_versions.account_id=subscription.parameter('account_id')
+          AND item_placement_versions.project_id=subscription.parameter('project_id')
+          AND principal.auth_user_id=auth.user_id() AND membership.state='active'
+      - |
         SELECT item_image_sets.id,item_image_sets.account_id,item_image_sets.item_id,
           item_image_sets.revision::text AS revision,item_image_sets.expected_count
         FROM item_image_sets
@@ -887,6 +897,15 @@ streams:
 
   physical_account_items:
     queries:
+      - |
+        SELECT item_placement_versions.id, item_placement_versions.account_id,
+          item_placement_versions.revision::text AS revision,
+          item_placement_versions.placement_id, item_placement_versions.space_id, item_placement_versions.project_id
+        FROM item_placement_versions
+        JOIN spike_account_memberships AS membership ON membership.account_id=item_placement_versions.account_id
+        JOIN spike_principals AS principal ON principal.id=membership.principal_id
+        WHERE item_placement_versions.account_id=subscription.parameter('account_id')
+          AND principal.auth_user_id=auth.user_id() AND membership.state='active'
       - |
         SELECT item_return_history.return_occurrence_id AS id, item_return_history.account_id,
           item_return_history.id AS charge_id, item_return_history.item_id, item_return_history.project_id,

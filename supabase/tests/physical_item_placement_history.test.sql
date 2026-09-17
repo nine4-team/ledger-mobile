@@ -74,7 +74,7 @@ select is((select count(*) from public.spike_transactions),(select total from ca
 
 select throws_ok($$update public.spike_item_placements set project_id='placement-project-b' where id='project-first'$$,'55000',null,'Cannot rewrite prior location');
 select throws_ok($$update public.spike_item_placements set ended_at=null,ended_by_principal_id=null where id='project-first'$$,'55000',null,'Cannot reopen old cycle');
-select throws_ok($$update public.spike_item_placements set space_id='placement-space-a' where id='project-resale'$$,'55000',null,'Active location is not mutable in place');
+select throws_ok($$update public.spike_item_placements set space_id='placement-space-a' where id='project-resale'$$,'23503',null,'Space assignment cannot cross the current Project');
 select throws_ok($$delete from public.spike_item_placements where id='project-first'$$,'55000',null,'Cannot delete history');
 -- Payment-link FKs now reject standalone TRUNCATE before the history trigger.
 select throws_ok('truncate public.spike_item_placements','0A000',null,'Cannot truncate referenced placement history');

@@ -3040,8 +3040,21 @@ struct AccountWorkspacePendingWorkRuntimeTests {
             if let value { downloaded = value; break }
         }
         _ = try #require(downloaded)
+        var originalPlacementRevision: Int64?
+        if !hostedQA {
+            for try await value in first.watchDownloadedItemPlacements(accountId: context.accountId, scope: .businessInventory) {
+                if let token = value.rows.first(where: { $0.itemId == itemId })?.placementRevision {
+                    originalPlacementRevision = token; break
+                }
+            }
+            #expect(originalPlacementRevision != nil)
+        }
         try await first.close()
         let offline = try await context.openRuntime()
+        if !hostedQA {
+            #expect(try await offline.readDownloadedItemPlacements(accountId: context.accountId, scope: .businessInventory)
+                .rows.first(where: { $0.itemId == itemId })?.placementRevision == originalPlacementRevision)
+        }
         let review = try await offline.readInventorySaleReview(itemIds: [itemId])
         let payload = try review.makePayload(projectId: projectId,currency: .init(validating: "USD"),
             enteredPrices: [itemId: Money(minorUnits: hostedQA ? 12_345 : Int64.max,currency: .init(validating: "USD"))])
@@ -3062,6 +3075,7 @@ struct AccountWorkspacePendingWorkRuntimeTests {
         var reconciled = false
         for try await value in resumed.watchDownloadedItemPlacements(accountId: context.accountId,scope: .project(projectId)) {
             if let row = value.rows.first(where: { $0.itemId == itemId }), row.placementId == payload.items[0].newPlacementId, row.pendingSale == nil {
+                if let originalPlacementRevision, row.placementRevision != originalPlacementRevision + 2 { continue }
                 #expect(value.rows.count == Int(env["LEDGER_RETURN_LOCAL_PROJECT_COUNT"] ?? "1")); reconciled = true; break
             }
         }

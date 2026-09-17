@@ -98,6 +98,7 @@
 		7EEC050E3E777A82542908AC /* ReportHTMLBuilder.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6C7463F5388550BDF9578145 /* ReportHTMLBuilder.swift */; };
 		7EF7864EC2BD5E203FDD4EF1 /* BudgetCategoryTracker.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1BE0EDBFE843E73446118EA3 /* BudgetCategoryTracker.swift */; };
 		7FEF31200288B9518F30167A /* TransactionExportCalculations.swift in Sources */ = {isa = PBXBuildFile; fileRef = 31A543DC51CDEB1F754445FF /* TransactionExportCalculations.swift */; };
+		82B26F7E7FF1D90CD5E4418E /* SetSpaceModal.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2A76D650DEF9B6C432BE0B31 /* SetSpaceModal.swift */; };
 		831DF338B563C8D303A35D1E /* InlineOptionPicker.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4244524B9444C76CBEE85BB4 /* InlineOptionPicker.swift */; };
 		843FE7B0962AAFAFC759DDC1 /* ProjectNoteHistoryStagingExerciseView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 33BE0835EF060B599B952729 /* ProjectNoteHistoryStagingExerciseView.swift */; };
 		863B314F07B41BBE1496B8D3 /* Typography.swift in Sources */ = {isa = PBXBuildFile; fileRef = DE7D419F5EEE10E03462EE58 /* Typography.swift */; };
@@ -113,6 +114,7 @@
 		96212E334A0E0101D6F12437 /* PDFDownloadHelper.swift in Sources */ = {isa = PBXBuildFile; fileRef = B32342422D1B67AD102EBBA1 /* PDFDownloadHelper.swift */; };
 		9D0FA4E24E53841B0BA6863D /* ClientSummaryPhysicalReportPreview.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0F92563B3412AB38B9B6C6F5 /* ClientSummaryPhysicalReportPreview.swift */; };
 		9FF10C95762C13E06F9051DA /* CategoryManagementRuntimeAdapter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1702B803A73BB230008A22C4 /* CategoryManagementRuntimeAdapter.swift */; };
+		A002B2043ECE6E778EBC10B8 /* SpacePickerList.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A85F47159C093BF43CE9CC7 /* SpacePickerList.swift */; };
 		A265D39F73FA25A661674C78 /* FormSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = D7C774E889B46543E5F20F36 /* FormSheet.swift */; };
 		A3638C5477CA886F506C50CD /* FindableText.swift in Sources */ = {isa = PBXBuildFile; fileRef = 63259696E26866CDDC3EDFAD /* FindableText.swift */; };
 		A4C85C18A40D64B173077BC4 /* AccountBusinessProfileView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 86FD296E5CCEC0D992DD9CB1 /* AccountBusinessProfileView.swift */; };
@@ -211,6 +213,7 @@
 		229EA2E72160E66DDE7DC3CB /* BrandColors.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BrandColors.swift; sourceTree = "<group>"; };
 		23D3EB4EC0B5447391266FA3 /* PropertyManagementReportPreview.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PropertyManagementReportPreview.swift; sourceTree = "<group>"; };
 		29F6E16DC62B4B9E6E6C1BCA /* FormSheetAction.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FormSheetAction.swift; sourceTree = "<group>"; };
+		2A76D650DEF9B6C432BE0B31 /* SetSpaceModal.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SetSpaceModal.swift; sourceTree = "<group>"; };
 		3073E8B1FEEB07F80FBBE757 /* ActionMenuSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ActionMenuSheet.swift; sourceTree = "<group>"; };
 		31A543DC51CDEB1F754445FF /* TransactionExportCalculations.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TransactionExportCalculations.swift; sourceTree = "<group>"; };
 		33A3796166F337AF9B3285CC /* PerformanceDiagnostics.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PerformanceDiagnostics.swift; sourceTree = "<group>"; };
@@ -264,6 +267,7 @@
 		76AC4682757637403328805B /* ItemCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ItemCard.swift; sourceTree = "<group>"; };
 		76D758B9B7496EBBBD132BF2 /* ClientRenameStagingExercise.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClientRenameStagingExercise.swift; sourceTree = "<group>"; };
 		7846BBA459A0493D9FED5460 /* SellToProjectModal.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SellToProjectModal.swift; sourceTree = "<group>"; };
+		7A85F47159C093BF43CE9CC7 /* SpacePickerList.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SpacePickerList.swift; sourceTree = "<group>"; };
 		7AEC21795FD972CBCE17D8C8 /* VendorSuggestionPickerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VendorSuggestionPickerView.swift; sourceTree = "<group>"; };
 		7D493C4ED12595DA1E84D9D1 /* AppButton.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppButton.swift; sourceTree = "<group>"; };
 		81BF9C60464E2A558163FC8E /* Clipboard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Clipboard.swift; sourceTree = "<group>"; };
@@ -610,6 +614,8 @@
 				6DEAE4E6D3A005338567A90C /* ExportTransactionsModal.swift */,
 				9B36273A29AE52FDAA6F37FD /* ProjectPickerList.swift */,
 				7846BBA459A0493D9FED5460 /* SellToProjectModal.swift */,
+				2A76D650DEF9B6C432BE0B31 /* SetSpaceModal.swift */,
+				7A85F47159C093BF43CE9CC7 /* SpacePickerList.swift */,
 				4A9E48B251D945EC1C593120 /* StatusPickerModal.swift */,
 			);
 			path = Modals;
@@ -921,6 +927,7 @@
 				1D1C3C079DBC046B9BB87D34 /* SelectableNoteText.swift in Sources */,
 				04367F9377B79036D388FB10 /* SelectorCircle.swift in Sources */,
 				0A374B2B25BBFE4AF3B20808 /* SellToProjectModal.swift in Sources */,
+				82B26F7E7FF1D90CD5E4418E /* SetSpaceModal.swift in Sources */,
 				086AF70229A4E98E64322048 /* SheetStyle.swift in Sources */,
 				24CE05BDA93465DD521C8075 /* SpaceAssignmentDestinationStagingExerciseView.swift in Sources */,
 				723814D51EE0A32C3E8979EE /* SpaceAssignmentDestinationStagingRuntimeAdapter.swift in Sources */,
@@ -930,6 +937,7 @@
 				E663263F2B0021037ACFB31E /* SpaceCoreDetailsStagingRuntimeAdapter.swift in Sources */,
 				1C0E3B3249CEF63B8F51B65E /* SpaceCreationStagingExerciseView.swift in Sources */,
 				38B4640C2E28DE47A0B956BD /* SpaceCreationStagingRuntimeAdapter.swift in Sources */,
+				A002B2043ECE6E778EBC10B8 /* SpacePickerList.swift in Sources */,
 				F7966378F2F09F20C5920071 /* Spacing.swift in Sources */,
 				7BD3218B9AACB12C9E1E9887 /* StatusColors.swift in Sources */,
 				E4CDD53FE9304A5006001653 /* StatusPickerModal.swift in Sources */,

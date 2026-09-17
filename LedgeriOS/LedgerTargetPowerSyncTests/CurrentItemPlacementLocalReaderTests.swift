@@ -10,6 +10,41 @@ struct CurrentItemPlacementLocalReaderTests {
     private let principal = try! PrincipalID(validating: "principal-item")
     private let project = try! ProjectID(validating: "project-item")
 
+    @Test("Space edit token requires matching placement and Space and survives encrypted reopen")
+    func spaceAssignmentRevision() async throws {
+        try await withDatabase(reopen: { db in
+            let rows = try await CurrentItemPlacementLocalReader(database: db)
+                .read(accountId: account, principalId: principal, scope: .project(project))
+            #expect(rows.first?.placementRevision == 9_007_199_254_740_993)
+            #expect(rows.first?.itemRevision == 1)
+        }) { db in
+            let reader = CurrentItemPlacementLocalReader(database: db)
+            #expect(try await reader.read(accountId: account, principalId: principal,
+                                         scope: .project(project)).first?.placementRevision == nil)
+            _ = try await db.execute(sql: """
+                INSERT INTO item_placement_versions(id,account_id,revision,placement_id,space_id)
+                VALUES('chair','account-item','9007199254740993','project-now','room')
+                """, parameters: nil)
+            #expect(try await reader.read(accountId: account, principalId: principal,
+                                         scope: .project(project)).first?.placementRevision == 9_007_199_254_740_993)
+            for value in ["0", "-1", "01", "1.0", "9223372036854775808", "invalid"] {
+                _ = try await db.execute(sql: "UPDATE item_placement_versions SET revision=? WHERE id='chair'", parameters: [value])
+                #expect(try await reader.read(accountId: account, principalId: principal,
+                                             scope: .project(project)).first?.placementRevision == nil)
+            }
+            _ = try await db.execute(sql: "UPDATE item_placement_versions SET revision='9007199254740993',placement_id='older-placement' WHERE id='chair'", parameters: nil)
+            #expect(try await reader.read(accountId: account, principalId: principal,
+                                         scope: .project(project)).first?.placementRevision == nil)
+            _ = try await db.execute(sql: "UPDATE item_placement_versions SET placement_id='project-now',space_id=null WHERE id='chair'", parameters: nil)
+            #expect(try await reader.read(accountId: account, principalId: principal,
+                                         scope: .project(project)).first?.placementRevision == nil)
+            _ = try await db.execute(sql: "UPDATE item_placement_versions SET space_id='room',account_id='account-other' WHERE id='chair'", parameters: nil)
+            #expect(try await reader.read(accountId: account, principalId: principal,
+                                         scope: .project(project)).first?.placementRevision == nil)
+            _ = try await db.execute(sql: "UPDATE item_placement_versions SET account_id='account-item' WHERE id='chair'", parameters: nil)
+        }
+    }
+
     @Test("Invoice history and explicit paid-return evidence survive encrypted reopen in Inventory", arguments: [false, true])
     func importedInvoiceHistory(withCredit: Bool) async throws {
         let item = try ItemID(validating: "chair")

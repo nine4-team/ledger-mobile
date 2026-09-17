@@ -18,7 +18,7 @@ const block = yaml.match(/^  property_management_report:\n([\s\S]*?)(?=^  \S|$(?
 assert.ok(block);
 const pattern = /^      - \|\n((?:        .*(?:\n|$))+)/gm;
 const queries = [...block.matchAll(pattern)].map((match) => match[1].replace(/^        /gm, "").trim());
-assert.equal(queries.length, 13);
+assert.equal(queries.length, 14);
 assert.equal(block.replace(/^    queries:\n/, "").replace(pattern, "").replace(/^\s*#.*$/gm, "").trim(), "");
 // Overlapping buckets can contain the same table/id. Keep the complete SELECT
 // expressions identical, including casts/aliases—not merely the output keys.
@@ -61,7 +61,7 @@ for (const table of sharedInvoicingTables) {
   sameProjection(table, invoicingQueries, `Invoicing and report ${table} projections must agree`);
 }
 sameProjection("spike_projects", noteQueries, "Report and note-history Project values must match exactly");
-for (const table of ["spike_items", "spike_item_placements", "spike_spaces", "item_image_sets"]) {
+for (const table of ["spike_items", "spike_item_placements", "spike_spaces", "item_image_sets", "item_placement_versions"]) {
   sameProjection(table, physicalQueries, `Overlapping ${table} values must match exactly`);
 }
 // Only the marker overlaps this report. Gallery original and derivative
@@ -147,7 +147,7 @@ sql.push("update public.spike_account_memberships set financial_access='full' wh
 sql.push(`update ledger_private.item_client_payment_connections set ended_at='2026-09-03',ended_by_principal_id='principal-owner' where id=${q(`link-${projects[0]}`)};`);
 capture("closed-link", "account-primary", projects[0], owner, ["item_client_payment_connections", "spike_transactions"]);
 sql.push(`update public.spike_item_placements set ended_at='2026-09-03',ended_by_principal_id='principal-owner' where id=${q(ids[1][1])};`);
-capture("departed-placement", "account-primary", projects[1], owner, ["item_client_payment_connections", "spike_transactions", "spike_item_project_categories", "spike_budget_categories", "item_charge_occurrences", "collected_invoice_lines", "collected_invoices", "item_image_sets"]);
+capture("departed-placement", "account-primary", projects[1], owner, ["item_client_payment_connections", "spike_transactions", "spike_item_project_categories", "spike_budget_categories", "item_charge_occurrences", "collected_invoice_lines", "collected_invoices", "item_image_sets", "item_placement_versions"]);
 capture("owner-invoicing-b", "account-primary", projects[1], owner, [], invoicingQueries);
 capture("invoicing-wrong-account", "account-other", projects[1], owner, [], invoicingQueries);
 capture("invoicing-other-user", "account-primary", projects[1], "10000000-0000-0000-0000-000000000003", [], invoicingQueries);
@@ -167,8 +167,9 @@ sql.push("rollback;");
 const output = execFileSync("docker", ["exec", "-i", container, "psql", "-X", "-q", "-A", "-t", "-U", "postgres", "-d", "postgres", "-v", "ON_ERROR_STOP=1"],
   { input: sql.join("\n"), encoding: "utf8", timeout: 30_000 });
 const results = output.trim().split("\n").map(JSON.parse);
-assert.equal(results.length, 156);
+assert.equal(results.length, 165);
 const columns = {
+  item_placement_versions: ["id","account_id","revision","placement_id","space_id","project_id"],
   spike_transactions: ["id", "account_id", "project_id", "client_id", "type", "role", "amount_minor_units", "currency", "origin",
     "scope_kind", "source", "transaction_date", "created_at_ms", "notes", "payment_method", "has_email_receipt",
     "legacy_subtotal_minor_units", "legacy_tax_rate_pct"],
@@ -209,6 +210,7 @@ for (const { label, table, rows } of results) {
   const row = accountCategoryProjection ? rows.find(row => row.id === "category-furnishings") : rows[0];
   assert.ok(row, `${label}: expected fixture row ${table}`);
   const expectedIDs = {
+    item_placement_versions: ids[2][selected],
     spike_transactions: `payment-${projects[selected]}`,
     item_image_sets: ids[2][selected],
     spike_projects: projects[selected],
@@ -226,6 +228,12 @@ for (const { label, table, rows } of results) {
   assert.equal(row.id, expectedIDs[table]);
   assert.deepEqual(Object.keys(row).sort(), [...columns[table]].sort());
   assert.equal(row.account_id, "account-primary");
+  if (table === "item_placement_versions") {
+    assert.equal(row.revision, '1');
+    assert.equal(row.placement_id, ids[1][selected]);
+    assert.equal(row.space_id, ids[0][selected]);
+    assert.equal(row.project_id, projects[selected]);
+  }
   if (label === "general-a" && table === "spike_budget_categories") {
     assert.equal(row.kind, "general");
     assert.equal(row.visibility_class, "ordinary", "Current General classification restores ordinary visibility without a transition flag");
@@ -258,4 +266,4 @@ for (const { label, table, rows } of results) {
     assert.equal(row.market_value_currency, selected === 0 ? "USD" : null);
   }
 }
-console.log("report/Invoicing streams: 156 actual SQL captures pass; overlapping projections agree, Invoicing retains paid charge/line/Invoice/category after physical departure, while current-location report drops them. Unreturned Items have no return credits. Financial downgrade, removal, restricted and cross-Account/user reads deny. Fixtures rolled back; not live replication validation.");
+console.log("report/Invoicing streams: 165 actual SQL captures pass; overlapping projections agree, exact placement versions withdraw on departure, Invoicing retains paid charge/line/Invoice/category after physical departure, while current-location report drops them. Unreturned Items have no return credits. Financial downgrade, removal, restricted and cross-Account/user reads deny. Fixtures rolled back; not live replication validation.");

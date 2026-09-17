@@ -466,7 +466,8 @@ struct CurrentItemPlacementLocalReader: Sendable {
                 isBookmarked: bookmark.map { $0 == 1 },
                 source: cursor.getStringOptional(name: "source"),
                 currentSource: cursor.getStringOptional(name: "current_source"),
-                imageCount: cursor.getIntOptional(name: "image_count").map(Int64.init))
+                imageCount: cursor.getIntOptional(name: "image_count").map(Int64.init),
+                placementRevision: cursor.getInt64Optional(name: "placement_revision"))
     }
 
     static func pendingSalePlacements(transaction: any Transaction, accountId: AccountID,
@@ -544,6 +545,10 @@ struct CurrentItemPlacementLocalReader: Sendable {
           WHERE account_id = ? AND principal_id = ? AND state = 'active') AS is_active
       ), selected AS (
         SELECT p.id AS placement_id, i.id AS item_id, i.name, i.description, i.sku, i.created_at, i.revision, p.space_id,
+          CASE WHEN version.placement_id=p.id AND version.space_id IS p.space_id
+            AND CAST(version.revision AS INTEGER)>0
+            AND version.revision=CAST(CAST(version.revision AS INTEGER) AS TEXT)
+            THEN CAST(version.revision AS INTEGER) END AS placement_revision,
           i.workflow_status, i.bookmark, typeof(i.bookmark) AS bookmark_type,
           i.source,i.current_source,
           CASE WHEN CAST(image_set.revision AS INTEGER)>0
@@ -557,6 +562,7 @@ struct CurrentItemPlacementLocalReader: Sendable {
           (p.scope_kind = 'business_inventory' OR project.id IS NOT NULL) AS project_valid
         FROM spike_item_placements p
         LEFT JOIN spike_items i ON i.account_id = p.account_id AND i.id = p.item_id
+        LEFT JOIN item_placement_versions version ON version.account_id=p.account_id AND version.id=p.item_id
         LEFT JOIN item_image_sets image_set ON image_set.account_id=i.account_id
           AND image_set.item_id=i.id AND image_set.id=i.id
         LEFT JOIN spike_projects project ON project.id = p.project_id AND project.account_id = p.account_id

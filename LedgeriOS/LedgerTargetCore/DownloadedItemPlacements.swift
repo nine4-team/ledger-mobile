@@ -29,6 +29,9 @@ public struct PhysicalItemPlacement: Equatable, Sendable {
     public let placementId: EntityID
     public let scope: ItemPlacementScope
     public let spaceId: SpaceID?
+    /// Nil until the revision and matching physical placement have downloaded.
+    /// This is separate from editable descriptive Item revision.
+    public let placementRevision: Int64?
 
     /// Accepted local sale, until the matching destination downloads. Not paid evidence.
     public let pendingSale: InventorySalePendingPlacement?
@@ -38,8 +41,10 @@ public struct PhysicalItemPlacement: Equatable, Sendable {
                 name: String? = nil, sku: String? = nil, createdAt: Date? = nil,
                 workflowStatusRaw: String? = nil, isBookmarked: Bool? = nil,
                 source: String? = nil, currentSource: String? = nil, imageCount: Int64? = nil,
-                pendingSale: InventorySalePendingPlacement? = nil) throws {
+                pendingSale: InventorySalePendingPlacement? = nil,
+                placementRevision: Int64? = nil) throws {
         guard itemRevision > 0 else { throw DownloadedItemPlacementsFailure.invalidRevision }
+        guard placementRevision.map({ $0 > 0 }) ?? true else { throw DownloadedItemPlacementsFailure.invalidRevision }
         guard createdAt?.timeIntervalSinceReferenceDate.isFinite != false else {
             throw DownloadedItemPlacementsFailure.invalidTimestamp
         }
@@ -51,6 +56,7 @@ public struct PhysicalItemPlacement: Equatable, Sendable {
         self.source = source; self.currentSource = currentSource
         self.imageCount = imageCount
         self.pendingSale = pendingSale
+        self.placementRevision = placementRevision
     }
 }
 

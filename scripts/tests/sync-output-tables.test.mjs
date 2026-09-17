@@ -23,13 +23,13 @@ test('every checked-in stream output resolves to the native schema', () => {
   const yaml = readFileSync(new URL('../../powersync/sync-streams.yaml', import.meta.url), 'utf8');
   const nativeSchema = readFileSync(new URL('../../LedgeriOS/LedgerTargetPowerSync/LedgerPowerSyncSchema.swift', import.meta.url), 'utf8');
   const count = validateSyncOutputTables(yaml, nativeSchema);
-  // Item history also retains return-credit links after leaving the Project.
-  assert.equal(count, 89);
+  // Project and Inventory reads include coherent placement-revision evidence.
+  assert.equal(count, 91);
   const compiled = SqlSyncRules.fromYaml(yaml, { defaultSchema: 'public', throwOnError: false });
   assert.deepEqual(compiled.errors.map(error => error.message), []);
   const nativeNames = new Set([...nativeSchema.matchAll(/public static let \w+ = "([a-z_]+)"/g)].map(m => m[1]));
   const outputs = Object.keys(compiled.config.debugGetOutputTables());
-  assert.equal(outputs.length, 42);
+  assert.equal(outputs.length, 43);
   for (const output of outputs) assert.ok(nativeNames.has(output), `Service outputs unknown client table ${output}`);
 });
 test('return review outputs exclude money and Invoice identities while retaining category authorization', () => {

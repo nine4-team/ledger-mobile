@@ -44,6 +44,8 @@ targets:
       - path: LedgeriOS/Components/SegmentedControl.swift
       - path: LedgeriOS/Views/Settings/BudgetCategoryManagementView.swift
       - path: LedgeriOS/Modals/ProjectPickerList.swift
+      - path: LedgeriOS/Modals/SpacePickerList.swift
+      - path: LedgeriOS/Modals/SetSpaceModal.swift
       - path: LedgeriOS/Modals/SellToProjectModal.swift
       - path: LedgeriOS/Modals/CreateInvoiceModal.swift
       - path: LedgeriOS/Modals/EditItemDetailsModal.swift

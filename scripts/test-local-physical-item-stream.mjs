@@ -27,7 +27,9 @@ const acquisitionQueries = allQueries.filter(sql => sql.includes('FROM ledger_pr
 assert.equal(acquisitionQueries.length, 1);
 const returnQueries = allQueries.filter(sql => sql.includes('FROM ledger_private.item_return_reviews'));
 assert.equal(returnQueries.length, 1);
-const queries = allQueries.filter(sql => !priceQueries.includes(sql) && !acquisitionQueries.includes(sql) && !returnQueries.includes(sql));
+const versionQueries = allQueries.filter(sql => sql.includes('FROM item_placement_versions'));
+assert.equal(versionQueries.length, 1);
+const queries = allQueries.filter(sql => !priceQueries.includes(sql) && !acquisitionQueries.includes(sql) && !returnQueries.includes(sql) && !versionQueries.includes(sql));
 assert.equal(queries.length, 4, "Review changes to the physical stream projections");
 assert.equal(block.replace(/^    queries:\n/, "")
   .replace(/^      - \|\n((?:        .*(?:\n|$))+)/gm, "").trim(), "", "No unparsed stream configuration");
@@ -36,7 +38,7 @@ for (const sql of allQueries) {
   assert.ok(!sql.split(/\bFROM\b/)[0].includes("*"), "Projection must name columns explicitly");
   assert.ok(!sql.includes(";"), "Expected one SELECT per stream query");
   assert.equal(sql.match(/auth\.user_id\(\)/g)?.length, 1);
-  assert.equal(sql.match(/subscription\.parameter\('account_id'\)/g)?.length, queries.includes(sql) ? 1 : returnQueries.includes(sql) ? 3 : 2);
+  assert.equal(sql.match(/subscription\.parameter\('account_id'\)/g)?.length, queries.includes(sql) || versionQueries.includes(sql) ? 1 : returnQueries.includes(sql) ? 3 : 2);
 }
 const quote = (value) => `'${value.replaceAll("'", "''")}'`;
 const suffix = randomUUID();
@@ -61,7 +63,7 @@ statements.push(`insert into public.spike_spaces(id,account_id,scope_kind,displa
 statements.push(`insert into public.spike_item_placements(id,account_id,item_id,scope_kind,space_id,started_at,started_by_principal_id,ended_at,ended_by_principal_id) values
   (${quote(`stream-ended-placement-${suffix}`)},'account-primary',${quote(fixtureIDs[0][0])},'business_inventory',${quote(endedArchivedSpace)},'2026-08-01','principal-restricted','2026-08-02','principal-restricted');`);
 function capture(label, user, account) {
-  for (const [index, source] of [...queries.entries(), [5, priceQueries[0]], [6, acquisitionQueries[0]], [7, returnQueries[0]]]) {
+  for (const [index, source] of [...queries.entries(), [5, priceQueries[0]], [6, acquisitionQueries[0]], [7, returnQueries[0]], [8, versionQueries[0]]]) {
     // Only the two PowerSync parameter functions are translated; the real
     // projection, joins and predicates remain exactly those in the YAML.
     const sql = source.replace("auth.user_id()", `${quote(user)}::uuid`)
@@ -108,7 +110,7 @@ statements.push("rollback;");
 const output = execFileSync("docker", ["exec", "-i", container, "psql", "-X", "-q", "-A", "-t", "-U", "postgres", "-d", "postgres", "-v", "ON_ERROR_STOP=1"],
   { input: statements.join("\n"), encoding: "utf8", timeout: 30_000 });
 const results = output.trim().split("\n").map((line) => JSON.parse(line));
-assert.equal(results.length, 60);
+assert.equal(results.length, 68);
 const columns = [
   ["id", "account_id", "item_id", "revision", "expected_count"],
   ["id", "account_id", "name", "description", "sku", "workflow_status", "bookmark", "source", "current_source", "notes", "market_value_minor_units", "market_value_currency", "revision", "created_at", "created_by_principal_id"],
@@ -130,6 +132,19 @@ for (const { label, index, rows } of results) {
   }
   const fixtureIndex = label === "other-member" ? 1 : 0;
   const account = fixtureIndex === 0 ? "account-primary" : "account-other";
+  if (index === 8) {
+    const fixture = rows.find(row => row.id === fixtureIDs[0][fixtureIndex]);
+    assert.ok(fixture, `${label}: placement revision exists`);
+    assert.equal(fixture.revision, fixtureIndex === 0 ? '2' : '1');
+    assert.equal(fixture.placement_id, fixtureIDs[1][fixtureIndex]);
+    assert.equal(fixture.space_id, fixtureIDs[2][fixtureIndex]);
+    assert.equal(fixture.project_id, null);
+    for (const row of rows) {
+      assert.equal(row.account_id, account);
+      assert.deepEqual(Object.keys(row).sort(), ['id','account_id','revision','placement_id','space_id','project_id'].sort());
+    }
+    continue;
+  }
   if (index === 7) {
     // Positive return/history fixtures live in the return SQL and actual-stream
     // tests. This consumer still executes the query in every denial case.
@@ -189,4 +204,4 @@ for (const { label, index, rows } of results) {
     }
   }
 }
-console.log("local-physical-item-stream: 60 actual SQL captures pass member, acquisition absence markers, return-history columns/denials, exact Int64 Item prices, scoped image markers, current archived parent, unreferenced/ended archived exclusion, cross-Account, other-user, removal and physical-column checks; all fixtures rolled back (not PowerSync engine validation)");
+console.log("local-physical-item-stream: 68 actual SQL captures pass member, exact placement revision/location, acquisition absence markers, return-history columns/denials, exact Int64 Item prices, scoped image markers, current archived parent, unreferenced/ended archived exclusion, cross-Account, other-user, removal and physical-column checks; all fixtures rolled back (not PowerSync engine validation)");

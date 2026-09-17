@@ -529,6 +529,68 @@ try {
       where invoice_id='invoice-${id}'`),'05');
   }
   console.log('PASS reviewed placement import concurrent retry, changed-review rejection and rollback recovery');
+  sql(`insert into public.spike_spaces(id,account_id,scope_kind,project_id,display_name,lifecycle)
+    values('assignment-race-a','account-primary','project','race-project','A','active'),
+          ('assignment-race-b','account-primary','project','race-project','B','active');`);
+  for (const scenario of ['retry','competing','rollback','movement']) {
+    const name='space-assignment-'+scenario, id=source(name);
+    prepare(name);
+    const assign=(suffix,destination)=>{
+      const command=JSON.stringify({operationId:`${id}-${suffix}`,accountId:'account-primary',
+        actorPrincipalId:'principal-owner',contractVersion:'item-space-v1',createdAtMs:'1788523200000',
+        scopeKind:'project',projectId:'race-project',destinationSpaceId:destination,expectedSpaceRevision:'1',
+        items:[{itemId:id,expectedRevision:'1',currentSpaceId:null}]});
+      return `select set_config('request.jwt.claims','{"sub":"10000000-0000-0000-0000-000000000001","role":"authenticated"}',true);
+        select (ledger_private.set_item_spaces('${command}')).phase;`;
+    };
+    const first=scenario==='movement'
+      ? `select 1 from public.spike_items where id='${id}' for update;
+         update public.spike_item_placements set ended_at='2026-09-17',ended_by_principal_id='principal-owner' where id='${id}';`
+      : assign('first','assignment-race-a');
+    const waiter=scenario==='retry'?'first':'second';
+    await race(name,first,assign(waiter,scenario==='retry'?'assignment-race-a':'assignment-race-b'),
+      scenario==='rollback'?'rollback':'commit');
+    assert.equal(sql(`select phase||coalesce(':'||error_code,'') from public.spike_operation_results
+      where operation_id='${id}-${waiter}'`),scenario==='competing'?'rejected:space_item_stale':
+      scenario==='movement'?'rejected:space_item_scope_changed':'applied');
+    assert.equal(sql(`select count(*) from ledger_private.item_space_changes where item_id='${id}'`),
+      scenario==='movement'?'0':'1');
+    assert.equal(sql(`select placement_id||':'||amount_minor_units from ledger_private.item_charge_occurrences where id='${id}'`),`${id}:12345`);
+    assert.equal(sql(`select count(*) from public.spike_item_placements where item_id='${id}'`),'1');
+  }
+  console.log('PASS Space assignment retry, competing destination, rollback and movement races; exact placement/charge identity preserved');
+  const detailsAuth = `select set_config('request.jwt.claims','{"sub":"10000000-0000-0000-0000-000000000002","role":"authenticated"}',true);`;
+  for (const scenario of ['retry', 'competing', 'rollback', 'removed', 'hidden']) {
+    const id = `transaction-details-${scenario}`;
+    sql(`insert into public.spike_budget_categories(id,account_id,display_name,kind,visibility_class,
+      presentation_order,lifecycle,is_system,excludes_from_overall_budget,created_at_ms,updated_at_ms)
+      values('${id}','account-primary','${id}','general','ordinary',
+        (select max(presentation_order)+1 from public.spike_budget_categories where account_id='account-primary'),
+        'active',false,false,1,1);
+      insert into public.spike_transactions(id,account_id,amount_minor_units,currency,origin,scope_kind,category_id,notes)
+      values('${id}','account-primary',9007199254740993,'USD','vendor_payment','business_inventory','${id}','Original');
+      update public.spike_account_memberships set state='active' where account_id='account-primary' and principal_id='principal-restricted';`);
+    const detailsEdit = suffix => `${detailsAuth} select ledger_private.edit_transaction_details('${JSON.stringify({
+      operationId: `${id}-${suffix}`, accountId: 'account-primary', actorPrincipalId: 'principal-restricted',
+      contractVersion: 'transaction-details-edit-v1', createdAtMs: '1000', transactionId: id,
+      scopeKind: 'business_inventory', projectId: null, clientId: null, expectedRevision: '1', changes: { notes: suffix }
+    })}');`;
+    const holder = scenario === 'removed'
+      ? "update public.spike_account_memberships set state='removed' where account_id='account-primary' and principal_id='principal-restricted';"
+      : scenario === 'hidden'
+        ? `update public.spike_budget_categories set kind='fee',revision=revision+1 where id='${id}';`
+        : detailsEdit('first');
+    const waiter = scenario === 'retry' ? 'first' : 'second';
+    await race(id, holder, detailsEdit(waiter), scenario === 'rollback' ? 'rollback' : 'commit',
+      ['removed', 'hidden'].includes(scenario) ? '42501' : undefined);
+    const denied = ['removed', 'hidden'].includes(scenario);
+    assert.equal(sql(`select notes||':'||details_revision||':'||amount_minor_units from public.spike_transactions where id='${id}'`),
+      `${denied ? 'Original:1' : scenario === 'rollback' ? 'second:2' : 'first:2'}:9007199254740993`);
+    assert.equal(sql(`select coalesce(string_agg(phase||coalesce(':'||error_code,''),','),'none')
+      from public.spike_operation_results where operation_id='${id}-${waiter}'`),
+      denied ? 'none' : scenario === 'competing' ? 'rejected:transaction_edit_stale' : 'applied');
+  }
+  console.log('PASS Transaction descriptive-edit retry, competing edit, rollback, removal and financial-visibility races');
 } finally {
   for (const child of sessions) if (!child.stdin.destroyed && !child.stdin.writableEnded) child.stdin.end('rollback;\n');
   if (created) {

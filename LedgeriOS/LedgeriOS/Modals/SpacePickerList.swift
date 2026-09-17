@@ -2,12 +2,11 @@ import SwiftUI
 
 /// Single-select space picker list.
 /// Shows project spaces, a "No Space" option, and optionally a "Create New Space" row.
+#if canImport(FirebaseFirestore)
 struct SpacePickerList: View {
     let spaces: [Space]
     var selectedId: String? = nil
     let onSelect: (Space?) -> Void
-
-    @Environment(\.dismiss) private var dismiss
 
     private var visibleSpaces: [Space] {
         spaces
@@ -16,23 +15,41 @@ struct SpacePickerList: View {
     }
 
     var body: some View {
+        SpacePickerPresentation(spaces: visibleSpaces, selectedId: selectedId,
+                                name: { $0.name }, onSelect: onSelect)
+    }
+}
+#endif
+
+/// Existing rows and selection marks with caller-owned, scoped data. A target
+/// writer can keep the sheet open until local acceptance instead of dismissing
+/// before an asynchronous save has succeeded.
+struct SpacePickerPresentation<SpaceValue: Identifiable>: View {
+    let spaces: [SpaceValue]
+    var selectedId: SpaceValue.ID? = nil
+    let name: (SpaceValue) -> String
+    var dismissOnSelect = true
+    let onSelect: (SpaceValue?) -> Void
+    @Environment(\.dismiss) private var dismiss
+
+    var body: some View {
         NavigationStack {
             ScrollView {
                 LazyVStack(spacing: 0) {
                     // "No Space" option
                     spaceRow(name: "No Space", icon: "xmark.circle", isSelected: selectedId == nil) {
                         onSelect(nil)
-                        dismiss()
+                        if dismissOnSelect { dismiss() }
                     }
 
-                    ForEach(visibleSpaces) { space in
+                    ForEach(spaces) { space in
                         spaceRow(
-                            name: space.name,
+                            name: name(space),
                             icon: "mappin.and.ellipse",
                             isSelected: space.id == selectedId
                         ) {
                             onSelect(space)
-                            dismiss()
+                            if dismissOnSelect { dismiss() }
                         }
                     }
                 }
@@ -71,6 +88,7 @@ struct SpacePickerList: View {
     }
 }
 
+#if canImport(FirebaseFirestore)
 #Preview {
     SpacePickerList(
         spaces: [Space(name: "Living Room"), Space(name: "Primary Bedroom"), Space(name: "Kitchen")],
@@ -78,3 +96,4 @@ struct SpacePickerList: View {
         onSelect: { _ in }
     )
 }
+#endif
