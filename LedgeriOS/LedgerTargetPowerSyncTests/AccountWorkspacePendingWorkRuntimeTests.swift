@@ -15,13 +15,28 @@ import CoreGraphics
 
 private final class RemovalUploadURLProtocol: URLProtocol, @unchecked Sendable {
     nonisolated(unsafe) static var events: AsyncStream<String>.Continuation?
+    nonisolated(unsafe) static var reservation: Data?
+    private var held = false
     override class func canInit(with request: URLRequest) -> Bool { true }
     override class func canonicalRequest(for request: URLRequest) -> URLRequest { request }
     override func startLoading() {
+        if let reservation = Self.reservation, request.httpMethod != "PATCH" {
+            let path = request.url!.path
+            let status = path.contains("spike_begin") ? 200 : path.contains("verify-") ? 409 : 201
+            let data = status == 200 ? reservation : status == 409
+                ? Data("{\"error\":\"attachment_upload_incomplete\"}".utf8) : Data()
+            let headers = status == 201 ? ["Location": "https://upload-removal.invalid/storage/v1/upload/resumable/held"] : [:]
+            client?.urlProtocol(self, didReceive: HTTPURLResponse(url: request.url!, statusCode: status,
+                httpVersion: "HTTP/1.1", headerFields: headers)!, cacheStoragePolicy: .notAllowed)
+            client?.urlProtocol(self, didLoad: data)
+            client?.urlProtocolDidFinishLoading(self)
+            return
+        }
+        held = true
         Self.events?.yield(request.url?.path ?? "missing-url")
         // Hold the real URLSession request until runtime removal cancels it.
     }
-    override func stopLoading() { Self.events?.yield("cancelled") }
+    override func stopLoading() { if held { Self.events?.yield("cancelled") } }
 }
 
 @Suite("Account workspace pending-work runtime", .serialized)
@@ -1806,7 +1821,7 @@ struct AccountWorkspacePendingWorkRuntimeTests {
     }
 
     @Test("Transaction capture uses live member/financial scope and survives encrypted runtime reopen",
-        arguments: ["allowed", "upload-removal", "foreign-account", "foreign-principal", "removed", "hidden-fee", "unknown-section"])
+        arguments: ["allowed", "upload-removal", "transfer-removal", "foreign-account", "foreign-principal", "removed", "hidden-fee", "unknown-section"])
     func transactionCaptureAdmission(scenario: String) async throws {
         let context = try RuntimeTestContext(suffix: "transaction-capture-\(scenario)")
         defer { context.remove() }
@@ -1858,7 +1873,7 @@ struct AccountWorkspacePendingWorkRuntimeTests {
             capturedAt: original.capturedAt, bytes: original.bytes,
             metadata: AttachmentCaptureMetadata(mediaType: "image/png", fileName: "Original.png", transactionSection: .receipts))
         let scope = TransactionScope.businessInventory(accountId: context.accountId)
-        if scenario == "allowed" || scenario == "upload-removal" {
+        if scenario == "allowed" || scenario == "upload-removal" || scenario == "transfer-removal" {
             let observations = LockedRecorder<DownloadedTransactionAttachments?>()
             let transactionId = try TransactionID(validating: "capture-parent")
             #expect(try await runtime.transactionAttachmentCaptureScope(scope: scope,
@@ -1876,7 +1891,7 @@ struct AccountWorkspacePendingWorkRuntimeTests {
             }
             #expect(observations.values.contains(where: { $0?.isComplete == true && $0?.attachments.isEmpty == true }))
             let receipt = try await runtime.captureTransactionAttachment(capture, scope: scope)
-            if scenario == "upload-removal" {
+            if scenario == "upload-removal" || scenario == "transfer-removal" {
                 let network = AsyncStream<String>.makeStream()
                 let deadline = Task {
                     do { try await Task.sleep(for: .seconds(5)); network.continuation.finish() }
@@ -1884,7 +1899,16 @@ struct AccountWorkspacePendingWorkRuntimeTests {
                 }
                 defer { deadline.cancel() }
                 RemovalUploadURLProtocol.events = network.continuation
-                defer { network.continuation.finish(); RemovalUploadURLProtocol.events = nil }
+                defer { network.continuation.finish(); RemovalUploadURLProtocol.events = nil; RemovalUploadURLProtocol.reservation = nil }
+                if scenario == "transfer-removal" {
+                    RemovalUploadURLProtocol.reservation = try JSONSerialization.data(withJSONObject: [
+                        "attachmentId": receipt.attachmentId.rawValue, "accountId": receipt.scope.accountId.rawValue,
+                        "principalId": receipt.scope.principalId.rawValue, "transactionId": receipt.scope.parent.id.rawValue,
+                        "section": "receipts", "bucket": "ledger-attachments",
+                        "storagePath": "accounts/\(receipt.scope.accountId.rawValue)/attachments/\(receipt.attachmentId.rawValue)/\(receipt.contentSHA256.rawValue)",
+                        "contentSHA256": receipt.contentSHA256.rawValue, "byteCount": String(receipt.byteCount),
+                        "mediaType": "image/png", "phase": "awaiting_upload"])
+                }
                 let configuration = URLSessionConfiguration.ephemeral
                 configuration.protocolClasses = [RemovalUploadURLProtocol.self]
                 let session = URLSession(configuration: configuration)
@@ -1896,7 +1920,8 @@ struct AccountWorkspacePendingWorkRuntimeTests {
                     }, session: session)
                 try await runtime.lifecycleOwner.startTransactionAttachmentUploads(using: client)
                 var events = network.stream.makeAsyncIterator()
-                #expect(await events.next() == "/rest/v1/rpc/spike_begin_transaction_attachment_upload")
+                #expect(await events.next() == (scenario == "transfer-removal"
+                    ? "/storage/v1/upload/resumable/held" : "/rest/v1/rpc/spike_begin_transaction_attachment_upload"))
                 let removal = Task { try await runtime.lockAccessPreservingPendingWork() }
                 #expect(await events.next() == "cancelled")
                 try await removal.value
@@ -1910,9 +1935,22 @@ struct AccountWorkspacePendingWorkRuntimeTests {
                 // Inspection does not authorize application recovery or upload.
                 var inspection = context.dependencies()
                 inspection.accessCoordinator = LedgerWorkspaceAccessCoordinator()
+                let stores = LockedRecorder<AttachmentCapturePowerSyncStore>()
+                let makeStore = inspection.makeAttachmentStore
+                inspection.makeAttachmentStore = { database, vault, scope, now in
+                    let store = try makeStore(database, vault, scope, now)
+                    if let concrete = store as? AttachmentCapturePowerSyncStore { stores.append(concrete) }
+                    return store
+                }
                 let retained = try await context.openRuntime(dependencies: inspection)
                 #expect(try await retained.resolveLocalAttachmentBytes(for: receipt) == capture.bytes)
                 #expect(try await retained.pendingWorkSummary().unverifiedAttachmentCount == 1)
+                if scenario == "transfer-removal" {
+                    let progress = try await #require(stores.values.first).uploadProgress(for: receipt)
+                    #expect(progress?.checkpoint?.uploadURL.path == "/storage/v1/upload/resumable/held")
+                    #expect(progress?.checkpoint?.offset == 0)
+                    #expect(progress?.publication == nil)
+                }
                 try await retained.close()
                 return
             }
