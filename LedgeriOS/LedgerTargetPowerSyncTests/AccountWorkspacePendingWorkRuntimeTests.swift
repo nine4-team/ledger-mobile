@@ -2122,9 +2122,9 @@ struct AccountWorkspacePendingWorkRuntimeTests {
         #expect(persisted.expectedPriceRevision == payload.expectedPriceRevision + 1)
         #expect(persisted.expectedChargeRevision == payload.expectedChargeRevision + 1)
         try await reopened.close()
-        // The local fixture also proves descriptive edits through the same real
-        // Auth/RPC/Sync stack. Hosted use waits for the details migration deployment.
-        if !hosted {
+        // Both guarded fixtures prove descriptive edits through the real
+        // Auth/RPC/Sync stack, including encrypted offline restart.
+        do {
             let online = try await context.openRuntime()
             try await entry.startWorkspaceSync(online, authorization: authorization, powerSyncURL: sync)
             var baseline: DownloadedItemDescriptiveDetails?

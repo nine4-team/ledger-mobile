@@ -1,6 +1,6 @@
 {
   "schemaVersion": 2,
-  "stateVersion": 1324,
+  "stateVersion": 1327,
   "userRequestedPause": {
     "date": "2026-09-15",
     "status": "resumed",
@@ -62,7 +62,7 @@
     "activeProcesses": {},
     "integrationCI": {"run":35156566635,"attempt":1,"commit":"a147da42a9b046a12a95f884bf0cf4ed6970746e","status":"failed","meaning":"Confirmed terminal: conversion/provider passed; macOS failed (count fix local); iOS cancelled after61minutes, ended2026-09-16T23:17:59Z. Not awaiting CI and no redispatch."},
     "desktopPrerequisite": "Mac UI70530: runner initialization failed, system authentication running; zero tests. /tmp/ledger-mac-invoice-followup-20260916.{log,xcresult}. Build passed. No unchanged retry; iOS unaffected.",
-    "immediateFollowup": "90558 bookmark applied/readback PASS2/24.956s recorded; no live processes. Save coherent local Item-edit checkpoint, then validate hosted descriptive command/real readback and remaining platform integration; no per-edit CI dispatch. Earlier SQL/fullMCP/native/RPC/offline evidence belongs to item-everyday-editing. Vendor O047 and broader amount edits remain incomplete. No hosted details deploy yet; prior CI terminal failed and not waived. Keep private .native-pdf-* files untracked.",
+    "immediateFollowup": "770b4aab Item-edit implementation; hosted flow42213 PASS and permissions93695/advisors90699 complete, recorded in item-everyday-editing. Existing leaked-password WARN remains. No live processes. Save hosted test/evidence checkpoint then integrated platform verification; inspect actual .github/workflows filenames (no *target* match). PR1 OPEN CONFLICTING against firebase, so push alone cannot supply PR CI. Do not merge/touch Firebase to resolve it. One integration run when appropriate, no per-edit dispatch. Vendor O047/broader amounts incomplete; prior CI failed not waived. Preserve private .native-pdf-*.",
     "nextVerification": "CI35156566635 failed; no redispatch. Earlier failures retained.",
     "resaleBatchCI": {"run":35094251669,"attempt":1,"commit":"7836695f2a766960a1bd7de2644bc255d6bc63f0","status":"failed","url":"https://github.com/nine4-team/ledger-mobile/actions/runs/35094251669"},
     "returnBatchCI": {"run":35093201085,"attempt":1,"commit":"726431917f3acdd3091e7ca369222c5225c00754","status":"failed","url":"https://github.com/nine4-team/ledger-mobile/actions/runs/35093201085","reason":"PR1 conflicts suppress automatic PR CI.","lastObserved":"Conversion passed; provider failed at outdated physical-query classification; native skipped, aggregate failed. Local consumer fix passed60captures; property consumer149captures. No unchanged rerun."},
