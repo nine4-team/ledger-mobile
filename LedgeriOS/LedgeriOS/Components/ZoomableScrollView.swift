@@ -57,6 +57,15 @@ enum ZoomableImageLoader {
 import SwiftUI
 import UIKit
 
+private final class ImageZoomScrollView: UIScrollView {
+    var onLayout: (() -> Void)?
+
+    override func layoutSubviews() {
+        super.layoutSubviews()
+        onLayout?()
+    }
+}
+
 private final class AccessibleAnnotationImageView: UIImageView {
     var annotationID = ""
     var onActivate: ((String) -> Void)?
@@ -100,7 +109,7 @@ struct ZoomableScrollView: UIViewRepresentable {
     }
 
     func makeUIView(context: Context) -> UIScrollView {
-        let scrollView = UIScrollView()
+        let scrollView = ImageZoomScrollView()
         scrollView.delegate = context.coordinator
         scrollView.minimumZoomScale = 1.0
         scrollView.maximumZoomScale = 5.0
@@ -117,6 +126,9 @@ struct ZoomableScrollView: UIViewRepresentable {
         imageView.clipsToBounds = true
         scrollView.addSubview(imageView)
         context.coordinator.imageView = imageView
+        scrollView.onLayout = { [weak coordinator = context.coordinator] in
+            coordinator?.layoutImage()
+        }
 
         // Loading indicator
         let spinner = UIActivityIndicatorView(style: .large)
@@ -182,6 +194,8 @@ struct ZoomableScrollView: UIViewRepresentable {
         var errorView: UIImageView?
         var doubleTapGesture: UITapGestureRecognizer?
         var currentURL: URL?
+        private var fittedBounds = CGSize.zero
+        private var isFittingImage = false
         var annotations: [ZoomableImageAnnotation] = []
         fileprivate var annotationViews: [String: AccessibleAnnotationImageView] = [:]
         fileprivate var loadTask: Task<Void, Never>?
@@ -203,6 +217,7 @@ struct ZoomableScrollView: UIViewRepresentable {
         func scrollViewDidZoom(_ scrollView: UIScrollView) {
             centerImage(in: scrollView)
             layoutAnnotationViews(in: scrollView)
+            guard !isFittingImage else { return }
             // Report zoom back to SwiftUI as a logical scale where 1.0 means fit.
             let scale = MediaGalleryCalculations.logicalZoomScale(
                 platformZoom: scrollView.zoomScale,
@@ -482,15 +497,34 @@ struct ZoomableScrollView: UIViewRepresentable {
             spinner?.stopAnimating()
             errorView?.isHidden = true
 
+            fittedBounds = .zero
+            isFittingImage = true
+            scrollView.zoomScale = 1
             imageView.image = image
             let imageSize = image.size
             imageView.frame = CGRect(origin: .zero, size: imageSize)
             scrollView.contentSize = imageSize
+            isFittingImage = false
+            layoutImage()
+        }
 
+        // Cached images can arrive before the representable has nonzero bounds.
+        // Fit after layout as well as after loading, and refit on size changes.
+        @MainActor
+        func layoutImage() {
+            guard !isFittingImage, let imageView, let image = imageView.image,
+                  let scrollView = imageView.superview as? UIScrollView else { return }
+            layoutCenteredViews()
+            let imageSize = image.size
             // Fit image to screen
             let scrollBounds = scrollView.bounds
             guard scrollBounds.width > 0, scrollBounds.height > 0,
                   imageSize.width > 0, imageSize.height > 0 else { return }
+
+            guard fittedBounds != scrollBounds.size else { return }
+            fittedBounds = scrollBounds.size
+            isFittingImage = true
+            defer { isFittingImage = false }
 
             let widthScale = scrollBounds.width / imageSize.width
             let heightScale = scrollBounds.height / imageSize.height

@@ -1,28 +1,16 @@
 import FirebaseFirestore
 import Foundation
 
-/// An observation made while reconciling a physical space with Ledger.
-/// This is intentionally separate from project notes and the space's legacy free-text notes.
-struct SpaceReviewNote: Codable, Identifiable, Hashable {
-    @DocumentID var id: String?
-    var text: String = ""
-    var createdBy: String = ""
-    var createdByName: String = ""
-    var createdAt: Date?
-    var updatedAt: Date?
-    var visualReference: SpaceNoteVisualReference?
-}
-
-/// A lightweight snapshot of one photo already attached to the note's space.
+/// One uploaded photo or a snapshot of an existing space photo.
 /// The note owns the red marker; item checkmarks remain owned by the source photo.
-struct SpaceNoteVisualReference: Codable, Hashable, Identifiable, Sendable {
-    var spaceId: String
+struct NoteVisualReference: Codable, Hashable, Identifiable, Sendable {
+    var spaceId: String?
     var image: AttachmentRef
-    var marker: SpaceNoteMarker?
+    var marker: NoteMarker?
 
-    var id: String { "\(spaceId)|\(image.url)" }
+    var id: String { "\(spaceId ?? "upload")|\(image.url)" }
 
-    init(spaceId: String, image: AttachmentRef, marker: SpaceNoteMarker? = nil) {
+    init(spaceId: String? = nil, image: AttachmentRef, marker: NoteMarker? = nil) {
         self.spaceId = spaceId
         var snapshot = image
         snapshot.checkmarks = nil
@@ -33,7 +21,7 @@ struct SpaceNoteVisualReference: Codable, Hashable, Identifiable, Sendable {
     }
 }
 
-struct SpaceNoteMarker: Codable, Hashable, Sendable {
+struct NoteMarker: Codable, Hashable, Sendable {
     var x: Double
     var y: Double
 
@@ -51,14 +39,14 @@ enum SpaceReviewNoteError: LocalizedError {
     }
 }
 
-enum SpaceReviewNoteFields {
-    static func validate(_ reference: SpaceNoteVisualReference?, spaceId: String) throws {
+enum NoteFields {
+    static func validate(_ reference: NoteVisualReference?, spaceId: String) throws {
         if let reference, reference.spaceId != spaceId {
             throw SpaceReviewNoteError.differentSpace
         }
     }
 
-    static func update(text: String, visualReference: SpaceNoteVisualReference?) throws -> [String: Any] {
+    static func update(text: String, visualReference: NoteVisualReference?) throws -> [String: Any] {
         var fields: [String: Any] = ["text": text, "updatedAt": Date()]
         if let visualReference {
             fields["visualReference"] = try Firestore.Encoder().encode(visualReference)
@@ -69,7 +57,7 @@ enum SpaceReviewNoteFields {
     }
 }
 
-enum SpaceReviewPhotoCatalog {
+enum NotePhotoCatalog {
     static func availableImages(_ images: [AttachmentRef]) -> [AttachmentRef] {
         var seen: Set<String> = []
         return images.filter { image in
@@ -78,6 +66,29 @@ enum SpaceReviewPhotoCatalog {
             !image.url.isEmpty &&
             ["https", "http", "gs"].contains(URL(string: image.url)?.scheme?.lowercased() ?? "") &&
             seen.insert(image.url).inserted
+        }
+    }
+}
+
+// Backward-compatible names for consumers of the original space-note API.
+typealias SpaceNoteVisualReference = NoteVisualReference
+typealias SpaceNoteMarker = NoteMarker
+typealias SpaceReviewNoteFields = NoteFields
+typealias SpaceReviewPhotoCatalog = NotePhotoCatalog
+
+enum NoteScope: Hashable {
+    case project(String)
+    case space(String)
+
+    var spaceId: String? {
+        if case .space(let id) = self { return id }
+        return nil
+    }
+
+    func collectionPath(accountId: String) -> String {
+        switch self {
+        case .project(let id): return "accounts/\(accountId)/projects/\(id)/notes"
+        case .space(let id): return "accounts/\(accountId)/spaces/\(id)/reviewNotes"
         }
     }
 }

@@ -253,25 +253,31 @@ final class ProjectContext {
         )
     }
 
-    func addNote(accountId: String, projectId: String, text: String, source: String, userId: String?, userName: String?) async throws {
+    func addNote(accountId: String, projectId: String, text: String, source: String, userId: String?, userName: String?, visualReference: NoteVisualReference? = nil) async throws {
         var note = ProjectNote()
         note.text = text
         note.source = source
+        note.visualReference = visualReference
         note.createdBy = userId ?? ""
         note.createdByName = userName ?? ""
         note.createdAt = Date()
         try await projectNotesService.addProjectNote(accountId: accountId, projectId: projectId, note: note)
     }
 
+    /// Text-only callers preserve any existing photo.
     func updateNote(accountId: String, projectId: String, noteId: String, text: String) async throws {
+        try await projectNotesService.updateProjectNote(
+            accountId: accountId, projectId: projectId, noteId: noteId,
+            fields: ["text": text, "updatedAt": Date()]
+        )
+    }
+
+    func updateNote(accountId: String, projectId: String, noteId: String, text: String, visualReference: NoteVisualReference?) async throws {
         try await projectNotesService.updateProjectNote(
             accountId: accountId,
             projectId: projectId,
             noteId: noteId,
-            fields: [
-                "text": text,
-                "updatedAt": Date()
-            ]
+            fields: try NoteFields.update(text: text, visualReference: visualReference)
         )
     }
 

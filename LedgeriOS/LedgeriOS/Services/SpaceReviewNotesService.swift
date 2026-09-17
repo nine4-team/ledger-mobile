@@ -1,10 +1,8 @@
 import FirebaseFirestore
 
 struct SpaceReviewNotesService {
-    private func repo(accountId: String, spaceId: String) -> FirestoreRepository<SpaceReviewNote> {
-        FirestoreRepository<SpaceReviewNote>(
-            path: "accounts/\(accountId)/spaces/\(spaceId)/reviewNotes"
-        )
+    private func repo(accountId: String, spaceId: String) -> NotesService {
+        NotesService(accountId: accountId, scope: .space(spaceId))
     }
 
     func subscribe(
@@ -16,8 +14,7 @@ struct SpaceReviewNotesService {
     }
 
     func add(accountId: String, spaceId: String, note: SpaceReviewNote) throws {
-        try SpaceReviewNoteFields.validate(note.visualReference, spaceId: spaceId)
-        _ = try repo(accountId: accountId, spaceId: spaceId).create(note)
+        try repo(accountId: accountId, spaceId: spaceId).add(note)
     }
 
     func update(

@@ -1,4 +1,5 @@
 import Foundation
+import SwiftUI
 import Testing
 import FirebaseFirestore
 @testable import LedgeriOS
@@ -27,6 +28,8 @@ private final class ListenerCounter: @unchecked Sendable {
     var projectBudgetCategorySubscriptions = 0
     var feeInstallmentSubscriptions = 0
     var noteSubscriptions = 0
+    var createdNotes: [ProjectNote] = []
+    var noteUpdates: [(accountId: String, projectId: String, noteId: String, fields: [String: Any])] = []
     var removeCalls = 0
 }
 
@@ -223,8 +226,12 @@ private struct LifecycleProjectNotesService: ProjectNotesServiceProtocol {
         return CountingListenerRegistration { counter.removeCalls += 1 }
     }
 
-    func addProjectNote(accountId: String, projectId: String, note: ProjectNote) async throws {}
-    func updateProjectNote(accountId: String, projectId: String, noteId: String, fields: [String: Any]) async throws {}
+    func addProjectNote(accountId: String, projectId: String, note: ProjectNote) async throws {
+        counter.createdNotes.append(note)
+    }
+    func updateProjectNote(accountId: String, projectId: String, noteId: String, fields: [String: Any]) async throws {
+        counter.noteUpdates.append((accountId, projectId, noteId, fields))
+    }
     func deleteProjectNote(accountId: String, projectId: String, noteId: String) async throws {}
 }
 
@@ -265,6 +272,113 @@ private func makeInventoryContext(counter: ListenerCounter) -> InventoryContext 
 
 @Suite("Loading Lifecycle Tests", .serialized)
 struct LoadingLifecycleTests {
+    @Test("Queued and repeated saves from one note composer create only one note")
+    @MainActor
+    func noteComposerRejectsDuplicateSubmissions() async throws {
+        let counter = ListenerCounter()
+        let context = makeProjectContext(counter: counter)
+        let submission = NoteSubmissionState()
+        let addNote = {
+            try await context.addNote(
+                accountId: "account-1", projectId: "project-1", text: "Brown blanket",
+                source: "text", userId: "user-1", userName: "Designer"
+            )
+        }
+        let saved = try await submission.save {
+            #expect(submission.isSaving)
+            // A second action can already be queued before SwiftUI disables Save.
+            let concurrentSave = try await submission.save(addNote)
+            #expect(!concurrentSave)
+            try await addNote()
+        }
+        #expect(saved)
+        #expect(submission.didSave)
+        #expect(!submission.isSaving)
+        // A queued action can also arrive after the first write has completed.
+        let repeatedSave = try await submission.save(addNote)
+        #expect(!repeatedSave)
+        #expect(counter.createdNotes.count == 1)
+
+        // A genuinely new composer is still allowed to submit identical text.
+        let newComposer = NoteSubmissionState()
+        _ = try await newComposer.save(addNote)
+        #expect(counter.createdNotes.count == 2)
+    }
+
+    @Test("Failed note saves allow retry; successful edits cannot resubmit")
+    @MainActor
+    func noteSubmissionRetriesFailure() async throws {
+        let submission = NoteSubmissionState()
+        enum SaveError: Error { case rejected }
+        do {
+            _ = try await submission.save { throw SaveError.rejected }
+            Issue.record("Expected save failure")
+        } catch SaveError.rejected {}
+        #expect(!submission.isSaving)
+        #expect(!submission.didSave)
+
+        let counter = ListenerCounter()
+        let context = makeProjectContext(counter: counter)
+        let saved = try await submission.save {
+            try await context.updateNote(
+                accountId: "account-1", projectId: "project-1", noteId: "note-1", text: "Revised note"
+            )
+        }
+        #expect(saved)
+        #expect(counter.createdNotes.isEmpty)
+        #expect(counter.noteUpdates.count == 1)
+        #expect(counter.noteUpdates.first?.noteId == "note-1")
+    }
+
+    @Test("Repeated project note edits update the original document without creating notes")
+    @MainActor
+    func projectNoteEditsPreserveDocumentIdentity() async throws {
+        let counter = ListenerCounter()
+        let context = makeProjectContext(counter: counter)
+
+        for text in ["Revised note", "Revised again"] {
+            try await context.updateNote(
+                accountId: "account-1", projectId: "project-1", noteId: "note-1", text: text
+            )
+        }
+
+        #expect(counter.createdNotes.isEmpty)
+        #expect(counter.noteUpdates.count == 2)
+        #expect(counter.noteUpdates.map { $0.fields["text"] as? String } == ["Revised note", "Revised again"])
+        for update in counter.noteUpdates {
+            #expect(update.accountId == "account-1")
+            #expect(update.projectId == "project-1")
+            #expect(update.noteId == "note-1")
+            #expect(update.fields["updatedAt"] is Date)
+            #expect(update.fields["createdAt"] == nil)
+            #expect(update.fields["visualReference"] == nil)
+        }
+    }
+
+    @Test("Project note snapshots replace edited text without retaining the old version")
+    func projectNoteSnapshotsReplaceOriginal() {
+        let state = FirestoreIncrementalSnapshotState<ProjectNote>()
+        var original = ProjectNote()
+        original.id = "note-1"
+        original.text = "Original note"
+        original.createdAt = Date(timeIntervalSince1970: 100)
+        var revised = original
+        revised.text = "Revised note"
+
+        _ = state.apply(orderedDocuments: [original], documentID: { $0.id! }, changes: [], decode: { $0 })
+        // Cover the local edit and the server's acknowledgement of that same edit.
+        for _ in 0..<2 {
+            let result = state.apply(
+                orderedDocuments: [revised], documentID: { $0.id! },
+                changes: [.upsert(documentID: "note-1", document: revised)], decode: { $0 }
+            )
+            #expect(result.values.count == 1)
+            #expect(result.values.first?.id == original.id)
+            #expect(result.values.first?.text == "Revised note")
+            #expect(result.values.first?.createdAt == original.createdAt)
+        }
+    }
+
     @Test("Account lookup indexes track published collection replacement")
     @MainActor
     func accountLookupIndexesStayFresh() {

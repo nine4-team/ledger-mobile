@@ -372,8 +372,8 @@ private struct SpaceDetailContentView: View {
         }
         .adaptivePresentation(item: $newReviewNoteDraft, style: .form) { draft in
             if let spaceId = liveSpace.id {
-                SpaceReviewNoteEditor(
-                    spaceId: spaceId,
+                NoteEditor(
+                    scope: .space(spaceId),
                     photos: liveSpace.images ?? [],
                     initialPhoto: draft.initialPhoto,
                     onSave: addReviewNote
@@ -382,8 +382,8 @@ private struct SpaceDetailContentView: View {
         }
         .adaptivePresentation(item: $editingReviewNote, style: .form) { note in
             if let spaceId = liveSpace.id {
-                SpaceReviewNoteEditor(
-                    spaceId: spaceId,
+                NoteEditor(
+                    scope: .space(spaceId),
                     photos: liveSpace.images ?? [],
                     note: note
                 ) { text, reference in
@@ -393,10 +393,10 @@ private struct SpaceDetailContentView: View {
         }
         .adaptivePresentation(item: $viewingReviewNote, style: .viewer) { note in
             if let reference = note.visualReference {
-                SpaceNoteReferenceViewer(reference: reference, noteText: note.text)
+                NoteReferenceViewer(reference: reference, noteText: note.text)
             }
         }
-        .confirmationDialog("Delete Review Note?", isPresented: reviewNoteDeleteBinding) {
+        .confirmationDialog("Delete Note?", isPresented: reviewNoteDeleteBinding) {
             Button("Delete", role: .destructive) { deletePendingReviewNote() }
         } message: {
             Text("This action cannot be undone.")
@@ -767,7 +767,7 @@ private struct SpaceDetailContentView: View {
 
             if !sortedReviewNotes.isEmpty {
                 VStack(alignment: .leading, spacing: Spacing.sm) {
-                    Text("SPACE REVIEW")
+                    Text("NOTES")
                         .sectionLabelStyle()
 
                     ForEach(sortedReviewNotes) { note in
@@ -783,7 +783,7 @@ private struct SpaceDetailContentView: View {
             Button {
                 newReviewNoteDraft = NewSpaceReviewNoteDraft(initialPhoto: nil)
             } label: {
-                Label("Add review note", systemImage: "note.text.badge.plus")
+                Label("Add note", systemImage: "note.text.badge.plus")
                     .frame(maxWidth: .infinity)
             }
             .buttonStyle(.bordered)
@@ -792,60 +792,8 @@ private struct SpaceDetailContentView: View {
     }
 
     private func reviewNoteCard(_ note: SpaceReviewNote) -> some View {
-        VStack(alignment: .leading, spacing: Spacing.sm) {
-            HStack(alignment: .top, spacing: Spacing.sm) {
-                SelectableNoteText(text: note.text, style: .small)
-                    .frame(maxWidth: .infinity, alignment: .leading)
-
-                if note.id != nil {
-                    Menu {
-                        Button {
-                            editingReviewNote = note
-                        } label: {
-                            Label("Edit", systemImage: "pencil")
-                        }
-                        Button(role: .destructive) {
-                            reviewNotePendingDelete = note
-                        } label: {
-                            Label("Delete", systemImage: "trash")
-                        }
-                    } label: {
-                        Image(systemName: "ellipsis.circle")
-                            .font(.title3)
-                            .foregroundStyle(BrandColors.textTertiary)
-                            .frame(width: 32, height: 32)
-                    }
-                    .buttonStyle(.plain)
-                }
-            }
-
-            if let reference = note.visualReference {
-                Button { viewingReviewNote = note } label: {
-                    SpaceNoteReferenceThumbnail(reference: reference, height: 120)
-                }
-                .buttonStyle(.plain)
-            }
-
-            HStack(spacing: Spacing.sm) {
-                if !note.createdByName.isEmpty {
-                    Text(note.createdByName)
-                        .font(Typography.caption)
-                        .foregroundStyle(BrandColors.textSecondary)
-                }
-                if let date = note.createdAt {
-                    Text(date, style: .relative)
-                        .font(Typography.caption)
-                        .foregroundStyle(BrandColors.textTertiary)
-                }
-            }
-        }
-        .padding(Spacing.sm)
-        .background(BrandColors.background)
-        .clipShape(RoundedRectangle(cornerRadius: Dimensions.inputRadius))
-        .overlay {
-            RoundedRectangle(cornerRadius: Dimensions.inputRadius)
-                .stroke(BrandColors.border, lineWidth: Dimensions.borderWidth)
-        }
+        NoteCard(note: note, onEdit: { editingReviewNote = note },
+                 onDelete: { reviewNotePendingDelete = note }, onViewPhoto: { viewingReviewNote = note })
     }
 
     // MARK: - Items

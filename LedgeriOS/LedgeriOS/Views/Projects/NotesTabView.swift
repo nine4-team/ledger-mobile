@@ -5,11 +5,11 @@ struct NotesTabView: View {
     @Environment(AccountContext.self) private var accountContext
     @Environment(AuthManager.self) private var authManager
 
-    @State private var noteText = ""
+    @State private var showingNewNote = false
+    @State private var viewingNote: LedgerNote?
     @State private var editingNote: ProjectNote?
     @State private var notePendingDelete: ProjectNote?
     @State private var errorMessage: String?
-    @FocusState private var isInputFocused: Bool
 
     // MARK: - Computed
 
@@ -35,9 +35,17 @@ struct NotesTabView: View {
             .safeAreaInset(edge: .bottom, spacing: 0) {
                 inputBar
             }
+            .adaptivePresentation(isPresented: $showingNewNote, style: .form) {
+                NoteEditor(scope: noteScope, photos: availablePhotos, onSave: addNote)
+            }
             .adaptivePresentation(item: $editingNote, style: .form) { note in
-                EditNotesModal(notes: note.text) { newText in
-                    updateNote(note, text: newText)
+                NoteEditor(scope: noteScope, photos: availablePhotos, note: note) { text, reference in
+                    try await updateNote(note, text: text, reference: reference)
+                }
+            }
+            .adaptivePresentation(item: $viewingNote, style: .viewer) { note in
+                if let reference = note.visualReference {
+                    NoteReferenceViewer(reference: reference, noteText: note.text)
                 }
             }
             .confirmationDialog("Delete Note?", isPresented: deleteConfirmationBinding) {
@@ -84,60 +92,8 @@ struct NotesTabView: View {
     // MARK: - Note Card
 
     private func noteCard(_ note: ProjectNote) -> some View {
-        VStack(alignment: .leading, spacing: Spacing.sm) {
-            HStack(alignment: .top, spacing: Spacing.sm) {
-                SelectableNoteText(text: note.text, style: .body)
-                    .frame(maxWidth: .infinity, alignment: .leading)
-
-                if note.id != nil {
-                    Menu {
-                        Button {
-                            editingNote = note
-                        } label: {
-                            Label("Edit", systemImage: "pencil")
-                        }
-
-                        Button(role: .destructive) {
-                            notePendingDelete = note
-                        } label: {
-                            Label("Delete", systemImage: "trash")
-                        }
-                    } label: {
-                        Image(systemName: "ellipsis.circle")
-                            .font(.title3)
-                            .foregroundStyle(BrandColors.textTertiary)
-                            .frame(width: 32, height: 32)
-                    }
-                    .buttonStyle(.plain)
-                }
-            }
-
-            HStack(spacing: Spacing.sm) {
-                Image(systemName: sourceIcon(note.source))
-                    .font(Typography.caption)
-                    .foregroundStyle(BrandColors.textSecondary)
-
-                if !note.createdByName.isEmpty {
-                    Text(note.createdByName)
-                        .font(Typography.caption)
-                        .foregroundStyle(BrandColors.textSecondary)
-                }
-
-                if let date = note.createdAt {
-                    Text(date, style: .relative)
-                        .font(Typography.caption)
-                        .foregroundStyle(BrandColors.textTertiary)
-                }
-            }
-        }
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .padding(Spacing.cardPadding)
-        .background(BrandColors.surface)
-        .clipShape(RoundedRectangle(cornerRadius: Dimensions.cardRadius))
-        .overlay(
-            RoundedRectangle(cornerRadius: Dimensions.cardRadius)
-                .stroke(BrandColors.border, lineWidth: Dimensions.borderWidth)
-        )
+        NoteCard(note: note, onEdit: { editingNote = note },
+                 onDelete: { notePendingDelete = note }, onViewPhoto: { viewingNote = note })
     }
 
     // MARK: - Legacy Card
@@ -161,83 +117,51 @@ struct NotesTabView: View {
 
     // MARK: - Input Bar
 
-    private var inputBar: some View {
-        HStack(alignment: .bottom, spacing: Spacing.sm) {
-            TextField("Add a note...", text: $noteText, axis: .vertical)
-                .font(Typography.body)
-                .lineLimit(1...5)
-                .focused($isInputFocused)
-                .padding(.horizontal, Spacing.md)
-                .padding(.vertical, Spacing.sm)
-                .background(BrandColors.surface)
-                .clipShape(RoundedRectangle(cornerRadius: Dimensions.inputRadius))
-                .overlay(
-                    RoundedRectangle(cornerRadius: Dimensions.inputRadius)
-                        .stroke(BrandColors.border, lineWidth: Dimensions.borderWidth)
-                )
+    private var noteScope: NoteScope? {
+        projectContext.currentProjectId.map(NoteScope.project)
+    }
 
-            Button {
-                sendNote()
-            } label: {
-                Image(systemName: "arrow.up.circle.fill")
-                    .font(.title2)
-                    .foregroundStyle(noteText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
-                        ? BrandColors.textTertiary
-                        : BrandColors.primary)
-            }
-            .disabled(noteText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
+    private var availablePhotos: [AttachmentRef] {
+        NotePhotoCatalog.availableImages(projectContext.spaces.flatMap { $0.images ?? [] })
+    }
+
+    private var inputBar: some View {
+        Button { showingNewNote = true } label: {
+            Label("Add note", systemImage: "square.and.pencil")
+                .frame(maxWidth: .infinity)
         }
+        .buttonStyle(.bordered)
         .padding(.horizontal, Spacing.screenPadding)
         .padding(.vertical, Spacing.sm)
         .background(.bar)
     }
 
-    // MARK: - Actions
-
-    private func sendNote() {
-        let trimmed = noteText.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard !trimmed.isEmpty,
-              let accountId = accountContext.currentAccountId,
-              let projectId = projectContext.currentProjectId else { return }
-        let userId = authManager.currentUser?.uid
-        let userName = accountContext.member?.name
-        noteText = ""
-        Task {
-            do {
-                try await projectContext.addNote(
-                    accountId: accountId,
-                    projectId: projectId,
-                    text: trimmed,
-                    source: "text",
-                    userId: userId,
-                    userName: userName
-                )
-            } catch {
-                noteText = trimmed
-                errorMessage = "Failed to add note. Please try again."
-            }
-        }
+    private func addNote(_ text: String, _ reference: NoteVisualReference?) async throws {
+        guard let accountId = accountContext.currentAccountId,
+              let projectId = projectContext.currentProjectId else { throw ProjectNoteEditError.missingContext }
+        try await projectContext.addNote(
+            accountId: accountId, projectId: projectId, text: text, source: "text",
+            userId: authManager.currentUser?.uid, userName: accountContext.member?.name,
+            visualReference: reference
+        )
     }
 
-    private func updateNote(_ note: ProjectNote, text: String) {
+    private func updateNote(_ note: ProjectNote, text: String, reference: NoteVisualReference?) async throws {
         let trimmed = text.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard !trimmed.isEmpty,
+        guard (!trimmed.isEmpty || reference != nil),
               let noteId = note.id,
               let accountId = accountContext.currentAccountId,
-              let projectId = projectContext.currentProjectId else { return }
-
-        Task {
-            do {
-                try await projectContext.updateNote(
-                    accountId: accountId,
-                    projectId: projectId,
-                    noteId: noteId,
-                    text: trimmed
-                )
-            } catch {
-                errorMessage = "Failed to update note. Please try again."
-            }
+              let projectId = projectContext.currentProjectId else {
+            throw ProjectNoteEditError.missingContext
         }
+
+        try await projectContext.updateNote(
+            accountId: accountId,
+            projectId: projectId,
+            noteId: noteId,
+            text: trimmed,
+            visualReference: reference
+        )
     }
 
     private func deletePendingNote() {
@@ -279,11 +203,8 @@ struct NotesTabView: View {
         )
     }
 
-    private func sourceIcon(_ source: String) -> String {
-        switch source {
-        case "voice": return "mic.fill"
-        case "mcp": return "cpu"
-        default: return "keyboard"
-        }
-    }
+}
+
+private enum ProjectNoteEditError: Error {
+    case missingContext
 }

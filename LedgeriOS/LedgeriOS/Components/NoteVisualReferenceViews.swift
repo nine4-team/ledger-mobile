@@ -1,19 +1,20 @@
 import SwiftUI
+import PhotosUI
 
-private extension SpaceNoteVisualReference {
+private extension NoteVisualReference {
     var annotations: [ZoomableImageAnnotation] {
         guard let marker else { return [] }
         return [ZoomableImageAnnotation(
-            id: "space-review-note-marker",
+            id: "note-marker",
             point: CGPoint(x: marker.x, y: marker.y),
-            accessibilityLabel: "Review note marker",
+            accessibilityLabel: "Note marker",
             style: .noteReference
         )]
     }
 }
 
-struct SpaceNoteReferenceThumbnail: View {
-    let reference: SpaceNoteVisualReference
+struct NoteReferenceThumbnail: View {
+    let reference: NoteVisualReference
     var height: CGFloat = 140
 
     var body: some View {
@@ -32,24 +33,44 @@ struct SpaceNoteReferenceThumbnail: View {
                 .stroke(BrandColors.border, lineWidth: Dimensions.borderWidth)
         }
         .accessibilityLabel(reference.marker == nil
-            ? "Space photo attached to this review note"
-            : "Space photo with a red review note marker")
+            ? "Photo attached to this note"
+            : "Photo with a red note marker")
     }
 }
 
-struct SpaceNoteVisualReferenceField: View {
-    let spaceId: String
+struct NoteVisualReferenceField: View {
+    let scope: NoteScope?
     let photos: [AttachmentRef]
-    @Binding var reference: SpaceNoteVisualReference?
+    @Binding var reference: NoteVisualReference?
+    @Binding var isProcessing: Bool
+    @Binding var newUploads: [AttachmentRef]
+    @Environment(AccountContext.self) private var accountContext
+    @Environment(MediaService.self) private var mediaService
+    @State private var libraryItem: PhotosPickerItem?
+    @State private var showCamera = false
+    @State private var uploadError: String?
 
     @State private var showPhotoPicker = false
     @State private var showMarkerEditor = false
 
     var body: some View {
         VStack(alignment: .leading, spacing: Spacing.sm) {
+            HStack {
+                PhotosPicker(selection: $libraryItem, matching: .images) {
+                    Label("Photo library", systemImage: "photo")
+                }
+                #if os(iOS)
+                Button { showCamera = true } label: {
+                    Label("Take photo", systemImage: "camera")
+                }
+                #endif
+            }
+            .disabled(isProcessing || scope == nil)
+            if isProcessing { ProgressView("Preparing photo…") }
+            if let uploadError { Text(uploadError).foregroundStyle(.red).font(Typography.small) }
             if let reference {
                 Button { showMarkerEditor = true } label: {
-                    SpaceNoteReferenceThumbnail(reference: reference, height: 170)
+                    NoteReferenceThumbnail(reference: reference, height: 170)
                 }
                 .buttonStyle(.plain)
 
@@ -65,43 +86,88 @@ struct SpaceNoteVisualReferenceField: View {
                 .controlSize(.small)
             } else {
                 Button { showPhotoPicker = true } label: {
-                    Label("Choose a space photo", systemImage: "photo.badge.plus")
+                    Label("Choose an existing photo", systemImage: "photo.badge.plus")
                 }
                 Text("Optional. Add a red mark if the note refers to something specific in the photo.")
                     .font(Typography.caption)
                     .foregroundStyle(BrandColors.textSecondary)
             }
         }
+        .disabled(isProcessing)
+        .onChange(of: libraryItem) { _, item in
+            guard let item else { return }
+            isProcessing = true
+            Task {
+                do {
+                    guard let data = try await item.loadTransferable(type: Data.self) else {
+                        throw CocoaError(.fileReadCorruptFile)
+                    }
+                    try await attach(data)
+                } catch { uploadError = error.localizedDescription }
+                libraryItem = nil
+                isProcessing = false
+            }
+        }
+        #if os(iOS)
+        .fullScreenCover(isPresented: $showCamera) {
+            CameraCapture { data in
+                showCamera = false
+                isProcessing = true
+                Task {
+                    do { try await attach(data) }
+                    catch { uploadError = error.localizedDescription }
+                    isProcessing = false
+                }
+            } onDismiss: { showCamera = false }
+        }
+        #endif
         .adaptivePresentation(isPresented: $showPhotoPicker, style: .fullSheet) {
-            SpaceReviewPhotoPicker(spaceId: spaceId, photos: photos) { selected in
-                reference = SpaceNoteVisualReference(spaceId: spaceId, image: selected)
+            NotePhotoPicker(photos: photos) { selected in
+                reference = NoteVisualReference(spaceId: scope?.spaceId, image: selected)
             }
         }
         .adaptivePresentation(isPresented: $showMarkerEditor, style: .viewer) {
             if let reference {
-                SpaceNoteReferenceViewer(reference: reference, isEditing: true) { marker in
+                NoteReferenceViewer(reference: reference, isEditing: true) { marker in
                     self.reference?.marker = marker
                 }
             }
         }
     }
+
+    private func attach(_ data: Data) async throws {
+        guard let scope, let accountId = accountContext.currentAccountId else {
+            throw CocoaError(.fileWriteNoPermission)
+        }
+        uploadError = nil
+        guard let jpeg = ImageThumbnailGenerator.generateThumbnailData(
+            from: data, maxDimension: 2400, quality: 0.85, force: true
+        ) else { throw CocoaError(.fileReadCorruptFile) }
+        let path = scope.collectionPath(accountId: accountId) + "/photos/" + UUID().uuidString + ".jpg"
+        let url = try await mediaService.uploadImage(jpeg, path: path)
+        let thumbnails = await mediaService.uploadThumbnails(for: jpeg, originalPath: path, contentType: "image/jpeg")
+        let image = AttachmentRef(url: url, thumbnailUrlSm: thumbnails.sm, thumbnailUrlMd: thumbnails.md, contentType: "image/jpeg")
+        newUploads.append(image)
+        reference = NoteVisualReference(spaceId: scope.spaceId, image: image)
+    }
+
 }
 
-struct SpaceNoteReferenceViewer: View {
-    let reference: SpaceNoteVisualReference
+struct NoteReferenceViewer: View {
+    let reference: NoteVisualReference
     var noteText: String?
     let isEditing: Bool
-    var onSave: ((SpaceNoteMarker?) -> Void)?
+    var onSave: ((NoteMarker?) -> Void)?
 
     @Environment(\.dismiss) private var dismiss
-    @State private var marker: SpaceNoteMarker?
+    @State private var marker: NoteMarker?
     @State private var zoomScale: CGFloat = 1
 
     init(
-        reference: SpaceNoteVisualReference,
+        reference: NoteVisualReference,
         noteText: String? = nil,
         isEditing: Bool = false,
-        onSave: ((SpaceNoteMarker?) -> Void)? = nil
+        onSave: ((NoteMarker?) -> Void)? = nil
     ) {
         self.reference = reference
         self.noteText = noteText
@@ -113,9 +179,9 @@ struct SpaceNoteReferenceViewer: View {
     private var draftAnnotations: [ZoomableImageAnnotation] {
         guard let marker else { return [] }
         return [ZoomableImageAnnotation(
-            id: "space-review-note-marker",
+            id: "note-marker",
             point: CGPoint(x: marker.x, y: marker.y),
-            accessibilityLabel: "Review note marker",
+            accessibilityLabel: "Note marker",
             style: .noteReference
         )]
     }
@@ -129,18 +195,18 @@ struct SpaceNoteReferenceViewer: View {
                     annotations: draftAnnotations,
                     annotationSelectionEnabled: false,
                     onImageTap: isEditing ? { point in
-                        marker = SpaceNoteMarker(x: point.x, y: point.y)
+                        marker = NoteMarker(x: point.x, y: point.y)
                     } : nil
                 )
                 .background(Color.black)
-                .accessibilityLabel("Space review reference photo")
+                .accessibilityLabel("Note photo")
                 .accessibilityAction(named: "Place mark at center") {
-                    if isEditing { marker = SpaceNoteMarker(x: 0.5, y: 0.5) }
+                    if isEditing { marker = NoteMarker(x: 0.5, y: 0.5) }
                 }
 
                 controls
             }
-            .navigationTitle(isEditing ? "Mark what you mean" : "Review note")
+            .navigationTitle(isEditing ? "Mark what you mean" : "Note")
             #if os(iOS)
             .navigationBarTitleDisplayMode(.inline)
             #endif
@@ -201,7 +267,7 @@ struct SpaceNoteReferenceViewer: View {
         .background(.bar)
     }
 
-    private func coordinate(_ keyPath: WritableKeyPath<SpaceNoteMarker, Double>) -> Binding<Double> {
+    private func coordinate(_ keyPath: WritableKeyPath<NoteMarker, Double>) -> Binding<Double> {
         Binding(
             get: { marker?[keyPath: keyPath] ?? 0.5 },
             set: { marker?[keyPath: keyPath] = $0 }
@@ -209,15 +275,14 @@ struct SpaceNoteReferenceViewer: View {
     }
 }
 
-private struct SpaceReviewPhotoPicker: View {
-    let spaceId: String
+private struct NotePhotoPicker: View {
     let photos: [AttachmentRef]
     let onSelect: (AttachmentRef) -> Void
 
     @Environment(\.dismiss) private var dismiss
 
     private var availablePhotos: [AttachmentRef] {
-        SpaceReviewPhotoCatalog.availableImages(photos)
+        NotePhotoCatalog.availableImages(photos)
     }
 
     var body: some View {
@@ -225,9 +290,9 @@ private struct SpaceReviewPhotoPicker: View {
             Group {
                 if availablePhotos.isEmpty {
                     ContentUnavailableView(
-                        "No space photos",
+                        "No existing photos",
                         systemImage: "photo.on.rectangle",
-                        description: Text("Add a photo to this space first, then attach it to a review note.")
+                        description: Text("Take a photo or choose one from your photo library.")
                     )
                 } else {
                     ScrollView {
@@ -251,7 +316,7 @@ private struct SpaceReviewPhotoPicker: View {
                                     .clipShape(RoundedRectangle(cornerRadius: Dimensions.inputRadius))
                                 }
                                 .buttonStyle(.plain)
-                                .accessibilityLabel("Choose space photo \(index + 1)")
+                                .accessibilityLabel("Choose existing photo \(index + 1)")
                             }
                         }
                         .padding(Spacing.md)
@@ -259,7 +324,7 @@ private struct SpaceReviewPhotoPicker: View {
                 }
             }
             .background(BrandColors.background)
-            .navigationTitle("Choose space photo")
+            .navigationTitle("Choose existing photo")
             #if os(iOS)
             .navigationBarTitleDisplayMode(.inline)
             #endif
@@ -272,32 +337,40 @@ private struct SpaceReviewPhotoPicker: View {
     }
 }
 
-struct SpaceReviewNoteEditor: View {
-    let spaceId: String
+struct NoteEditor: View {
+    let scope: NoteScope?
     let photos: [AttachmentRef]
     let isEditing: Bool
-    let onSave: (String, SpaceNoteVisualReference?) async throws -> Void
+    var header: AnyView?
+    let onSave: (String, NoteVisualReference?) async throws -> Void
 
     @Environment(\.dismiss) private var dismiss
     @State private var text: String
-    @State private var reference: SpaceNoteVisualReference?
-    @State private var isSaving = false
+    @State private var reference: NoteVisualReference?
+    @State private var submission = NoteSubmissionState()
+    @State private var isProcessing = false
+    @State private var newUploads: [AttachmentRef] = []
+    @Environment(MediaService.self) private var mediaService
+    private var isSaving: Bool { submission.isSaving || submission.didSave }
     @State private var errorMessage: String?
 
     init(
-        spaceId: String,
+        scope: NoteScope?,
         photos: [AttachmentRef],
-        note: SpaceReviewNote? = nil,
+        note: LedgerNote? = nil,
         initialPhoto: AttachmentRef? = nil,
-        onSave: @escaping (String, SpaceNoteVisualReference?) async throws -> Void
+        initialText: String = "",
+        header: AnyView? = nil,
+        onSave: @escaping (String, NoteVisualReference?) async throws -> Void
     ) {
-        self.spaceId = spaceId
+        self.scope = scope
+        self.header = header
         self.photos = photos
         self.isEditing = note != nil
         self.onSave = onSave
-        _text = State(initialValue: note?.text ?? "")
+        _text = State(initialValue: note?.text ?? initialText)
         _reference = State(initialValue: note?.visualReference ?? initialPhoto.map {
-            SpaceNoteVisualReference(spaceId: spaceId, image: $0)
+            NoteVisualReference(spaceId: scope?.spaceId, image: $0)
         })
     }
 
@@ -305,21 +378,24 @@ struct SpaceReviewNoteEditor: View {
         NavigationStack {
             ScrollView {
                 VStack(alignment: .leading, spacing: Spacing.lg) {
+                    if let header { header }
                     VStack(alignment: .leading, spacing: Spacing.xs) {
-                        Text("What needs attention?")
+                        Text("Note")
                             .font(Typography.label)
-                        TextField("Describe what is missing, unclear, or not represented in Ledger", text: $text, axis: .vertical)
+                        TextField("Write a note", text: $text, axis: .vertical)
                             .lineLimit(4...12)
                             .formInputStyle()
                     }
 
                     VStack(alignment: .leading, spacing: Spacing.xs) {
-                        Text("Visual reference")
+                        Text("Photo")
                             .font(Typography.label)
-                        SpaceNoteVisualReferenceField(
-                            spaceId: spaceId,
+                        NoteVisualReferenceField(
+                            scope: scope,
                             photos: photos,
-                            reference: $reference
+                            reference: $reference,
+                            isProcessing: $isProcessing,
+                            newUploads: $newUploads
                         )
                     }
 
@@ -330,23 +406,30 @@ struct SpaceReviewNoteEditor: View {
                     }
                 }
                 .padding(Spacing.screenPadding)
-                .disabled(isSaving)
+                .disabled(isSaving || isProcessing)
             }
-            .navigationTitle(isEditing ? "Edit review note" : "Add review note")
+            .navigationTitle(isEditing ? "Edit note" : "Add note")
             #if os(iOS)
             .navigationBarTitleDisplayMode(.inline)
             #endif
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
-                    Button("Cancel") { dismiss() }
-                        .disabled(isSaving)
+                    Button("Cancel") {
+                        cleanupUploads(keeping: nil)
+                        dismiss()
+                    }
+                    .disabled(isSaving || isProcessing)
                 }
                 ToolbarItem(placement: .confirmationAction) {
                     Button(isSaving ? "Saving…" : "Save") { save() }
-                        .disabled(isSaving || trimmedText.isEmpty)
+                        .disabled(isSaving || isProcessing || scope == nil || (trimmedText.isEmpty && reference == nil))
                 }
             }
-            .interactiveDismissDisabled(isSaving)
+            .interactiveDismissDisabled(isSaving || isProcessing || !newUploads.isEmpty)
+            .onChange(of: scope) { _, _ in
+                cleanupUploads(keeping: nil)
+                reference = nil
+            }
         }
     }
 
@@ -355,16 +438,78 @@ struct SpaceReviewNoteEditor: View {
     }
 
     private func save() {
-        guard !trimmedText.isEmpty, !isSaving else { return }
-        isSaving = true
+        guard scope != nil, !isProcessing, !isSaving,
+              !trimmedText.isEmpty || reference != nil else { return }
+        let savedText = trimmedText
+        let savedReference = reference
         Task {
             do {
-                try await onSave(trimmedText, reference)
-                dismiss()
-            } catch {
-                errorMessage = error.localizedDescription
-                isSaving = false
+                if try await submission.save({ try await onSave(savedText, savedReference) }) {
+                    cleanupUploads(keeping: savedReference?.image.url)
+                    dismiss()
+                }
+            } catch { errorMessage = error.localizedDescription }
+        }
+    }
+
+    private func cleanupUploads(keeping url: String?) {
+        let discarded = newUploads.filter { $0.url != url }
+        newUploads = []
+        Task {
+            for image in discarded {
+                for path in [image.url, image.thumbnailUrlSm, image.thumbnailUrlMd].compactMap({ $0 }) {
+                    try? await mediaService.deleteImage(url: path)
+                }
             }
+        }
+    }
+}
+
+/// The same note card in every scope.
+struct NoteCard: View {
+    let note: LedgerNote
+    let onEdit: () -> Void
+    let onDelete: () -> Void
+    let onViewPhoto: () -> Void
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: Spacing.sm) {
+            HStack(alignment: .top) {
+                if !note.text.isEmpty {
+                    SelectableNoteText(text: note.text, style: .body)
+                }
+                Spacer(minLength: 0)
+                if note.id != nil {
+                    Menu {
+                        Button(action: onEdit) { Label("Edit", systemImage: "pencil") }
+                        Button(role: .destructive, action: onDelete) { Label("Delete", systemImage: "trash") }
+                    } label: {
+                        Image(systemName: "ellipsis.circle").font(.title3).frame(width: 32, height: 32)
+                    }
+                    .buttonStyle(.plain)
+                }
+            }
+            if let reference = note.visualReference {
+                Button(action: onViewPhoto) {
+                    NoteReferenceThumbnail(reference: reference, height: 150)
+                }
+                .buttonStyle(.plain)
+            }
+            HStack(spacing: Spacing.sm) {
+                if !note.createdByName.isEmpty { Text(note.createdByName) }
+                if let date = note.createdAt { Text(date, style: .relative) }
+                if note.updatedAt != nil { Text("Edited") }
+            }
+            .font(Typography.caption)
+            .foregroundStyle(BrandColors.textSecondary)
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding(Spacing.cardPadding)
+        .background(BrandColors.surface)
+        .clipShape(RoundedRectangle(cornerRadius: Dimensions.cardRadius))
+        .overlay {
+            RoundedRectangle(cornerRadius: Dimensions.cardRadius)
+                .stroke(BrandColors.border, lineWidth: Dimensions.borderWidth)
         }
     }
 }
