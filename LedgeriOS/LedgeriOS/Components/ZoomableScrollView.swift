@@ -24,7 +24,10 @@ struct ImageAnnotationSymbol: View {
 
     var body: some View {
         Image(systemName: annotation.style.symbolName)
-            .font(.system(size: 24, weight: .heavy))
+            .font(.system(
+                size: annotation.style == .noteReference ? 12 : 24,
+                weight: .heavy
+            ))
             .symbolRenderingMode(.palette)
             .foregroundStyle(
                 annotation.style == .noteReference
