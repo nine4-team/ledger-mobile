@@ -31,7 +31,7 @@ create function ledger_private.publish_verified_item_attachment(
  p_auth_user_id uuid,p_upload_id text,p_observed_sha256 text,p_observed_byte_count bigint,p_observed_media_type text
 ) returns jsonb language plpgsql security definer set search_path='' as $$
 declare u ledger_private.item_attachment_uploads; marker public.item_image_sets;
- stored public.item_image_objects; existing public.item_image_references;
+ stored public.item_image_objects;
  result jsonb; rejection text; new_revision bigint; target_position integer;
 begin
  select upload.* into u from ledger_private.item_attachment_uploads upload
@@ -63,7 +63,7 @@ begin
   is distinct from row(u.account_id,u.content_sha256,u.byte_count,u.media_type,u.storage_path) then
   rejection:='attachment_identity_conflict';
  end if;
- select * into existing from public.item_image_references where id=u.id;
+ perform 1 from public.item_image_references where id=u.id;
  if found then rejection:='attachment_identity_conflict'; end if;
  if rejection is null then
   if stored.id is null then

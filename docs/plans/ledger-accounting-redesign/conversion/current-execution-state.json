@@ -1,6 +1,6 @@
 {
   "schemaVersion": 2,
-  "stateVersion": 1539,
+  "stateVersion": 1541,
   "userRequestedPause": {
     "date": "2026-09-15",
     "status": "resumed",
@@ -29,7 +29,7 @@
     "outcome": "Implement confirmed2026-09-17 live Item adjustment allocation, inclusive Project price edits and exact unadjusted-price audit. Preserve editability, clear errors, deterministic pennies and collected history; verify native/offline/Postgres/MCP/migration parity under the linked contract.",
     "baseCommit": "c5226c11992a46357a9d4a51b81c53f68e814d24",
     "nextActions": [
-      "Live Item adjustments implemented and independently reviewed locally:29native/23MCP/2449SQL assertions/focused iPhone PASS. Review fixes verified. No active worker; no commit/push/hosted deployment or exact-commit CI. Preserve local evidence; do not rerun broad tests for context recovery.",
+      "Photo/pricing/export batch committed and pushed febe461ea8ce90120c82677d4a942404a4003baa. Prior local evidence/review retained. Draft PR1 is CONFLICTING, so PR checks did not start; one explicit integration workflow dispatched at this head. Save its run ID; no duplicate dispatch or Firebase merge.",
       "Prior Item-photo local checks/review finished; evidence and limits remain in its checklist record, measurement/old goal in efficiency assessment. Integration list preserves its dirty-file ownership, not acceptance of new accounting work.",
       "Item-photo migrations appliedLOCAL without history; do not replay."
     ]
@@ -63,7 +63,7 @@
     "verificationCommands": ["npm run conversion:check","node --test scripts/tests/analyze-agent-usage.test.mjs"],
     "lastResult": "Live adjustments locally implemented/reviewed. Final29native/23MCP/2449SQL/iPhone PASS; logs /tmp/ledger-adjustments-review-*.log. Migration20260918001914 appliedLOCAL without history; do not replay blindly. Hosted unchanged; exact-commit CI/newMacUI not proven. Older receipt CI35269076888 status is historical/unverified, not an active process for this slice.",
     "activeProcesses": {},
-    "integrationCI": {"run":35218414703,"attempt":1,"commit":"7ed45e59b406ca9e599eeefa75704abbaee9e559","status":"failed","meaning":"Completed13:01:47UTC. Provider/conversion PASS; Mac boundary failed (local fix). iOS1hour timeout:73passed,3failed of76finished, remaining unexecuted. Full log /tmp/ledger-ci-35218414703-ios-latest.log: capture first Photos picker still Loading; category reorder order assertion; Invoice cancel picker appears in final AX dump after15s wait failed. Diagnose targeted readiness/drag, no UI rebuild or blanket retry. Live log was incomplete; tests began12:13, not compile hang."},
-    "nextWorkflowDecision": "Coherent photo/pricing/export batch ready for commit/normal PR CI. CSV28native/9CSV/1iPhone PASS;186MCP/types PASS;16sync parser/boundary PASS. Actual receipt read/reopen/price replay PASS22.152s after alias/Account lookup fixes and local service reload; observed max94parameters. Scoped reviews passed. Checklist owns failures/evidence. Save exact CI run after push; do not rerun local passing suites or wait-poll unchanged CI."
+    "integrationCI": {"run":35358843803,"attempt":1,"commit":"febe461ea8ce90120c82677d4a942404a4003baa","status":"failed","meaning":"Conversion passed; provider strict SQL lint failed; native jobs skipped. Fixed locally:2function volatility declarations, explicit JSON cast and unused variable. Strict lint/2449SQL assertions/security advisors PASS. New-commit integration required; PR remains conflicting."},
+    "nextWorkflowDecision": "Push locally verified SQL lint correction, then one new-commit integration run (PR1 conflicts prevent automatic checks). Preserve failed35358843803; do not repeat passing local tests. Session-ending UI/coordinator already implemented: no rebuild. Async product questions sent Sept18 for O052/O053 broad member editing and O039 note text; await responses, continue independent approved work."
   }
 }

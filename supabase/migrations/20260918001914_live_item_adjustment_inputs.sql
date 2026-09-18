@@ -50,7 +50,7 @@ revoke all on function ledger_private.item_price_product(numeric,numeric),ledger
  ledger_private.item_price_add(numeric[],numeric[]),ledger_private.item_price_round(numeric[]) from public,anon,authenticated,service_role;
 
 create function ledger_private.item_price_inverse(requested bigint,total bigint,adjustments bigint)
-returns jsonb language plpgsql immutable security invoker set search_path='' as $$
+returns jsonb language plpgsql stable security invoker set search_path='' as $$
 declare base numeric:=total::numeric-adjustments; fraction numeric[];
 begin
   if base<=0 then return jsonb_build_object('requestedProjectPriceMinorUnits',requested::text,'issue','nonpositiveBase'); end if;
@@ -69,11 +69,11 @@ $$;
 revoke all on function ledger_private.item_price_inverse(bigint,bigint,bigint) from public,anon,authenticated,service_role;
 
 create function ledger_private.calculate_item_adjustments(total bigint,adjustments bigint,inputs jsonb)
-returns jsonb language plpgsql immutable security invoker set search_path='' as $$
+returns jsonb language plpgsql stable security invoker set search_path='' as $$
 declare
   base numeric:=total::numeric-adjustments; difference numeric[]:=array[base,1];
   input jsonb; item_value numeric[]; share numeric[]; final_price numeric[]; resolved jsonb;
-  rows jsonb:='[]'; unknown boolean:=false; invalid boolean:=false; balanced boolean;
+  rows jsonb:='[]'::jsonb; unknown boolean:=false; invalid boolean:=false; balanced boolean;
   rounded_share bigint; rounded_final bigint; rounded_unadjusted bigint; issue text;
   share_sum numeric:=0; final_sum numeric:=0; delta numeric; entry record; field text;
 begin
