@@ -625,7 +625,7 @@ try {
   }
   console.log('PASS Transaction receipt-line retry, competing edit, rollback, removal and financial-visibility races');
   }
-  if (process.argv.includes('--media-only')) {
+  if (!process.argv.includes('--adjustments-only')) {
     for (const operation of ['insert','update']) {
       const name=`media-marker-order-${operation}`, id=source(name); prepare(name,false);
       sql(`begin;
