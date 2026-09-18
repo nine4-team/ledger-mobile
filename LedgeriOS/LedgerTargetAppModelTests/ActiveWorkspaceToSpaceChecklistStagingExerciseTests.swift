@@ -106,6 +106,9 @@ struct ActiveWorkspaceToSpaceChecklistStagingExerciseTests {
             "target-business-inventory-card",
             "target-inventory-section",
             "target-inventory-transactions-unavailable",
+            // Owned by their feature records, now reachable from this route.
+            "ProjectBudgetContent(",
+            "SpaceMediaSection(",
         ] {
             #expect(view.contains(required), "Missing route UI contract token: \(required)")
         }
@@ -120,10 +123,6 @@ struct ActiveWorkspaceToSpaceChecklistStagingExerciseTests {
             "Button(\"Edit\")",
             "Retry local acceptance",
             "Item count",
-            "Text(\"Budget",
-            "Button(\"Budget",
-            "Section(\"Budget",
-            "Media",
             "Delete Space",
         ] {
             #expect(!view.contains(excluded), "Out-of-scope control escaped: \(excluded)")

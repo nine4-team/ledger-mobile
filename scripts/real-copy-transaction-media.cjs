@@ -87,6 +87,19 @@ function transactionPublicationSQL(plan, principal) {
   }
   return publicationSQL({items:[],objects:plan.objects},principal).replace('set constraints all immediate;',()=>statements.join('\n')+'\nset constraints all immediate;');
 }
+function spacePublicationSQL(plan, principal) {
+  const statements=[];
+  for(const gallery of plan.spaces) {
+    statements.push(`insert into public.space_media_sets(id,account_id,space_id,revision,expected_count) values(${[gallery.id,account,gallery.space].map(q).join(',')},1,${gallery.images.length}) on conflict(id) do nothing;`);
+    statements.push(`do $$ begin if not exists(select 1 from public.space_media_sets where id=${q(gallery.id)} and account_id=${q(account)} and space_id=${q(gallery.space)} and revision=1 and expected_count=${gallery.images.length}) then raise exception 'Existing Space gallery differs'; end if; end $$;`);
+    gallery.images.forEach((image,position)=>{
+      const reference=id('space-ref',gallery.sourceID+':'+position),primary=position===gallery.primaryIndex;
+      statements.push(`insert into public.space_media_references(id,account_id,space_id,attachment_id,set_revision,position,is_primary,file_name) values(${[reference,account,gallery.space,image.id].map(q).join(',')},1,${position},${primary},${q(image.fileName)}) on conflict(id) do nothing;`);
+      statements.push(`do $$ begin if not exists(select 1 from public.space_media_references where id=${q(reference)} and account_id=${q(account)} and space_id=${q(gallery.space)} and attachment_id=${q(image.id)} and set_revision=1 and position=${position} and is_primary=${primary} and file_name is not distinct from ${q(image.fileName)}) then raise exception 'Existing Space reference differs'; end if; end $$;`);
+    });
+  }
+  return publicationSQL({items:[],objects:plan.objects},principal).replace('set constraints all immediate;',()=>statements.join('\n')+'\nset constraints all immediate;');
+}
 // Receipt planning for the Swift financial importer. It supplies the accepted
 // source IDs only after complete Invoice validation; no rejected Invoice's
 // originals are uploaded. Source references stay in the original snapshot.
@@ -163,5 +176,5 @@ async function expenseReceiptCommand() {
   console.log(JSON.stringify({sourceSHA256,accountID:request.targetAccountID,blocked:plan.blocked,
     receipts:plan.receipts.map(({sourceID,images})=>({sourceID,images:images.map(image=>({id:image.id,sha256:image.sha256,byteCount:String(image.bytes),mediaType:image.contentType,storagePath:image.storagePath}))}))}));
 }
-module.exports={planMediaReferences,planSpaceMedia,planTransactionMedia,transactionPublicationSQL,planExpenseReceipts};
+module.exports={planMediaReferences,planSpaceMedia,spacePublicationSQL,planTransactionMedia,transactionPublicationSQL,planExpenseReceipts};
 if (require.main===module) expenseReceiptCommand().catch(()=>{console.error('Expense receipt preparation failed; no financial import authorized.');process.exitCode=1;});

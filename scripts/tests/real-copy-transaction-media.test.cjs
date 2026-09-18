@@ -1,5 +1,5 @@
 const test=require('node:test'),assert=require('node:assert/strict'),crypto=require('node:crypto');
-const {planMediaReferences,planSpaceMedia,planTransactionMedia,transactionPublicationSQL,planExpenseReceipts}=require('../real-copy-transaction-media.cjs');
+const {planMediaReferences,planSpaceMedia,spacePublicationSQL,planTransactionMedia,transactionPublicationSQL,planExpenseReceipts}=require('../real-copy-transaction-media.cjs');
 const transaction='realcopy-b9d236394770-transaction-'+crypto.createHash('sha256').update('one').digest('hex').slice(0,24);
 const ids=new Set([transaction]);
 const ref=(object,kind='image')=>({mapValue:{fields:{url:{stringValue:'https://firebasestorage.googleapis.com/v0/b/ledger-nine4.firebasestorage.app/o/'+object},kind:{stringValue:kind}}}});
@@ -14,6 +14,14 @@ test('Space planning preserves mixed media and refuses partial galleries',()=>{
   assert.deepEqual(planned.spaces[0].images.map(image=>image.contentType),['image/jpeg','application/pdf']);
   assert.equal(planned.spaces[0].primaryIndex,0);
   assert.equal(planned.objects.size,2);
+  for(const image of planned.objects.values()) image.storagePath=`accounts/realcopy-b9d236394770-account/attachments/${image.id}/${image.sha256}`;
+  const sql=spacePublicationSQL(planned,'upload-http-owner-test');
+  assert.match(sql,/insert into public.space_media_sets/);
+  assert.match(sql,/Existing Space gallery differs/);
+  assert.match(sql,/Existing Space reference differs/);
+  assert.match(sql,/set constraints all immediate/);
+  assert.equal(spacePublicationSQL(planned,'upload-http-owner-test'),sql);
+  assert.throws(()=>spacePublicationSQL(planned,'foreign-owner'));
   assert.equal(planSpaceMedia(input,copies,new Set()).spaces.length,0);
   const missing=planSpaceMedia(input,new Map([['image',copies.get('image')]]),new Set([space]));
   assert.equal(missing.spaces.length,0);

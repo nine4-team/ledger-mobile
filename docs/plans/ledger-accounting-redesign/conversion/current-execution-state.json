@@ -1,6 +1,6 @@
 {
   "schemaVersion": 2,
-  "stateVersion": 1555,
+  "stateVersion": 1556,
   "userRequestedPause": {
     "date": "2026-09-15",
     "status": "resumed",
@@ -60,9 +60,9 @@
     "acceptanceCheckIds": ["SPACE-MEDIA-CATALOG","SPACE-MEDIA-BYTES","SPACE-MEDIA-OFFLINE"],
     "meaning": "Saved-source media QA planning for the existing Space reader, not production migration.",
     "verificationCommands": ["node --test scripts/tests/real-copy-transaction-media.test.cjs","node scripts/load-hosted-real-copy-item-media.cjs --plan-spaces","npm run conversion:state:check"],
-    "lastResult": "Space-scoped copier/planner12tests PASS /tmp/ledger-space-copy-tests-final.log.229originals copied with zero failures /tmp/ledger-space-original-copy.log; fresh verified plan60galleries/206refs,2blocked /tmp/ledger-space-complete-copy-plan.log. Read-only Firebase downloads; no target uploads/writes. O011 Transfer-tag question remains unanswered.",
+    "lastResult": "CI35366670601 macOS native failed2stale route exclusions (Budget/Media); fixed to require approved bindings,11route tests PASS0.086s /tmp/ledger-space-budget-route-contract.log. Publication SQL5planner tests pass; empty-gallery SQL retry/conflict rollback PASS /tmp/ledger-space-publication-rollback-fixed.log. Nonempty publication/CLI apply not yet verified/wired.",
     "activeProcesses": {"integrationCI":{"run":35366670601,"commit":"ccee5ac9afb582cc826adb579fa997b102bf8adb","status":"queued","watchSession":39393,"watchLog":"/tmp/ledger-ci-35366670601-watch.log","instruction":"One coherent workflow_dispatch; use existing watcher/results, no repeated model polling or duplicate dispatch. Prior run35359599965 failure remains preserved below."}},
     "integrationCI": {"run":35359599965,"attempt":1,"commit":"cd8be156fa695f92e2b461cfccd961717c2e95ac","status":"failure","meaning":"Strict lint and SQL/races passed; physical stream test rejected approved live_pricing projection. Native jobs skipped. Repaired exact-column expectation and added absent-acquisition null assertion. All four downstream stream/MCP scripts passed locally. No hosted changes; new-commit integration still required."},
-    "nextWorkflowDecision": "Review existing CI35366670601 when terminal; never dispatch duplicate. Follow-up export messages tested locally, not included in ccee5ac9 CI. macOS local runner auth failure remains. O023/O053 mutations excluded; no hosted Storage claim."
+    "nextWorkflowDecision": "Finish nonempty Space publication verification and wire existing QA loader before applying. Preserve60complete/2blocked galleries. CI35366670601 Mac native failed stale assertions now locally fixed; iPhone job still pending last observation. Use watcher, no duplicate dispatch. Follow-ups outside ccee5ac9 CI; O011 question unanswered; O023/O053 mutations excluded."
   }
 }
