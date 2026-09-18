@@ -1,6 +1,6 @@
 {
   "schemaVersion": 2,
-  "stateVersion": 1566,
+  "stateVersion": 1567,
   "userRequestedPause": {
     "date": "2026-09-15",
     "status": "resumed",
@@ -28,9 +28,9 @@
     "outcome": "Return only to the proven source Project at immutable inventory-entry amount/category, adding a positive charge, occurrence and unpaid progress. Preserve independent Sell and single/bulk routing; never guess source or recalculate basis. Apply linked Required Test Stories and Target Action Routing Contract.",
     "baseCommit": "3b4bbbaf17b76602ec70ea7da97aa54f544bbd40",
     "nextActions": [
-      "Source-return consumer reviewed; stable-parent fix verified by Luna on macOS/iOS. Next hosted isolated verification within existing Ledger authority, then exact-commit integration. O031 acquisition writer/backfill remains blocked; no source-return deploy yet.",
-      "Space media remains pending integration in its owning record. CI35384788446 at3b4bbbaf17b76602ec70ea7da97aa54f544bbd40 FAILED on stale five-query Item stream expectation; native jobs skipped. Root repaired consumer6b644be6 (24SQL captures) and default ten-race inclusion0f07e7cf, not pushed. PR1 still conflicts with firebase; do not merge Firebase or duplicate CI.",
-      "CI35366670601 attempt1 at ccee5ac9afb582cc826adb579fa997b102bf8adb is terminal FAILURE: conversion/local Supabase pass, macOS and isolated target fail, iOS cancelled during testItemStatusEditorExplicitClear after preceding passes. Cause of cancellation unknown; no UI pass or frozen-runner claim. No duplicate CI. Earlier failures stay in owning records."
+      "Source-return consumer reviewed; stable-parent fix verified by Luna on macOS/iOS. Hosted isolated verification passed in existing Ledger authority: hosted history20260918203400, PowerSync activev13 with21streams/43tables and zero replication/table errors, synthetic return/replay/auth/sync PASS with zero cleanup rows. Exact-commit integration/CI remains pending; O031 acquisition writer/backfill remains blocked.",
+      "Source return92864e01d43e20c9b43d8c5eb3097dc656365498 and earlier Space fixes pushed. CI35391745535 explicitly dispatched once because PR1 conflicts with firebase and normal PR checks cannot run. Do not merge Firebase or duplicate this run. Earlier35384788446 failure repaired by6b644be6/0f07e7cf; retain original evidence.",
+      "Earlier CI failures remain in owning records;35366670601 iOS hit its60min job limit (GitHub annotation), not a frozen runner. Measured full-run budget repaired in3b4bbbaf."
     ]
   },
   "blockers": [
@@ -60,10 +60,10 @@
     "acceptanceCheckIds": ["SOURCE-RETURN-IDENTITY","SOURCE-RETURN-BASIS","SOURCE-RETURN-ATOMIC","SOURCE-RETURN-SYNC","SOURCE-RETURN-OFFLINE","SOURCE-RETURN-UI","SOURCE-RETURN-PARITY"],
     "meaning": "Restore only proven saved source/amount/category through existing workflow; O031 acquisition writer/backfill excluded and still blocked.",
     "verificationCommands": ["swift test --package-path LedgeriOS --filter InventorySourceReturn","node scripts/test-local-item-charge-concurrency.mjs --source-return-only","node --import ./LedgerTargetMCP/node_modules/tsx/dist/loader.mjs scripts/test-local-inventory-sale-http.mjs --mcp --source-return","npm run conversion:check"],
-    "lastResult": "SQL2520assertions/five races/11native/28identity/192MCP and actual offline readback/withdrawal passed. Root final review passed. Luna stable-parent UI: Mac2cases51.535s and iOS2cases47.526s PASS (/tmp/source-return-ui-{macos,ios}-stable-parent.log), no auto-reopen. Original menu failure /tmp/ledger-source-return-ui-macos-final.log and direct implementation-agent live testing model deviation retained in checklist. Hosted isolated verification and exact-commit integration pending; O031 still blocks acquisition writer/backfill, no completion claim.",
+    "lastResult": "Local SQL/native/MCP/offline and Luna stable-parent Mac/iOS UI passed; details and retained failures are in the checklist. Hosted history20260918203400, PowerSyncv13/21streams/43tables with zero errors, synthetic exact-basis return/replay/auth/stream checks and zero-row cleanup PASS. O031 still blocks acquisition writer/backfill; exact-commit integration/CI pending; no completion claim.",
     "activeProcesses": {},
     "previousIntegrationCI": {"run":35359599965,"attempt":1,"commit":"cd8be156fa695f92e2b461cfccd961717c2e95ac","status":"failure","meaning":"Historical Space integration failure retained; live_pricing projection consumer repaired, native skipped. New source-return work does not waive this or later35366670601/35384788446 failures."},
-    "integrationCI": {"status":"not_run"},
-    "nextWorkflowDecision": "Hosted isolated verification in existing Ledger only, then exact-commit integration; O031 open, workflow incomplete."
+    "integrationCI": {"status":"not_run","run":35391745535,"commit":"92864e01d43e20c9b43d8c5eb3097dc656365498","meaning":"Dispatched, completion not yet verified. PR merge conflict prevents automatic checks; no duplicate run."},
+    "nextWorkflowDecision": "Hosted isolated verification passed in existing Ledger; next exact-commit integration/CI only. O031 open, workflow incomplete."
   }
 }

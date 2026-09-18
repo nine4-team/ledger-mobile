@@ -178,7 +178,10 @@ try {
   {
     // Retain the schema-only Supabase platform, but remove every Ledger object.
     // This is only the generated disposable database, never the working database.
-    sql(`drop schema ledger_private cascade; drop schema public cascade;
+    // A fresh Supabase startup has no app-owned PowerSync publication yet.
+    // Do not accidentally inherit it from the running development database.
+    sql(`drop publication if exists powersync;
+      drop schema ledger_private cascade; drop schema public cascade;
       create schema public authorization pg_database_owner;
       grant usage on schema public to postgres,anon,authenticated,service_role;
       grant all on schema public to postgres,service_role;`);

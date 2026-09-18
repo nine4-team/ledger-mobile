@@ -187,4 +187,8 @@ end;
 $$;
 revoke all on function public.spike_read_inventory_source_return_review(text,text[]) from public,anon,service_role;
 grant execute on function public.spike_read_inventory_source_return_review(text,text[]) to authenticated;
-alter publication powersync add table ledger_private.inventory_source_entries;
+do $$ begin
+ if exists(select 1 from pg_publication where pubname='powersync') then
+   alter publication powersync add table ledger_private.inventory_source_entries;
+ end if;
+end $$;
