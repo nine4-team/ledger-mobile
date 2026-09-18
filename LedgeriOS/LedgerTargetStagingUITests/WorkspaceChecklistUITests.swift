@@ -5471,7 +5471,19 @@ final class WorkspaceChecklistUITests: XCTestCase {
         let photo = app.descendants(matching: .any)["target-space-media-space-media-0"].firstMatch
         XCTAssertTrue(photo.waitForExistence(timeout: 5)); reveal(photo,in: app); photo.tap()
         let pin = app.buttons["target-space-image-pin"]
-        XCTAssertTrue(pin.waitForExistence(timeout: 5)); pin.tap()
+        XCTAssertTrue(pin.waitForExistence(timeout: 5))
+        #if os(iOS)
+        let share = app.buttons["target-space-image-share"]
+        XCTAssertTrue(share.exists); share.tap()
+        let activity = app.otherElements["ActivityListView"].firstMatch
+        XCTAssertTrue(activity.waitForExistence(timeout: 10), app.debugDescription)
+        let dismissShare = app.otherElements["PopoverDismissRegion"].firstMatch
+        XCTAssertTrue(waitUntil { dismissShare.isHittable }); dismissShare.tap()
+        XCTAssertTrue(activity.waitForNonExistence(timeout: 5))
+        XCTAssertTrue(waitUntil { share.isEnabled })
+        XCTAssertFalse(app.alerts["Space Media"].exists)
+        #endif
+        pin.tap()
         let unpin = app.buttons["target-space-pinned-image-unpin"]
         XCTAssertTrue(unpin.waitForExistence(timeout: 5))
         XCTAssertTrue(app.staticTexts["target-space-pinned-images-counter"].exists)
@@ -5486,7 +5498,16 @@ final class WorkspaceChecklistUITests: XCTestCase {
         let pdf = app.descendants(matching: .any)["target-space-media-space-media-2"].firstMatch
         reveal(pdf,in: app); pdf.tap()
         let pdfPin = app.buttons["Pin PDF for reference"]
-        XCTAssertTrue(pdfPin.waitForExistence(timeout: 5)); pdfPin.tap()
+        XCTAssertTrue(pdfPin.waitForExistence(timeout: 5))
+        #if os(iOS)
+        app.buttons["Share PDF"].tap()
+        XCTAssertTrue(activity.waitForExistence(timeout: 10), app.debugDescription)
+        XCTAssertTrue(waitUntil { dismissShare.isHittable }); dismissShare.tap()
+        XCTAssertTrue(activity.waitForNonExistence(timeout: 5))
+        XCTAssertTrue(app.buttons["Share PDF"].waitForExistence(timeout: 5))
+        XCTAssertFalse(app.alerts["Space Media"].exists)
+        #endif
+        pdfPin.tap()
         XCTAssertTrue(unpin.waitForExistence(timeout: 5))
         XCTAssertTrue(app.descendants(matching: .any)["target-space-pinned-pdf"].firstMatch.waitForExistence(timeout: 5))
         XCTAssertFalse(app.buttons["Match Items"].exists)

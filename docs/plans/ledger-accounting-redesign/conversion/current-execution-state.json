@@ -1,6 +1,6 @@
 {
   "schemaVersion": 2,
-  "stateVersion": 1551,
+  "stateVersion": 1552,
   "userRequestedPause": {
     "date": "2026-09-15",
     "status": "resumed",
@@ -63,6 +63,6 @@
     "lastResult": "Current iPhone pin/missing-byte print2tests PASS30.817s /tmp/ledger-space-media-current-iphone.log. Protected Space bytes survive offline runtime reopen PASS0.280s /tmp/ledger-space-media-byte-restart-fixed.log. Print refuses incomplete or changed image sets. Prior runtime close/removal and live sync evidence preserved. State/diff checks PASS. macOS UI authentication failure remains; no CI/hosted changes.",
     "activeProcesses": {},
     "integrationCI": {"run":35359599965,"attempt":1,"commit":"cd8be156fa695f92e2b461cfccd961717c2e95ac","status":"failure","meaning":"Strict lint and SQL/races passed; physical stream test rejected approved live_pricing projection. Native jobs skipped. Repaired exact-column expectation and added absent-acquisition null assertion. All four downstream stream/MCP scripts passed locally. No hosted changes; new-commit integration still required."},
-    "nextWorkflowDecision": "Mixed pinned attachment paging fixed and current iPhone test PASS /tmp/ledger-space-media-mixed-pinning.log. PDF uses original native PDFKit zoom; original separate zoom-button overlay was conditional on image marker editing, so do not invent PDF controls. Remaining: export binding checks and macOS UI environment failure, then coherent integration checkpoint (prior batch failure still open). Local byte restart/missing-byte UI verified; no hosted Storage claim. No active tests; O023/O053 mutations excluded."
+    "nextWorkflowDecision": "iPhone image/PDF sharing and cancellation plus mixed pinning PASS /tmp/ledger-space-media-share.log. macOS correctly ad-hoc-signed retry still cannot initialize: system authentication running /tmp/ledger-space-media-macos-signed.log; no local UI pass. Coherent accumulated integration gate is next; inspect exact latest run before dispatch, never duplicate. Prior physical-stream CI failure remains open until new gate verifies repair. No local tests active. O023/O053 mutations excluded; no hosted Storage claim."
   }
 }
