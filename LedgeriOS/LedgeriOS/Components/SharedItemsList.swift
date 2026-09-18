@@ -26,7 +26,13 @@ struct SharedItemsList: View {
     var filterCatalog: ItemFilterCatalog = .empty
     var inline: Bool = false
     var pickerItems: [Item]?
+    /// Section title, shown with the controls in either layout.
     var inlineSectionHeader: AnyView? = nil
+    /// Optional full-width content before the item rows. Uses a single-column,
+    /// content-width list so project Quick Drafts retain their section layout.
+    var listHeader: AnyView? = nil
+    var showsBottomBar: Bool = true
+    var expandsGroupsInline: Bool = false
     var externalSearchText: Binding<String>?
     var protoItems: [ProtoItem] = []
     var protoItemCard: ((ProtoItem) -> AnyView)?
@@ -301,12 +307,21 @@ struct SharedItemsList: View {
                     content
                 }
                 .safeAreaInset(edge: .top, spacing: 0) {
-                    controlBar
-                        .padding(.horizontal, Spacing.screenPadding)
-                        .background(BrandColors.background)
+                    VStack(spacing: 0) {
+                        if let inlineSectionHeader {
+                            inlineSectionHeader
+                        }
+                        controlBar
+                    }
+                    .frame(maxWidth: Dimensions.contentMaxWidth)
+                    .frame(maxWidth: .infinity)
+                    .padding(.horizontal, Spacing.screenPadding)
+                    .background(BrandColors.background)
                 }
                 .safeAreaInset(edge: .bottom) {
-                    bottomBar
+                    if showsBottomBar {
+                        bottomBar
+                    }
                 }
             }
         }
@@ -505,7 +520,7 @@ struct SharedItemsList: View {
                 message: error,
                 onRetry: { Task { await setupData() } }
             )
-        } else if !hasProcessedResults {
+        } else if !hasProcessedResults && listHeader == nil {
             let message = hasSourceResults ? "No items match your filters" : emptyMessage
             ContentUnavailableView {
                 Label(message, systemImage: emptyIcon)
@@ -571,10 +586,20 @@ struct SharedItemsList: View {
         ScrollViewReader { proxy in
             ScrollView {
                 LazyVGrid(
-                    columns: Dimensions.listColumns,
+                    columns: listHeader == nil ? Dimensions.listColumns : [GridItem(.flexible())],
                     alignment: .leading,
                     spacing: Spacing.cardListGap
                 ) {
+                    if let listHeader {
+                        listHeader
+                    }
+                    if !hasProcessedResults {
+                        Text(hasSourceResults ? "No items match your filters" : emptyMessage)
+                            .font(Typography.small)
+                            .foregroundStyle(BrandColors.textSecondary)
+                            .frame(maxWidth: .infinity)
+                            .padding(.vertical, Spacing.xl)
+                    }
                     ForEach(processedProtoItems) { protoItem in
                         protoItemRow(for: protoItem)
                     }
@@ -598,6 +623,8 @@ struct SharedItemsList: View {
                         }
                     }
                 }
+                .frame(maxWidth: listHeader == nil ? .infinity : Dimensions.contentMaxWidth)
+                .frame(maxWidth: .infinity)
                 .padding(.horizontal, Spacing.screenPadding)
                 .padding(.vertical, Spacing.sm)
             }
@@ -857,7 +884,7 @@ struct SharedItemsList: View {
 
     private func inlineGroupExpansionBinding(for group: ItemGroup) -> Binding<Bool>? {
         #if os(macOS)
-        if !inline {
+        if !inline && !expandsGroupsInline {
             return nil
         }
         #endif
@@ -879,7 +906,7 @@ struct SharedItemsList: View {
 
     private func groupedCardPressAction(for group: ItemGroup) -> (() -> Void)? {
         #if os(macOS)
-        if !inline {
+        if !inline && !expandsGroupsInline {
             return { withAnimation { macOSExpandedGroup = group } }
         }
         #endif

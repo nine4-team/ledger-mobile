@@ -2,8 +2,6 @@ import SwiftUI
 import FirebaseFirestore
 
 struct ItemsTabView: View {
-    private static let itemsScrollAnchor = "project-items-search-anchor"
-
     @Environment(ProjectContext.self) private var projectContext
     @Environment(AccountContext.self) private var accountContext
     @Environment(AuthManager.self) private var authManager
@@ -76,36 +74,10 @@ struct ItemsTabView: View {
 
     var body: some View {
         let _ = recordBodyEvaluation()
-        ScrollViewReader { scrollProxy in
-            let searchText = Binding(
-                get: { itemSearchText },
-                set: { newValue in
-                    guard newValue != itemSearchText else { return }
-                    // Move while the old result set still defines a valid
-                    // scroll range. Publishing the query first can strand the
-                    // macOS ScrollView beyond the much shorter filtered list.
-                    scrollProxy.scrollTo(Self.itemsScrollAnchor, anchor: .top)
-                    itemSearchText = newValue
-                }
-            )
-
-            ScrollView {
-                VStack(spacing: 0) {
-                    Color.clear
-                        .frame(height: 0)
-                        .id(Self.itemsScrollAnchor)
-
-                    AdaptiveContentWidth {
-                        LazyVStack(spacing: Spacing.md, pinnedViews: [.sectionHeaders]) {
-                            itemDraftsSection
-                            itemsSection(searchText: searchText)
-                        }
-                        .padding(.horizontal, Spacing.screenPadding)
-                        .padding(.vertical, Spacing.lg)
-                    }
-                }
-            }
-        }
+        // The list owns its scrolling; its controls stay outside the lazy rows.
+        // A focused search field in a pinned lazy header can be recycled when
+        // filtering shortens the list, losing focus or looping in macOS layout.
+        itemsSection(searchText: $itemSearchText)
         .safeAreaInset(edge: .bottom) {
             ItemsTabBulkSelectionControls(
                 selectedCount: selectedItemIds.count,
@@ -353,12 +325,23 @@ struct ItemsTabView: View {
                     spaces: projectContext.spaces,
                     budgetCategories: projectContext.budgetCategories
                 ),
-                inline: true,
                 inlineSectionHeader: AnyView(itemsSectionHeader),
+                listHeader: AnyView(itemDraftsSection),
+                showsBottomBar: false,
+                expandsGroupsInline: true,
                 externalSearchText: searchText
             )
         } else {
-            itemsSectionHeader
+            ScrollView {
+                AdaptiveContentWidth {
+                    VStack(spacing: Spacing.md) {
+                        itemsSectionHeader
+                        itemDraftsSection
+                    }
+                    .padding(.horizontal, Spacing.screenPadding)
+                    .padding(.vertical, Spacing.lg)
+                }
+            }
         }
     }
 
