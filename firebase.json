@@ -12,6 +12,7 @@
     }
   ],
   "hosting": {
+    "site": "ledger-nine4",
     "public": "firebase/hosting",
     "ignore": [
       "firebase.json",
