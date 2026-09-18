@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { test } from 'node:test';
-import { SqlSyncRules, DEFAULT_HYDRATION_STATE } from '@powersync/service-sync-rules';
+import { SqlSyncRules, DEFAULT_HYDRATION_STATE, RequestParameters } from '@powersync/service-sync-rules';
 import { validateSyncOutputTables } from '../sync-output-tables.mjs';
 
 const schema = 'public static let projects = "spike_projects"\npublic static let items = "spike_items"';
@@ -39,7 +39,7 @@ test('every checked-in stream output resolves to the native schema', () => {
   const nativeSchema = readFileSync(new URL('../../LedgeriOS/LedgerTargetPowerSync/LedgerPowerSyncSchema.swift', import.meta.url), 'utf8');
   const count = validateSyncOutputTables(yaml, nativeSchema);
   // Project and Inventory reads include coherent placement-revision evidence.
-  assert.equal(count, 95);
+  assert.equal(count, 98);
   const compiled = SqlSyncRules.fromYaml(yaml, { defaultSchema: 'public', throwOnError: false });
   assert.deepEqual(compiled.errors.map(error => error.message), []);
   const nativeNames = new Set([...nativeSchema.matchAll(/public static let \w+ = "([a-z_]+)"/g)].map(m => m[1]));
@@ -124,16 +124,79 @@ test('live Invoice stream scopes all new outputs to full financial membership an
   assert.match(queries[2], /revision::text AS revision/);
 });
 
-test('Item image-set joins explicitly constrain the subscription before expansion', () => {
+test('media buckets route on physical scope columns, never attachment identities', () => {
   const yaml = readFileSync(new URL('../../powersync/sync-streams.yaml', import.meta.url), 'utf8');
-  const images = yaml.split('  item_images:')[1].split('  account_business_profile:')[0];
-  // Equivalent relational joins alone expanded beyond 1000 parameter results
-  // on hosted real data. Explicit joined-side predicates keep all four lookups
-  // Item-scoped. Hosted replay additionally proves 8 buckets / 2 references.
-  assert.equal((images.match(/JOIN item_image_sets AS image_set/g) ?? []).length, 4);
-  for (const field of ['account_id', 'item_id']) {
-    assert.equal((images.match(new RegExp(`AND image_set\\.${field}=subscription.parameter\\('${field}'\\)`, 'g')) ?? []).length, 4);
+  const { config, errors } = SqlSyncRules.fromYaml(yaml, { defaultSchema: 'public', throwOnError: false });
+  assert.deepEqual(errors.map(error => error.message), []);
+  for (const name of ['item_images','project_item_images','space_media']) {
+    const stream = config.bucketSources.find(source => source.name === name);
+    for (const source of stream.dataSources.flatMap(source => source.source.sources)) {
+      const columns = source.parameters.map(parameter => parameter.expr.source?.column);
+      assert.ok(columns.every(column => ['account_id','item_id','space_id','sync_project_id','scope_id'].includes(column)),
+        `${name}/${source.sourceTable.tablePattern}: ${columns}`);
+    }
   }
+});
+
+test('700-Item Project media and mixed117-Item Space subscriptions stay below the real pre-dedup budget', async () => {
+  const yaml = readFileSync(new URL('../../powersync/sync-streams.yaml', import.meta.url), 'utf8');
+  const { config } = SqlSyncRules.fromYaml(yaml, { defaultSchema: 'public', throwOnError: true });
+  const evaluator = config.hydrate({ hydrationState: DEFAULT_HYDRATION_STATE, sqlite: null });
+  const facts = [];
+  const add = (name, row, schema = 'public') => facts.push({ table: {connectionTag:'default',schema,name}, row });
+  add('spike_principals', {id:'actor',auth_user_id:'user'});
+  add('spike_account_memberships', {id:'member',account_id:'account',principal_id:'actor',state:'active',financial_access:'full'});
+  add('spike_projects', {id:'project',account_id:'account',lifecycle:'active'});
+  add('spike_spaces', {id:'space',account_id:'account',scope_kind:'project',project_id:'project',lifecycle:'active',sync_current_item_count:117});
+  add('space_media_sets', {id:'space-set',account_id:'account',space_id:'space',revision:1,expected_count:30});
+  for (let i=0;i<700;i++) {
+    add('spike_items', {id:`item${i}`,account_id:'account',sync_project_id:'project'});
+    add('spike_item_placements', {id:`placement${i}`,account_id:'account',item_id:`item${i}`,scope_kind:'project',project_id:'project',space_id:i<117?'space':null,ended_at:null});
+    add('item_image_sets', {id:`item${i}`,account_id:'account',item_id:`item${i}`,sync_project_id:'project',revision:1,expected_count:4});
+    for (let j=0;j<4;j++) {
+      const object = `object${i}-${j}`;
+      add('item_image_references', {id:`ref${i}-${j}`,account_id:'account',item_id:`item${i}`,attachment_id:object,set_revision:1,position:j,is_primary:j===0?1:0,sync_project_id:'project',sync_is_current:1});
+      for (const [scope_kind,scope_id] of [['item',`item${i}`],['project','project']]) {
+        add('media_sync_objects', {id:`${scope_id}-${object}`,account_id:'account',scope_kind,scope_id,attachment_id:object,byte_count:123,content_sha256:'a'.repeat(64),media_type:'image/jpeg',storage_path:object}, 'ledger_private');
+        add('media_sync_thumbnails', {id:`${scope_id}-${object}`,account_id:'account',scope_kind,scope_id,thumbnail_link_id:`thumb-${object}`,original_attachment_id:object,thumbnail_attachment_id:`small-${object}`,recipe:'item-card-300-jpeg-v1',pixel_width:300,pixel_height:200}, 'ledger_private');
+      }
+    }
+  }
+  async function budget(streams, userId = 'user', removed = false) {
+    const index = new Map();
+    for (const fact of facts) {
+      const row = removed && fact.table.name === 'spike_account_memberships' ? {...fact.row,state:'removed'} : fact.row;
+      for (const entry of evaluator.evaluateParameterRow(fact.table,row)) {
+        const key = entry.lookup.serializedRepresentation;
+        index.set(key,[...(index.get(key)??[]),...entry.bucketParameters]);
+      }
+    }
+    const {querier,errors} = evaluator.getBucketParameterQuerier({globalParameters:new RequestParameters({parsedPayload:{sub:userId},userIdJson:userId,parameters:{}},{}),hasDefaultStreams:false,streams});
+    assert.deepEqual(errors,[]);
+    let rows=0;
+    const buckets=await querier.queryDynamicBucketDescriptions({getParameterSets:async lookups=>lookups.map(lookup=>{
+      const values=index.get(lookup.serializedRepresentation)??[];
+      rows+=values.length; // Intentionally before any DISTINCT/bucket deduplication.
+      assert.ok(rows<1000,`pre-dedup parameter budget exceeded: ${rows}`);
+      return {lookup,rows:values};
+    })});
+    return {rows,buckets:[...buckets,...querier.staticBuckets].length};
+  }
+  const sub = parameters => ({parameters:{account_id:'account',...parameters},priorityOverride:null,opaque_id:0});
+  const projectStreams = {project_item_images:[sub({project_id:'project'})],property_management_report:[sub({project_id:'project'})],
+    space_media:[sub({space_id:'space'})],space_core_details:[sub({space_id:'space'})]};
+  const project = await budget(projectStreams);
+  assert.ok(project.rows<100,`700-Item Project uses scope-sized parameter results: ${project.rows}`);
+  const mixed = await budget({...projectStreams,project_item_images:[],item_images:Array.from({length:117},(_,i)=>sub({item_id:`item${i}`}))});
+  assert.ok(mixed.buckets>0);
+  assert.equal((await budget(projectStreams,'foreign-user')).buckets,0);
+  assert.equal((await budget(projectStreams,'user',true)).buckets,0);
+  console.log(`Media capacity: Project700=${project.rows} parameter rows; mixed117=${mixed.rows} (limit1000)`);
+  // Verify physical aliases preserve downloaded IDs and exact descriptors.
+  const {results,errors}=evaluator.evaluateRowWithErrors({sourceTable:{connectionTag:'default',schema:'ledger_private',name:'media_sync_objects'},
+    record:{id:'route-key',account_id:'account',scope_kind:'project',scope_id:'project',attachment_id:'original',content_sha256:'a'.repeat(64),byte_count:123,media_type:'image/jpeg',storage_path:'protected-original'}});
+  assert.deepEqual(errors,[]);
+  assert.ok(results.some(row=>row.table==='item_image_objects' && row.id==='original' && row.data.byte_count==='123' && row.data.storage_path==='protected-original'));
 });
 
 test('project Item and accounting buckets do not grow per physical Item', () => {

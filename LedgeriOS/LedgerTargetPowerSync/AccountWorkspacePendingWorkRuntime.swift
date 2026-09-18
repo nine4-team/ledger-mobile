@@ -1396,10 +1396,8 @@ actor AccountWorkspacePendingWorkRuntime {
                 try await resources.streamOperationCheckpoint(.itemImages)
                 try Task.checkCancellation()
                 let reader = ItemImageCatalogLocalReader(database: resources.structuredDatabase)
-                try await withOwnedSyncStreamWatch(subscribe: {
-                    try await resources.structuredDatabase.syncStream(name: "item_images",
-                        params: ["account_id": .string(accountId.rawValue), "item_id": .string(itemId.rawValue)]).subscribe()
-                }, observe: {
+                try await withOwnedItemImageStreamWatch(database: resources.structuredDatabase,
+                    accountId: accountId.rawValue, itemId: itemId.rawValue, observe: {
                     try await reader.run(accountId: accountId, principalId: resources.principalId, itemId: itemId,
                                          attachmentDatabase: resources.attachmentDatabase) { value in
                         do {

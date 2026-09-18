@@ -13,7 +13,9 @@ export function validateSyncOutputTables(yaml, swiftSchema) {
     const table = source[1].split('.').at(-1), output = source[2] ?? table;
     const returnProjection = source[1] === 'ledger_private.item_return_reviews'
       && ['return_charge_sources','return_live_memberships','return_paid_memberships','item_return_history'].includes(output);
-    if ((!returnProjection && output !== table) || !tables.has(output)) {
+    const mediaProjection = (source[1] === 'ledger_private.media_sync_objects' && output === 'item_image_objects')
+      || (source[1] === 'ledger_private.media_sync_thumbnails' && output === 'item_card_thumbnails');
+    if ((!returnProjection && !mediaProjection && output !== table) || !tables.has(output)) {
       throw new Error(`Sync output ${output} from ${table} does not match its client table`);
     }
   }

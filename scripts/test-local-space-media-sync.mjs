@@ -16,7 +16,7 @@ const facts = [
   fact('spike_account_memberships',{id:'member',account_id:'account',principal_id:'actor',state:'active',financial_access:'limited'}),
   fact('spike_spaces',{id:'space',account_id:'account',lifecycle:'active',sync_current_item_count:0}),
   fact('space_media_sets',{id:'set',account_id:'account',space_id:'space',revision:1,expected_count:1}),
-  fact('space_media_references',{id:'reference',account_id:'account',space_id:'space',set_revision:1,attachment_id:'photo'})
+  fact('space_media_references',{id:'reference',account_id:'account',space_id:'space',set_revision:1,attachment_id:'photo',sync_is_current:true})
 ];
 function evaluate(rows = facts, parameters = {account_id:'account',space_id:'space'}, userId = 'user') {
   const output = execFileSync('docker',['exec','-i','ledger_powersync_local','node','--input-type=module','-e',
@@ -39,10 +39,10 @@ for (const values of [
 assert.ok(evaluate(change('spike_spaces',{lifecycle:'archived',sync_current_item_count:1})).every(n => n > 0),
   'archived current physical parent stays readable');
 const stale = evaluate(change('space_media_sets',{revision:2,expected_count:0}));
-// The reference query may subscribe to an empty bucket for revision 2. Bucket
-// existence is not row delivery; only the object lookup must disappear here.
-assert.ok(stale[0] > 0 && stale[2] === 0, `revision change withdraws old object lookup: ${stale}`);
-console.log('PASS Space media service parameter evaluation: current, foreign Account/Space/user, removed, archived visibility and stale revisions. Not live replication.');
+// Scope buckets intentionally survive revision changes. SQL routing tests prove
+// stale reference/object rows withdraw inside them; no attachment parameter rows.
+assert.ok(stale.every(n => n > 0), `revision change retains fixed scope buckets: ${stale}`);
+console.log('PASS Space media service parameter evaluation: current, foreign Account/Space/user, removed, archived visibility and revision-independent scope buckets. Not live replication.');
 
 if (process.argv.includes('--live')) {
   const local = JSON.parse(execFileSync('npx',['--offline','--yes','supabase@2.116.0','status','-o','json'],
@@ -56,6 +56,8 @@ if (process.argv.includes('--live')) {
   const id = 'space-media-' + randomUUID(), now = Math.floor(Date.now()/1000);
   assert.equal(sql("select count(*) from pg_publication_tables where pubname='powersync' and schemaname='public' and tablename in ('space_media_sets','space_media_references');").trim(), '2',
     'Space media tables must be published before testing live replication');
+  assert.equal(sql("select count(*) from pg_publication_tables where pubname='powersync' and schemaname='ledger_private' and tablename in ('media_sync_objects','media_sync_thumbnails');").trim(), '2',
+    'Scoped media projections must be published before testing live replication');
   const unsigned = [{alg:'HS256',typ:'JWT'},{aud:'authenticated',role:'authenticated',
     sub:'10000000-0000-0000-0000-000000000002',iat:now,exp:now+120}]
     .map(v => Buffer.from(JSON.stringify(v)).toString('base64url')).join('.');
@@ -69,18 +71,32 @@ if (process.argv.includes('--live')) {
         values('${id}','principal-restricted','employee','active','limited');
       insert into public.spike_spaces(id,account_id,scope_kind,display_name) values('${id}','${id}','business_inventory','Synthetic Space');
       insert into public.item_image_objects(id,account_id,content_sha256,byte_count,media_type,storage_path)
-        values('${id}','${id}',repeat('a',64),4,'application/pdf','accounts/${id}/attachments/${id}/'||repeat('a',64));
-      insert into public.space_media_sets values('${id}','${id}','${id}',1,1);
-      insert into public.space_media_references values('${id}','${id}','${id}','${id}',1,0,true,'Synthetic.pdf');
+        values('${id}','${id}',repeat('a',64),4,'image/jpeg','accounts/${id}/attachments/${id}/'||repeat('a',64));
+      insert into public.item_image_objects(id,account_id,content_sha256,byte_count,media_type,storage_path)
+        values('${id}-pdf','${id}',repeat('b',64),8,'application/pdf','accounts/${id}/attachments/${id}-pdf/'||repeat('b',64));
+      insert into public.space_media_sets values('${id}','${id}','${id}',1,2);
+      insert into public.space_media_references values('${id}','${id}','${id}','${id}',1,0,true,'Synthetic.jpg');
+      insert into public.space_media_references values('${id}-pdf','${id}','${id}','${id}-pdf',1,1,false,'Synthetic.pdf');
+      insert into public.spike_clients(id,account_id,display_name,lifecycle,revision,created_at,updated_at,created_at_ms,updated_at_ms,created_by_principal_id)
+        values('${id}','${id}','Synthetic media client','active',1,'2026-09-05T12:00:00Z','2026-09-05T12:00:00Z',1788609600000,1788609600000,'principal-restricted');
+      insert into public.spike_projects(id,account_id,client_id,display_name,lifecycle,revision,created_at,updated_at,created_at_ms,updated_at_ms,created_by_principal_id)
+        values('${id}','${id}','${id}','Synthetic media project','active',1,'2026-09-05T12:00:00Z','2026-09-05T12:00:00Z',1788609600000,1788609600000,'principal-restricted');
+      insert into public.spike_items(id,account_id,description,created_by_principal_id) values('${id}','${id}','Synthetic media Item','principal-restricted');
+      insert into public.spike_item_placements(id,account_id,item_id,scope_kind,project_id,started_at,started_by_principal_id)
+        values('${id}','${id}','${id}','project','${id}','2026-09-18','principal-restricted');
+      insert into public.item_image_sets(id,account_id,item_id,revision,expected_count) values('${id}','${id}','${id}',1,1);
+      insert into public.item_image_references(id,account_id,item_id,attachment_id,set_revision,position,is_primary)
+        values('${id}','${id}','${id}','${id}',1,0,true);
       commit;`);
     created = true;
     const response = await fetch('http://127.0.0.1:5590/sync/stream',{method:'POST',signal:controller.signal,
       headers:{Authorization:'Bearer '+token,'Content-Type':'application/json',Accept:'application/x-ndjson'},
       body:JSON.stringify({buckets:[],raw_data:true,client_id:id,streams:{include_defaults:false,
-        subscriptions:[{stream:'space_media',override_priority:null,parameters:{account_id:id,space_id:id}}]}})});
+        subscriptions:[{stream:'space_media',override_priority:null,parameters:{account_id:id,space_id:id}},
+          {stream:'project_item_images',override_priority:null,parameters:{account_id:id,project_id:id}}]}})});
     assert.equal(response.status,200);
     const reader = response.body.pipeThrough(new TextDecoderStream()).getReader();
-    let pending = '', buckets = new Set(), received = new Set(), stage = 'download', removed = false;
+    let pending = '', buckets = new Set(), received = new Set(), stage = 'download', removed = false, pdfReceived = false;
     try {
       while (!removed) {
         const chunk = await reader.read(); if (chunk.done) break;
@@ -96,13 +112,17 @@ if (process.argv.includes('--live')) {
             for (const bucket of message.checkpoint_diff.updated_buckets ?? []) buckets.add(bucket.bucket);
           }
           for (const row of message.data?.data ?? []) if (row.op === 'PUT') {
-            assert.equal(row.object_id,id,'No foreign Space media delivered');
+            assert.ok(row.object_id===id || row.object_id===`${id}-pdf`,'No foreign media delivered');
             const data = typeof row.data === 'string' ? JSON.parse(row.data) : row.data;
             assert.equal(data.account_id,id);
+            if (row.object_type==='item_image_objects' && row.object_id===`${id}-pdf`) {
+              assert.equal(data.media_type,'application/pdf'); assert.equal(data.byte_count,'8');
+              assert.equal(data.content_sha256,'b'.repeat(64)); pdfReceived=true;
+            }
             received.add(row.object_type);
           }
           if (message.checkpoint_complete) {
-            if (stage === 'download' && ['space_media_sets','space_media_references','item_image_objects'].every(t => received.has(t))) {
+            if (stage === 'download' && pdfReceived && ['space_media_sets','space_media_references','item_image_objects','item_image_sets','item_image_references'].every(t => received.has(t))) {
               sql(`update public.spike_account_memberships set state='removed' where account_id='${id}';`);
               stage = 'withdraw';
             } else if (stage === 'withdraw' && buckets.size === 0) removed = true;
@@ -111,7 +131,7 @@ if (process.argv.includes('--live')) {
       }
     } finally { await reader.cancel().catch(() => {}); }
     assert.ok(removed,'Same-session removal must withdraw every Space media bucket');
-    console.log('PASS live Space media: exact catalog/reference/object downloaded and same-session membership removal withdrew all buckets. Synthetic metadata only; no Storage bytes or native app proof.');
+    console.log('PASS live Space + Project Item media: exact catalogs/references/shared object downloaded and same-session membership removal withdrew all buckets. Synthetic metadata only; no Storage bytes or native app proof.');
   } finally {
     clearTimeout(timer); controller.abort();
     if (created) sql(`update public.spike_account_memberships set state='removed' where account_id='${id}';`);

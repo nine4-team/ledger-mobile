@@ -2584,6 +2584,7 @@ if (
   const expectedStreamNames = [
     "space_media",
     "item_images",
+    "project_item_images",
     "account_business_profile",
     "property_management_report",
     "project_live_invoices",

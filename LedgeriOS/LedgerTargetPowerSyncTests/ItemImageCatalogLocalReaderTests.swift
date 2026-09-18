@@ -10,6 +10,69 @@ struct ItemImageCatalogLocalReaderTests {
     let principal = try! PrincipalID(validating: "image-principal")
     let item = try! ItemID(validating: "image-item")
 
+    @Test("Image subscriptions follow downloaded Project moves, share SDK scope and drain offline")
+    func subscriptionRouting() async throws {
+        try await withDatabase { db in
+            let lifetime = AsyncStream<Void>.makeStream()
+            let first = Task {
+                try await withOwnedItemImageStreamWatch(database: db, accountId: account.rawValue, itemId: item.rawValue) {
+                    for await _ in lifetime.stream {}
+                }
+            }
+            do {
+                try await awaitSubscription(db, name: "item_images", field: "item_id", value: item.rawValue)
+                _ = try await db.execute(sql: """
+                    INSERT INTO spike_item_placements(id,account_id,item_id,scope_kind,project_id)
+                    VALUES('image-placement','image-account','image-item','project','project-a')
+                    """, parameters: nil)
+                try await awaitSubscription(db, name: "project_item_images", field: "project_id", value: "project-a")
+                let secondLifetime = AsyncStream<Void>.makeStream()
+                let second = Task {
+                    try await withOwnedItemImageStreamWatch(database: db, accountId: account.rawValue, itemId: item.rawValue) {
+                        for await _ in secondLifetime.stream {}
+                    }
+                }
+                do {
+                    _ = try await db.execute(sql: "UPDATE spike_item_placements SET project_id='project-b' WHERE id='image-placement'", parameters: nil)
+                    try await awaitSubscription(db, name: "project_item_images", field: "project_id", value: "project-b")
+                    #expect(db.currentStatus.syncStreams?.filter {
+                        $0.subscription.name == "project_item_images" && $0.subscription.parameters?["project_id"] == .string("project-b")
+                    }.count == 1)
+                    second.cancel(); secondLifetime.continuation.finish()
+                    do { try await second.value } catch is CancellationError {}
+                } catch {
+                    second.cancel(); secondLifetime.continuation.finish()
+                    _ = try? await second.value
+                    throw error
+                }
+                _ = try await db.execute(sql: "UPDATE spike_item_placements SET ended_at='2026-09-18' WHERE id='image-placement'", parameters: nil)
+                try await awaitSubscription(db, name: "item_images", field: "item_id", value: item.rawValue)
+                first.cancel(); lifetime.continuation.finish()
+                do { try await first.value } catch is CancellationError {}
+            } catch {
+                first.cancel(); lifetime.continuation.finish()
+                _ = try? await first.value
+                throw error
+            }
+        }
+    }
+
+    private func awaitSubscription(_ db: any PowerSyncDatabaseProtocol, name: String, field: String, value: String) async throws {
+        try await withThrowingTaskGroup(of: Void.self) { group in
+            group.addTask {
+                for await status in db.currentStatus.asFlow() {
+                    if status.syncStreams?.contains(where: {
+                        $0.subscription.name == name && $0.subscription.parameters?[field] == .string(value)
+                    }) == true { return }
+                }
+                throw CancellationError()
+            }
+            group.addTask { try await Task.sleep(for: .seconds(5)); throw CancellationError() }
+            defer { group.cancelAll() }
+            try await group.next()
+        }
+    }
+
     @Test("Absent marker is unknown; explicit zero is empty; object arrival completes exact set")
     func completeness() async throws {
         try await withDatabase { db in

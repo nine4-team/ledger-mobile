@@ -570,8 +570,8 @@ struct AccountWorkspacePendingWorkRuntimeTests {
 
     @Test("Hosted Space image sync and bytes survive encrypted offline restart",
           .enabled(if: ProcessInfo.processInfo.environment["LEDGER_SPACE_MEDIA_HOSTED_QA"] == "1"),
-          .timeLimit(.minutes(1)))
-    @MainActor func spaceMediaHostedOfflineRestart() async throws {
+          .timeLimit(.minutes(2)), arguments: ["mixed-media", "largest-space"])
+    @MainActor func spaceMediaHostedOfflineRestart(scenario: String) async throws {
         let env = ProcessInfo.processInfo.environment
         let email = try #require(env["LEDGER_SESSION_QA_EMAIL"])
         let password = try #require(env["LEDGER_SESSION_QA_PASSWORD"])
@@ -591,9 +591,21 @@ struct AccountWorkspacePendingWorkRuntimeTests {
         let directory = try await entry.accounts(environment: context.environment.manifest.environment)
         let authorization = try await entry.authorize(AccountSelectionPolicy.makeIntent(selecting: context.accountId,
             from: directory.snapshot, requestedAt: Date()))
-        let runtime = try await context.openRuntime()
-        let space = try SpaceID(validating: "realcopy-b9d236394770-space-1967fe0d99501ba7a4fb8195")
-        let scope = SpaceCreationScope.project(try ProjectID(validating: "realcopy-b9d236394770-project-3f728fcb87a0e9fb3a7f6912"))
+        let databases = LockedRecorder<any PowerSyncDatabaseProtocol>()
+        var dependencies = context.dependencies()
+        let validate = dependencies.validateStructuredDatabase
+        dependencies.validateStructuredDatabase = { database in
+            try await validate(database); databases.append(database)
+        }
+        let runtime = try await context.openRuntime(dependencies: dependencies)
+        let database = try #require(databases.values.first)
+        let largest = scenario == "largest-space"
+        let expectedItems = largest ? 117 : 42, expectedMedia = largest ? 0 : 4
+        let space = try SpaceID(validating: largest
+            ? "realcopy-b9d236394770-space-48bd34278338951ba1415464"
+            : "realcopy-b9d236394770-space-f85ad810fe53219ff018d003")
+        let project = try ProjectID(validating: "realcopy-b9d236394770-project-b9d236394770249424e87c90")
+        let scope = SpaceCreationScope.project(project)
         try await entry.startWorkspaceSync(runtime, authorization: authorization,
             powerSyncURL: URL(string: "https://6aa8966802481fb31b96942c.powersync.journeyapps.com")!)
         // The app renders Space media only after the parent Space is readable.
@@ -601,16 +613,53 @@ struct AccountWorkspacePendingWorkRuntimeTests {
         while let update = try await details.next() {
             if case .snapshot(let snapshot) = update.state, snapshot.row != nil { break }
         }
+        // Hold the same Project Items and per-Item gallery subscriptions used
+        // by the Space screen alongside its own media subscription.
+        var items = runtime.watchDownloadedProjectItems(accountId: context.accountId, projectId: project).makeAsyncIterator()
+        var spaceItems: [ItemID] = []
+        while let update = try await items.next() {
+            spaceItems = update.placements.rows.filter { $0.spaceId == space }.map(\.itemId)
+            if spaceItems.count == expectedItems { break }
+        }
+        #expect(spaceItems.count == expectedItems)
+        let imageFailures = LockedRecorder<String>()
+        let imageWatches = spaceItems.map { item in Task {
+            do {
+                for try await _ in runtime.watchDownloadedItemImages(accountId: context.accountId, itemId: item) {}
+            } catch is CancellationError { }
+              catch { imageFailures.append(String(describing: error)) }
+        } }
+        defer { imageWatches.forEach { $0.cancel() } }
+        let imageStream = database.syncStream(name: "project_item_images", params: [
+            "account_id": .string(context.accountId.rawValue), "project_id": .string(project.rawValue)
+        ])
+        for await status in database.currentStatus.asFlow() {
+            if !imageFailures.values.isEmpty { throw RuntimeInjectedFailure() }
+            if status.forStream(stream: imageStream)?.subscription.hasSynced == true { break }
+        }
+        let itemReader = ItemImageCatalogLocalReader(database: database)
+        var completeItemGalleries = 0
+        for item in spaceItems {
+            let gallery = try await itemReader.read(accountId: context.accountId,
+                principalId: context.principalId, itemId: item)
+            if gallery.isComplete { completeItemGalleries += 1 }
+        }
+        #expect(completeItemGalleries == (largest ? 117 : 41))
         var downloaded: DownloadedSpaceMedia?
         for try await value in runtime.watchDownloadedSpaceMedia(accountId: context.accountId, spaceId: space, scope: scope) {
-            guard let value, value.isComplete, value.attachments.count == 7 else { continue }
+            guard let value, value.isComplete, value.attachments.count == expectedMedia else { continue }
             downloaded = value; break
         }
         let catalog = try #require(downloaded)
-        let attachment = try #require(catalog.attachments.first)
-        #expect(try await runtime.loadDownloadedSpaceMedia(catalog: catalog, attachment: attachment, allowDownload: false) == nil)
-        let bytes = try #require(await runtime.loadDownloadedSpaceMedia(catalog: catalog, attachment: attachment, allowDownload: true))
-        #expect(!bytes.isEmpty)
+        var bytes: Data?
+        if let attachment = catalog.attachments.first {
+            #expect(try await runtime.loadDownloadedSpaceMedia(catalog: catalog, attachment: attachment, allowDownload: false) == nil)
+            bytes = try #require(await runtime.loadDownloadedSpaceMedia(catalog: catalog, attachment: attachment, allowDownload: true))
+            #expect(bytes?.isEmpty == false)
+        }
+        imageWatches.forEach { $0.cancel() }
+        for watch in imageWatches { await watch.value }
+        #expect(imageFailures.values.isEmpty)
         try await runtime.close()
         try await auth.signOut(scope: .local)
         var offline = context.dependencies()
@@ -618,10 +667,12 @@ struct AccountWorkspacePendingWorkRuntimeTests {
         let reopened = try await context.openRuntime(dependencies: offline)
         let restored = try await reopened.readDownloadedSpaceMedia(accountId: context.accountId, spaceId: space, scope: scope)
         #expect(restored == catalog)
-        #expect(try await reopened.loadDownloadedSpaceMedia(catalog: restored, attachment: attachment, allowDownload: false) == bytes)
+        if let attachment = restored.attachments.first {
+            #expect(try await reopened.loadDownloadedSpaceMedia(catalog: restored, attachment: attachment, allowDownload: false) == bytes)
+        }
         try await reopened.lockAccessPreservingPendingWork()
         await #expect(throws: LedgerOfflineClientRuntimeFailure.runtimeClosed) {
-            try await reopened.loadDownloadedSpaceMedia(catalog: restored, attachment: attachment, allowDownload: false)
+            try await reopened.readDownloadedSpaceMedia(accountId: context.accountId, spaceId: space, scope: scope)
         }
         try await reopened.close()
     }

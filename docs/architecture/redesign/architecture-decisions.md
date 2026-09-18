@@ -4475,3 +4475,77 @@ identity and all existing fields. The service-evaluator regression exercises two
 distinct operation IDs and receipt revision evidence. The local live-runtime
 test passed after reloading this correction, including offline save, encrypted
 restart, upload and replicated readback. No product policy or UI replacement is involved.
+
+### Media sync scope capacity — 2026-09-18
+
+The hosted 117-Item Space plus Item galleries, Space details/media and Project
+report exceeded PowerSync's 1,000 parameter-query-result limit (`PSYNC_S2305`).
+The 42-Item case passed. The limit counts lookup rows before bucket deduplication;
+explicit Item predicates alone still enumerate original and thumbnail identities.
+See PowerSync's [bucket-count guidance](https://docs.powersync.com/sync/streams/bucket-count)
+and [reducing bucket count](https://docs.powersync.com/sync/advanced/reducing-bucket-count).
+
+Extend the existing Project Item routing pattern, without replacing canonical
+media, history, local readers, protected byte storage or UI. Reference routing
+copies exact current-revision eligibility and current Project placement. Two
+private replicated projections represent object descriptors and thumbnail links
+once per Account/Item, Account/Project or Account/Space scope, projecting their
+original canonical IDs into the existing client tables. A shared original can
+belong to several scopes; withdrawing one reference removes its route only when
+the scope has no remaining current reference. Space routing excludes Item-only
+thumbnails. Original objects and historical references are never deleted here.
+
+Reference writes follow the verified publisher's marker-before-original lock
+order. Marker propagation first locks every referenced original in sorted order,
+before taking any scope lock; a new captured object is private to the publication
+transaction, and capture admission rejects an already existing object ID. Our
+original locks use NO KEY UPDATE: they serialize publishers while allowing the
+foreign-key KEY SHARE checks that retain shared originals in other scopes.
+The private derived object projection itself has no redundant object FK:
+rebuilding a Project must not lock unrelated originals through FK checks.
+Canonical reference FKs remain; the canonical immutable-object deletion guard
+independently prevents orphaning, and tests compare every projected descriptor
+with its exact canonical object.
+Scope refreshes consistently take Project before Item, with sorted old/new
+Project scopes. This avoids reproduced marker/original and Item/Project cycles,
+including actual multi-original upload and placement changes racing thumbnails.
+The existing thumbnail publisher's stronger original lock remains unchanged.
+Arbitrary privileged reference UPDATE without first locking its marker is not a
+supported public API or a deadlock-free promise. Public verifier failures become
+HTTP502; the existing native upload loop retains the pending receipt/bytes/order
+and retries after30seconds. The migration backfills flags and then rebuilds each
+distinct scope once. No application/API grants are added; private tables force
+RLS. Streams still require active Account membership. Space queries retain the
+existing active-or-current-Item-count visibility predicate exactly.
+
+Item watches follow downloaded current placements and share the SDK's existing
+refcounted `project_item_images` subscription. Missing/Inventory placements retain
+the Item-scoped stream. Placement changes switch scope while the existing local
+catalog reader continues independently, including offline. Subscription retention
+keeps the SDK's existing default. This bounds Project browsing at 600–700 Items;
+it does not promise unlimited unrelated Item/Space subscriptions per connection.
+
+Migration `20260918173408` publishes the two projections and retains canonical
+thumbnail publication through the old/new hosted-rule transition. The local
+service permits that exact extra source, not arbitrary publication differences.
+Deployment must grant
+the existing replication role SELECT on the new private source tables. Merge
+only `space_media`, `item_images` and `project_item_images` into freshly fetched
+hosted rules: four unrelated hosted/local stream differences must remain intact.
+Local evidence: 2,487 SQL assertions, 21 focused routing checks, ten concurrent
+media cases (nine observed waits and one unrelated-original nonblocking case),
+fresh replay of137migrations, strict lint/security advisors,
+native routing/readers and actual Space/Project media withdrawal. The service
+compiler's pre-dedup evaluator measures 41 parameter rows for 700 Items with four
+images each plus Project/Space streams; the original 117 separate Item streams
+plus Space/Project streams use 271. Hosted real-copy scale/native/offline tests
+remain required after independent review and scoped deployment; these local
+results are not hosted or full-app acceptance.
+
+Independent review reproduced40P01 before the repair in
+`/tmp/ledger-media-lock-order-before.log`; removing Project-before-Item ordering
+reproduces the advisory cycle in `/tmp/ledger-media-scope-order-before.log`.
+An actual upload versus an unrelated thumbnail also reproduced the redundant FK
+cycle in `/tmp/ledger-media-unrelated-original-before.log`. The final ten-case
+run is `/tmp/ledger-media-lock-review-final.log`; SQL regression is
+`/tmp/ledger-media-lock-review-sql-final.log`.

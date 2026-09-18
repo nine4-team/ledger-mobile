@@ -96,7 +96,10 @@ try {
   if (!publication) sql(`CREATE PUBLICATION powersync FOR TABLE ${tables.join(',')};`);
   else {
     const published = sql("SELECT schemaname||'.'||tablename FROM pg_publication_tables WHERE pubname='powersync' ORDER BY 1;").split('\n');
-    if (publication !== 'f' || JSON.stringify(published) !== JSON.stringify(tables)) throw Error('Publication requires explicit reconciliation');
+    // Retain the canonical thumbnail source while old and new rules overlap
+    // during rollout. It remains private and does not add a stream output.
+    const expected = published.filter(table => table !== 'public.item_card_thumbnails' || tables.includes(table));
+    if (publication !== 'f' || JSON.stringify(expected) !== JSON.stringify(tables)) throw Error('Publication requires explicit reconciliation');
   }
   const config = {
     replication: { connections: [{ type: 'postgresql', uri: `postgresql://ledger_local_sync_replication:${passwords.replication}@${database}:5432/postgres`, sslmode: 'disable' }] },

@@ -34,7 +34,7 @@ function session(label) {
     child.once('close', code => { exited = true; sessions.delete(child); resolve({ code, out, err }); });
   });
   child.stdin.write(`set application_name='${label}'; set statement_timeout='12s'; set idle_in_transaction_session_timeout='12s'; select pg_backend_pid();\n`);
-  return { child, closed, async until(marker) {
+  return { child, closed, isClosed: () => exited, async until(marker) {
     const deadline = Date.now() + 10_000;
     while (!out.includes(marker)) {
       assert.ok(!exited, `Session exited before ${marker}: ${err}`);
@@ -71,7 +71,7 @@ function collect(name, amount = 12345, revision = 1) {
     values('line-${id}','account-primary','invoice-${id}',0,'USD','item','${id}','${id}',${revision},'category-furnishings',${amount},'Synthetic','{}');
     update ledger_private.collected_invoices set sealed=true where id='invoice-${id}'; set constraints all immediate;`;
 }
-async function race(name, holderSQL, waiterSQL, release, expectedCode) {
+async function race(name, holderSQL, waiterSQL, release, expectedCode, allowUnblocked = false) {
   const holderLabel = `charge_holder_${name}`, waiterLabel = `charge_waiter_${name}`;
   const holder = session(holderLabel), waiter = session(waiterLabel);
   try {
@@ -80,14 +80,14 @@ async function race(name, holderSQL, waiterSQL, release, expectedCode) {
     waiter.child.stdin.end(`begin; ${waiterSQL} commit;\n`);
     const deadline = Date.now() + 8000;
     let observed = false;
-    while (!observed && Date.now() < deadline) {
+    while (!observed && Date.now() < deadline && !(allowUnblocked && waiter.isClosed())) {
       observed = sql(`select exists(select 1 from pg_stat_activity w join pg_stat_activity h
         on h.pid=any(pg_blocking_pids(w.pid)) where w.datname='${database}' and h.datname='${database}'
         and w.application_name='${waiterLabel}' and h.application_name='${holderLabel}'
         and w.wait_event_type='Lock' and w.wait_event in ('advisory','transactionid','tuple'));`) === 't';
       if (!observed) await pause(25);
     }
-    assert.ok(observed, `${name}: waiter never demonstrably blocked on holder's lock`);
+    assert.ok(observed || (allowUnblocked && waiter.isClosed()), `${name}: waiter neither blocked nor completed while holder retained its lock`);
     holder.child.stdin.end(`${release};\n`);
     const [held, waited] = await Promise.all([holder.closed, waiter.closed]);
     assert.equal(held.code, 0, held.err);
@@ -95,7 +95,7 @@ async function race(name, holderSQL, waiterSQL, release, expectedCode) {
       assert.equal(waited.code, 3, `${name}: expected failure: ${waited.out} ${waited.err}`);
       assert.match(waited.err, new RegExp(`ERROR:  ${expectedCode}:`));
     } else assert.equal(waited.code, 0, `${name}: ${waited.err}`);
-    console.log(`PASS ${name}: observed holder lock wait; holder ${release}; waiter ${expectedCode ?? 'committed'}`);
+    console.log(`PASS ${name}: ${observed ? 'observed holder lock wait' : 'writer completed while unrelated original stayed locked'}; holder ${release.trim().endsWith('rollback') ? 'rollback' : 'commit'}; waiter ${expectedCode ?? 'committed'}`);
   } finally {
     for (const s of [holder, waiter]) if (!s.child.stdin.destroyed && !s.child.stdin.writableEnded) s.child.stdin.end('rollback;\n');
     await Promise.allSettled([holder.closed, waiter.closed]);
@@ -194,7 +194,7 @@ try {
   assert.equal(sql("select to_regprocedure('ledger_private.lock_item_charge_source(text,text)') is not null and to_regprocedure('ledger_private.validate_collected_item_charge()') is not null"), 't');
   sql(`insert into public.spike_projects(id,account_id,client_id,display_name,created_at,updated_at,created_at_ms,updated_at_ms,created_by_principal_id)
     values('race-project','account-primary','client-existing','Synthetic concurrency',now(),now(),1,1,'principal-owner');`);
-  if (!process.argv.includes('--adjustments-only')) {
+  if (!process.argv.includes('--adjustments-only') && !process.argv.includes('--media-only')) {
   prepare('correction-first');
   for (const scenario of ['exact', 'changed', 'rollback']) {
     const id = `mixed-import-${scenario}`;
@@ -624,6 +624,132 @@ try {
       denied ? 'none' : scenario === 'competing' ? 'rejected:transaction_receipt_edit_stale' : 'applied');
   }
   console.log('PASS Transaction receipt-line retry, competing edit, rollback, removal and financial-visibility races');
+  }
+  if (process.argv.includes('--media-only')) {
+    for (const operation of ['insert','update']) {
+      const name=`media-marker-order-${operation}`, id=source(name); prepare(name,false);
+      sql(`begin;
+        insert into public.item_image_objects(id,account_id,content_sha256,byte_count,media_type,storage_path)
+        values('${id}','account-primary',repeat('a',64),123,'image/jpeg','accounts/account-primary/attachments/${id}/'||repeat('a',64));
+        insert into public.item_image_sets(id,account_id,item_id,revision,expected_count) values('${id}','account-primary','${id}',1,1);
+        insert into public.item_image_references(id,account_id,item_id,attachment_id,set_revision,position,is_primary)
+        values('${id}','account-primary','${id}','${id}',1,0,true); commit;`);
+      const referenceWrite=operation==='insert'
+        ? `insert into public.item_image_references(id,account_id,item_id,attachment_id,set_revision,position,is_primary)
+          values('${id}-future','account-primary','${id}','${id}',3,0,true);`
+        // Existing reference UPDATE follows the verified publisher's explicit
+        // marker-first protocol; arbitrary privileged row UPDATE is not an API.
+        : `select id from public.item_image_sets where id='${id}' for update;
+          update public.item_image_references set position=position where id='${id}';`;
+      await race(name,`select id from public.item_image_sets where id='${id}' for update;`,referenceWrite,
+        `update public.item_image_sets set revision=2,expected_count=0 where id='${id}'; commit`);
+      assert.equal(sql(`select count(*) from ledger_private.media_sync_objects where scope_kind='item' and scope_id='${id}'`),'0');
+    }
+    for (const action of ['upload','placement','upload-unrelated']) {
+      const name=`media-multi-original-${action}`, id=source(name); prepare(name,false); prepare(`${name}-shared`,false);
+      const thumbnailOriginal=`${id}-${action==='upload-unrelated'?'outside':'b'}`;
+      sql(`begin;
+        insert into public.item_image_objects(id,account_id,content_sha256,byte_count,media_type,storage_path)
+        select id,'account-primary',repeat('a',64),123,'image/jpeg','accounts/account-primary/attachments/'||id||'/'||repeat('a',64)
+        from (values('${id}-a'),('${id}-b'),('${id}-outside')) f(id);
+        insert into public.item_image_sets(id,account_id,item_id,revision,expected_count)
+        values('${id}','account-primary','${id}',1,2),('${id}-shared','account-primary','${id}-shared',1,1);
+        insert into public.item_image_references(id,account_id,item_id,attachment_id,set_revision,position,is_primary)
+        values('${id}-a','account-primary','${id}','${id}-a',1,0,true),
+          ('${id}-b','account-primary','${id}','${id}-b',1,1,false),
+          ('${id}-shared','account-primary','${id}-shared','${thumbnailOriginal}',1,0,true); commit;`);
+      const thumbnail=`select ledger_private.publish_item_card_thumbnail('account-primary','${thumbnailOriginal}',repeat('a',64),123,'image/jpeg',
+        'accounts/account-primary/attachments/${thumbnailOriginal}/'||repeat('a',64),'${id}-small',repeat('b',64),30,'image/jpeg',
+        'accounts/account-primary/attachments/${id}-small/'||repeat('b',64),'${id}-thumbnail','item-card-300-jpeg-v1',300,200);`;
+      let writer;
+      if (action.startsWith('upload')) {
+        sql(`begin; set local role authenticated;
+          select set_config('request.jwt.claims','{"sub":"10000000-0000-0000-0000-000000000001","role":"authenticated"}',true);
+          select public.spike_begin_item_attachment_upload('${id}-new','account-primary','${id}',repeat('c',64),12,'image/png','New.png',2,false);
+          reset role;
+          insert into storage.objects(bucket_id,name) values('ledger-attachments','accounts/account-primary/attachments/${id}-new/'||repeat('c',64)); commit;`);
+        writer=`set local role service_role; select public.spike_publish_verified_item_attachment(
+          '10000000-0000-0000-0000-000000000001','${id}-new',repeat('c',64),12,'image/png');`;
+      } else writer=`update public.spike_item_placements set ended_at='2026-09-18',ended_by_principal_id='principal-owner' where id='${id}';`;
+      // Hold the LAST original while the real publisher/placement path begins.
+      // Before the fix it acquired the Project scope for -a then blocked on -b,
+      // and this thumbnail publication blocked on that same Project scope.
+      await race(name,`select id from public.item_image_objects where id='${thumbnailOriginal}' for update;`,writer,`${thumbnail} commit`,undefined,action==='upload-unrelated');
+      assert.equal(sql(`select count(*) from ledger_private.media_sync_objects where scope_kind='project' and scope_id='race-project'
+        and attachment_id in ('${thumbnailOriginal}','${id}-small')`),'2');
+      assert.equal(sql(`select count(*) from ledger_private.media_sync_thumbnails where scope_kind='project' and scope_id='race-project'
+        and thumbnail_link_id='${id}-thumbnail'`),'1');
+      if (action.startsWith('upload')) {
+        assert.equal(sql(`select result->>'phase' from ledger_private.item_attachment_upload_results where upload_id='${id}-new'`),'applied');
+        assert.equal(sql(`select expected_count from public.item_image_sets where id='${id}'`),'3');
+        assert.equal(sql(`select count(*) from ledger_private.media_sync_objects where scope_kind='item' and scope_id='${id}'`),action==='upload-unrelated'?'3':'4');
+      } else {
+        assert.equal(sql(`select sync_project_id is null from public.item_image_sets where id='${id}'`),'t');
+        assert.equal(sql(`select count(*) from ledger_private.media_sync_objects where scope_kind='item' and scope_id='${id}'`),'3');
+      }
+    }
+    {
+      const prefix='media-scope-order';
+      for (const suffix of ['a','b','c']) prepare(`${prefix}-${suffix}`,false);
+      sql(`begin;
+        insert into public.item_image_objects(id,account_id,content_sha256,byte_count,media_type,storage_path)
+        select id,'account-primary',repeat('a',64),123,'image/jpeg','accounts/account-primary/attachments/'||id||'/'||repeat('a',64)
+        from (values('${prefix}-shared'),('${prefix}-first'),('${prefix}-second'),('${prefix}-small')) f(id);
+        insert into public.item_image_sets(id,account_id,item_id,revision,expected_count)
+        select 'race-${prefix}-'||suffix,'account-primary','race-${prefix}-'||suffix,1,case when suffix='c' then 0 else 1 end
+          from (values('a'),('b'),('c')) f(suffix);
+        insert into public.item_image_references(id,account_id,item_id,attachment_id,set_revision,position,is_primary)
+        select 'race-${prefix}-'||suffix,'account-primary','race-${prefix}-'||suffix,'${prefix}-shared',1,0,true
+          from (values('a'),('b')) f(suffix); commit;`);
+      const first=`update public.item_image_sets set expected_count=1 where id='race-${prefix}-c';
+        insert into public.item_image_references(id,account_id,item_id,attachment_id,set_revision,position,is_primary)
+        values('${prefix}-first','account-primary','race-${prefix}-c','${prefix}-first',1,0,true);`;
+      const second=`update public.item_image_sets set expected_count=2 where id='race-${prefix}-b';
+        insert into public.item_image_references(id,account_id,item_id,attachment_id,set_revision,position,is_primary)
+        values('${prefix}-second','account-primary','race-${prefix}-b','${prefix}-second',1,1,false);`;
+      // Isolate trigger scope ordering using trusted direct publication. The
+      // ordinary private function's stronger original lock is tested above.
+      const thumbnail=`insert into public.item_card_thumbnails values('${prefix}-link','account-primary',
+        '${prefix}-shared','${prefix}-small','item-card-300-jpeg-v1',300,200);`;
+      await race(prefix,first,thumbnail,`${second} commit`);
+      assert.equal(sql(`select count(*) from ledger_private.media_sync_objects where scope_kind='project' and scope_id='race-project'
+        and attachment_id in ('${prefix}-shared','${prefix}-first','${prefix}-second','${prefix}-small')`),'4');
+      assert.equal(sql(`select count(*) from ledger_private.media_sync_thumbnails where scope_kind='item'
+        and thumbnail_link_id='${prefix}-link'`),'2');
+    }
+    for (const scenario of ['thumbnail-first','reference-first','thumbnail-rollback']) {
+      const name=`media-${scenario}`, id=source(name);
+      prepare(name,false);
+      sql(`insert into public.item_image_objects(id,account_id,content_sha256,byte_count,media_type,storage_path)
+        select id,'account-primary',repeat('a',64),123,'image/jpeg','accounts/account-primary/attachments/'||id||'/'||repeat('a',64)
+        from (values('${id}-original'),('${id}-small')) f(id);
+        insert into public.item_image_sets(id,account_id,item_id,revision,expected_count) values('${id}','account-primary','${id}',1,0);`);
+      const reference=`update public.item_image_sets set expected_count=1 where id='${id}';
+        insert into public.item_image_references(id,account_id,item_id,attachment_id,set_revision,position,is_primary)
+        values('${id}','account-primary','${id}','${id}-original',1,0,true);`;
+      const thumbnail=`insert into public.item_card_thumbnails values('${id}','account-primary','${id}-original','${id}-small','item-card-300-jpeg-v1',300,200);`;
+      await race(name,scenario==='reference-first'?reference:thumbnail,scenario==='reference-first'?thumbnail:reference,
+        scenario==='thumbnail-rollback'?'rollback':'commit');
+      assert.equal(sql(`select count(*) from ledger_private.media_sync_objects
+        where scope_kind='project' and scope_id='race-project' and attachment_id in ('${id}-original','${id}-small')`),
+        scenario==='thumbnail-rollback'?'1':'2');
+      assert.equal(sql(`select count(*) from ledger_private.media_sync_thumbnails
+        where scope_kind='project' and scope_id='race-project' and thumbnail_link_id='${id}'`),
+        scenario==='thumbnail-rollback'?'0':'1');
+    }
+    for (const name of ['media-scope-a','media-scope-b']) {
+      const id=source(name); prepare(name,false);
+      sql(`insert into public.item_image_objects(id,account_id,content_sha256,byte_count,media_type,storage_path)
+        values('${id}','account-primary',repeat('a',64),123,'image/jpeg','accounts/account-primary/attachments/${id}/'||repeat('a',64));
+        insert into public.item_image_sets(id,account_id,item_id,revision,expected_count) values('${id}','account-primary','${id}',1,0);`);
+    }
+    const reference=name=>`update public.item_image_sets set expected_count=1 where id='${source(name)}';
+      insert into public.item_image_references(id,account_id,item_id,attachment_id,set_revision,position,is_primary)
+      values('${source(name)}','account-primary','${source(name)}','${source(name)}',1,0,true);`;
+    await race('media-shared-project',reference('media-scope-a'),reference('media-scope-b'),'commit');
+    assert.equal(sql(`select count(*) from ledger_private.media_sync_objects where scope_kind='project' and scope_id='race-project'
+      and attachment_id in ('race-media-scope-a','race-media-scope-b')`),'2');
+    console.log('PASS media routing: both thumbnail/reference publication orders, rollback, and concurrent Project scope refresh preserve exact descriptors.');
   }
   if (process.argv.includes('--adjustments-only')) {
     for (const scenario of ['retry','competing','rollback','header','collected-first','edit-first']) {
