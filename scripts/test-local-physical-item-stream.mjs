@@ -161,9 +161,10 @@ for (const { label, index, rows } of results) {
     assert.equal(fixture.state, 'absent');
     assert.equal(fixture.amount_minor_units, null);
     assert.equal(fixture.currency, null);
+    assert.equal(fixture.live_pricing, null, 'No adjustment context without an acquisition');
     for (const row of rows) {
       assert.equal(row.account_id, account);
-      assert.deepEqual(Object.keys(row).sort(), ['id','account_id','state','amount_minor_units','currency'].sort());
+      assert.deepEqual(Object.keys(row).sort(), ['id','account_id','state','amount_minor_units','currency','live_pricing'].sort());
     }
     continue;
   }
