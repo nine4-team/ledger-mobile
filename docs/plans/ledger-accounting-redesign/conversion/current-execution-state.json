@@ -1,6 +1,6 @@
 {
   "schemaVersion": 2,
-  "stateVersion": 1552,
+  "stateVersion": 1553,
   "userRequestedPause": {
     "date": "2026-09-15",
     "status": "resumed",
@@ -21,15 +21,15 @@
     "meaning": "Historical attempt1 passed all five jobs including1086native tests/156suites and25Mac/30iPhoneUI tests. Attempt2 failed iOS UI. Not a currently clean full-UI baseline or broad Item/Purchase/hosted/migration/cutover proof."
   },
   "activeWorkflow": {
-    "id": "space-media-view-print",
+    "id": "project-budget-progress",
     "kind": "product_ui",
     "status": "implementation",
     "recordPath": "docs/plans/ledger-accounting-redesign/conversion/product-behavior-checklist.json",
-    "outcome": "Connect existing Space gallery, image/PDF pinning and photo printing to authorized downloaded media, preserving honest missing-byte and access-loss behavior.",
-    "baseCommit": "596573186b47a3faa0469c16d81f2187aaa5dcf2",
+    "outcome": "Combine direct client payments, frozen Invoice allocations and open Item charges/credits, Expenses and Fees exactly once; show authorized paid/unpaid category totals with honest completeness. Collection preserves total and paid returns reduce it. Transfer integration remains required before complete coverage.",
+    "baseCommit": "6edf7de1b66c8b4bef524445678339e233cd2371",
     "nextActions": [
-      "Space media implementation and focused iPhone/export/offline checks done. Await exact integration run below; macOS local runner authentication failed. No capture/delete/primary/markers.",
-      "Prior photo/adjustment batch remains integration-unverified: CI35359599965 failed stale physical-stream expectation; repair59657318 locally passes all four stream/MCP scripts. No running CI or duplicate dispatch. Prior batch base c5226c1 remains in evidence; new Space batch does not waive failures.",
+      "Budget pending-state follow-up: include Project-scoped Transaction details/receipt adjustments. Three focused budget tests pass. Transfer/Additional Requests coverage remains incomplete; no new accounting writers or complete-budget claim.",
+      "Space/photo/adjustment integration CI35366670601 at ccee5ac9 pending on existing watcher. Earlier failures remain in owning records. Follow-up export messages and this budget change are outside that tested revision.",
       "Space migration20260918151339 applied LOCAL without history; do not replay. Local service restarted to activate rules. Live metadata test initially timed out: tables absent from publication. Added publication migration/preflight and local replication grants; actual download and membership withdrawal now pass. No hosted changes."
     ]
   },
@@ -55,12 +55,12 @@
     "instruction": "Follow the active checklist record and nextActions. Preserve failures; no full-suite context recovery."
   },
   "currentTask": {
-    "id": "space-media-view-print",
+    "id": "project-budget-progress",
     "status": "implementation",
-    "acceptanceCheckIds": ["SPACE-MEDIA-CATALOG","SPACE-MEDIA-UI","SPACE-MEDIA-BYTES","SPACE-MEDIA-SQL","SPACE-MEDIA-AUTH","SPACE-MEDIA-SYNC","SPACE-MEDIA-OFFLINE"],
-    "meaning": "Read-only Space media; reuse existing gallery, PDF/image pinning, print helper and byte vault.",
-    "verificationCommands": ["swift test --package-path LedgeriOS --no-parallel --filter DownloadedSpaceMediaTests","npm run conversion:state:check"],
-    "lastResult": "Shared export failure messages now clear;14 Item/Transaction export tests PASS0.109s /tmp/ledger-media-export-errors.log. This follow-up is outside CI commit ccee5ac9. Space local evidence lives in checklist; macOS UI runner auth failure remains.",
+    "acceptanceCheckIds": ["BUDGET-CONTRACT","BUDGET-SYNC","BUDGET-OFFLINE"],
+    "meaning": "Existing budget read workflow; pending Project receipt adjustments must remain visible before sync.",
+    "verificationCommands": ["swift test --package-path LedgeriOS --no-parallel --filter DownloadedProjectItemsTests/budget","npm run conversion:state:check"],
+    "lastResult": "Budget snapshot/watch/encrypted reopen3tests PASS0.801s /tmp/ledger-budget-pending-adjustments.log, including same-Project nested Transaction scopes and exclusion of another Project. No totals changed; no complete-budget claim.",
     "activeProcesses": {"integrationCI":{"run":35366670601,"commit":"ccee5ac9afb582cc826adb579fa997b102bf8adb","status":"queued","watchSession":39393,"watchLog":"/tmp/ledger-ci-35366670601-watch.log","instruction":"One coherent workflow_dispatch; use existing watcher/results, no repeated model polling or duplicate dispatch. Prior run35359599965 failure remains preserved below."}},
     "integrationCI": {"run":35359599965,"attempt":1,"commit":"cd8be156fa695f92e2b461cfccd961717c2e95ac","status":"failure","meaning":"Strict lint and SQL/races passed; physical stream test rejected approved live_pricing projection. Native jobs skipped. Repaired exact-column expectation and added absent-acquisition null assertion. All four downstream stream/MCP scripts passed locally. No hosted changes; new-commit integration still required."},
     "nextWorkflowDecision": "Review existing CI35366670601 when terminal; never dispatch duplicate. Follow-up export messages tested locally, not included in ccee5ac9 CI. macOS local runner auth failure remains. O023/O053 mutations excluded; no hosted Storage claim."

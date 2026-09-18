@@ -87,14 +87,17 @@ struct DownloadedProjectItemsTests {
                 ("nested-expense", "edit_expense", "{\"entry\":{\"projectId\":\"project\"}}"),
                 ("invoice", "create_invoice", "{\"selection\":{\"scope\":{\"projectId\":\"project\"}}}"),
                 ("revision", "revise_created_invoice", "{\"invoice\":{\"selection\":{\"scope\":{\"projectId\":\"project\"}}}}"),
-                ("category", "manage_categories", "{\"action\":\"rename\",\"categoryId\":\"category\"}")
+                ("category", "manage_categories", "{\"action\":\"rename\",\"categoryId\":\"category\"}"),
+                ("receipt-adjustments", "edit_transaction_receipt_lines", "{\"scope\":{\"projectId\":\"project\"}}"),
+                ("transaction-edit", "edit_transaction_details", "{\"scope\":{\"projectId\":\"project\"}}"),
+                ("other-receipt", "edit_transaction_receipt_lines", "{\"scope\":{\"projectId\":\"elsewhere\"}}")
             ] {
                 _ = try await db.execute(sql: "INSERT INTO spike_local_operations(id,account_id,actor_principal_id,command_type,local_state,command_envelope_json) VALUES(?,'account','principal',?,'queued',?)",
                     parameters: [id,kind,"{\"payload\":\(payload)}"])
             }
             _ = try await db.execute(sql: "UPDATE spike_local_operations SET category_projection_json='[]' WHERE id='category'", parameters: nil)
             let nested = try await query.readImplementedSources(accountId: account, principalId: principal, projectId: project, currency: usd)
-            #expect(Set(nested.localOperations.map(\.operationId.rawValue)) == ["pending","rejected","nested-expense","invoice","revision","category"])
+            #expect(Set(nested.localOperations.map(\.operationId.rawValue)) == ["pending","rejected","nested-expense","invoice","revision","category","receipt-adjustments","transaction-edit"])
             _ = try await db.execute(sql: "UPDATE spike_local_operations SET local_state='applied',contract_version='return-paid-items-v1',fingerprint='fingerprint' WHERE id='pending'", parameters: nil)
             _ = try await db.execute(sql: "INSERT INTO spike_operation_results(id,account_id,actor_principal_id,command_type,contract_version,command_fingerprint,envelope_sha256,phase) VALUES('pending','account','principal','return_paid_items','return-paid-items-v1','wrong','fingerprint','applied')", parameters: nil)
             let mismatch = try await query.readImplementedSources(accountId: account, principalId: principal, projectId: project, currency: usd)
