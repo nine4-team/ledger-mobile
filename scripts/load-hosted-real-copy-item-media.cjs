@@ -6,7 +6,7 @@ const path = require('node:path');
 const {execFileSync} = require('node:child_process');
 const {planItemMedia, publicationSQL, uploadVerifiedOriginals} = require('./load-real-copy-item-media.cjs');
 const {verifiedCopies} = require('./copy-authorized-project-media.cjs');
-const {planSpaceMedia,spacePublicationSQL,planTransactionMedia,transactionPublicationSQL} = require('./real-copy-transaction-media.cjs');
+const {planSpaceMedia,spacePublicationSQL,planSpaceDetails,spaceDetailsPublicationSQL,planTransactionMedia,transactionPublicationSQL} = require('./real-copy-transaction-media.cjs');
 const root='/Users/benjaminmackenzie/Dev/ledger_mobile_supabase';
 const project='ybwviepljilrkrjoahbl';
 const account='realcopy-b9d236394770-account';
@@ -23,9 +23,10 @@ function assertQAState(row) {
 
 async function main() {
   const spacePlan=process.argv[2]==='--plan-spaces';
-  const spaceMode=['--plan-spaces','--apply-spaces','--verify-spaces'].includes(process.argv[2]);
-  if(process.cwd()!==root || !(process.argv.length===3 || (spaceMode && process.argv.length===4)) || !['--plan','--apply','--verify','--prepare-thumbnails','--publish-thumbnails','--plan-transactions','--apply-transactions','--verify-transactions','--plan-spaces','--apply-spaces','--verify-spaces'].includes(process.argv[2])) throw Error('Unexpected loader command or worktree');
-  if(spaceMode && !spacePlan && !process.argv[3]) throw Error('Verified Space original directory required');
+  const spaceDetails=process.argv[2]==='--apply-space-details';
+  const spaceMode=spaceDetails || ['--plan-spaces','--apply-spaces','--verify-spaces'].includes(process.argv[2]);
+  if(process.cwd()!==root || !(process.argv.length===3 || (spaceMode && process.argv.length===4)) || !['--plan','--apply','--verify','--prepare-thumbnails','--publish-thumbnails','--plan-transactions','--apply-transactions','--verify-transactions','--plan-spaces','--apply-spaces','--verify-spaces','--apply-space-details'].includes(process.argv[2])) throw Error('Unexpected loader command or worktree');
+  if(spaceMode && !spacePlan && !spaceDetails && !process.argv[3]) throw Error('Verified Space original directory required');
   const bytes=fs.readFileSync(directory+'/source.json');
   const manifest=JSON.parse(fs.readFileSync(directory+'/manifest.json'));
   if(hash(bytes)!=='9e597cb852f5d2048f774f4b20dd76c77fc9eec9bc93fc6ceaa8d6693c348183'
@@ -39,7 +40,7 @@ async function main() {
     const identity=JSON.parse(fs.readFileSync(selectedMediaDirectory+'/source.json'));
     if(identity.sha256!==hash(bytes) || identity.selection!=='space_originals') throw Error('Space copy source differs');
   }
-  const copies=verifiedCopies(selectedMediaDirectory);
+  const copies=spaceDetails ? new Map() : verifiedCopies(selectedMediaDirectory);
   if(process.argv[2]==='--plan-spaces') {
     const source=JSON.parse(bytes),prefix=source.account+'/spaces/';
     const spaces=new Set(source.documents.filter(d=>d.name.startsWith(prefix) && !d.name.slice(prefix.length).includes('/'))
@@ -87,6 +88,16 @@ async function main() {
   if(spaceMode) {
     const rows=query(sqlFile('space-media-preflight.sql',`select id from public.spike_spaces where account_id=${q(account)} order by id;`)).rows;
     if(rows?.length!==62 || rows.some(row=>!row.id.startsWith('realcopy-b9d236394770-space-'))) throw Error('Reviewed Spaces changed');
+    if(spaceDetails) {
+      const details=planSpaceDetails(JSON.parse(bytes),new Set(rows.map(row=>row.id)));
+      query(sqlFile('space-details-publication.sql',spaceDetailsPublicationSQL(details,auth.principalId)));
+      console.log(JSON.stringify({publishedSpaceDetails:details.length,
+        sourceCreatedAt:details.filter(d=>d.created.source==='createdAt').length,
+        sourceUpdatedAt:details.filter(d=>d.updated.source==='updatedAt').length,
+        metadataTimestampFallback:'Retained Firestore createTime/updateTime; millisecond precision',
+        nonemptyChecklists:'Rejected, never silently omitted'}));
+      return;
+    }
     spacePublication=planSpaceMedia(JSON.parse(bytes),copies,new Set(rows.map(row=>row.id)));
     if(spacePublication.spaces.length!==60 || spacePublication.objects.size!==206
       || spacePublication.spaces.reduce((n,s)=>n+s.images.length,0)!==206
@@ -94,14 +105,19 @@ async function main() {
     console.log(JSON.stringify({spaceGalleries:60,spaceReferences:206,spaceObjects:206,blockedGalleries:2}));
     const observed=query(sqlFile('space-media-schema.sql',`select
       (select count(*) from public.space_media_sets where account_id=${q(account)}) as galleries,
-      (select count(*) from public.space_media_references where account_id=${q(account)}) as refs;`)).rows[0];
+      (select count(*) from public.space_media_references where account_id=${q(account)}) as refs,
+      (select count(*) from public.spike_spaces s where s.account_id=${q(account)} and not exists
+        (select 1 from public.spike_space_core_details d where d.account_id=s.account_id and d.id=s.id)) as missing_details;`)).rows[0];
+    if(observed.missing_details!==0) throw Error('Copied Space details must be published first');
     if(process.argv[2]==='--verify-spaces') {
       if(observed.galleries!==60 || observed.refs!==206) throw Error('Space publication counts differ');
       const objects=[...spacePublication.objects.values()].sort((a,b)=>a.bytes-b.bytes);
-      for(const object of [objects.find(x=>x.contentType.startsWith('image/')),objects.find(x=>x.contentType==='application/pdf')].filter(Boolean)) {
+      const samples=[objects.find(x=>x.contentType.startsWith('image/')),objects.find(x=>x.contentType==='application/pdf')].filter(Boolean);
+      for(const object of samples) {
         await verifyOwnerImageRead(spacePublication,auth,object.id);
       }
-      console.log(JSON.stringify({verifiedSpaceGalleries:60,verifiedSpaceReferences:206,blockedGalleries:2,ownerBytesVerified:true,anonymousDenied:true}));
+      console.log(JSON.stringify({verifiedSpaceGalleries:60,verifiedSpaceReferences:206,blockedGalleries:2,
+        verifiedMediaTypes:samples.map(x=>x.contentType),ownerBytesVerified:true,anonymousDenied:true}));
       return;
     }
   }
@@ -290,7 +306,7 @@ async function verifyOwnerImageRead(plan,auth,imageID='realcopy-b9d236394770-ima
 module.exports={assertQAState,thumbnailPublicationSQL};
 if(require.main===module) main().catch(error=>{
   // CLI failures may contain credentials: expose only known transport failures.
-  const safeMessages=['Hosted QA scope or private access changed','Reviewed Spaces changed','Space coverage differs from reviewed plan','Space publication counts differ','Storage read failed','Storage upload failed','Original bytes changed','Uploaded bytes unavailable','Storage bytes do not match source','Transaction publication counts differ','QA sign-in failed','Reviewed image missing','Authorized image unavailable','Owner received incorrect image','Anonymous image access was not denied'];
+  const safeMessages=['Copied Space details must be published first','Hosted QA scope or private access changed','Reviewed Spaces changed','Space coverage differs from reviewed plan','Space publication counts differ','Storage read failed','Storage upload failed','Original bytes changed','Uploaded bytes unavailable','Storage bytes do not match source','Transaction publication counts differ','QA sign-in failed','Reviewed image missing','Authorized image unavailable','Owner received incorrect image','Anonymous image access was not denied'];
   const category=safeMessages.includes(error.message)?error.message:
     ['TimeoutError','AbortError'].includes(error.name)?error.name:'private_operation_failed';
   console.error('Hosted private media load stopped ('+category+'). No overwrite fallback; inspect retained state before retry.');

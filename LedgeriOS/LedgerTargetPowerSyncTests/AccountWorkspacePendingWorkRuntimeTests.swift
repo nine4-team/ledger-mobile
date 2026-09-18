@@ -568,6 +568,64 @@ struct AccountWorkspacePendingWorkRuntimeTests {
         cancellation.continuation.finish()
     }
 
+    @Test("Hosted Space image sync and bytes survive encrypted offline restart",
+          .enabled(if: ProcessInfo.processInfo.environment["LEDGER_SPACE_MEDIA_HOSTED_QA"] == "1"),
+          .timeLimit(.minutes(1)))
+    @MainActor func spaceMediaHostedOfflineRestart() async throws {
+        let env = ProcessInfo.processInfo.environment
+        let email = try #require(env["LEDGER_SESSION_QA_EMAIL"])
+        let password = try #require(env["LEDGER_SESSION_QA_PASSWORD"])
+        guard email.hasSuffix("@ledger-tests.invalid") else { throw RuntimeInjectedFailure() }
+        let context = try RuntimeTestContext(suffix: "space-media-hosted",
+            accountId: .init(validating: "realcopy-b9d236394770-account"),
+            principalId: .init(validating: "upload-http-owner-4b1e9766-5791-48a9-a7b1-15a541807e64"))
+        defer { context.remove() }
+        let url = URL(string: "https://ybwviepljilrkrjoahbl.supabase.co")!
+        let key = "sb_publishable_oAx8Wobv1rd1OZ9m_nrE1A_bOuo1T-H"
+        let auth = AuthClient(configuration: .init(url: url.appendingPathComponent("auth/v1"), headers: ["apikey": key],
+            localStorage: CategoryAuthTestStorage(), fetch: { try await URLSession.shared.data(for: $0) },
+            autoRefreshToken: false, emitLocalSessionAsInitialSession: true))
+        let entry = SupabaseOnlineSignIn(client: auth, supabaseURL: url, publishableKey: key)
+        try await entry.signIn(email: email, password: password)
+        #expect(auth.currentSession?.user.id.uuidString.lowercased() == "5cb9aa33-337a-4fd4-a33f-121119e04c4e")
+        let directory = try await entry.accounts(environment: context.environment.manifest.environment)
+        let authorization = try await entry.authorize(AccountSelectionPolicy.makeIntent(selecting: context.accountId,
+            from: directory.snapshot, requestedAt: Date()))
+        let runtime = try await context.openRuntime()
+        let space = try SpaceID(validating: "realcopy-b9d236394770-space-1967fe0d99501ba7a4fb8195")
+        let scope = SpaceCreationScope.project(try ProjectID(validating: "realcopy-b9d236394770-project-3f728fcb87a0e9fb3a7f6912"))
+        try await entry.startWorkspaceSync(runtime, authorization: authorization,
+            powerSyncURL: URL(string: "https://6aa8966802481fb31b96942c.powersync.journeyapps.com")!)
+        // The app renders Space media only after the parent Space is readable.
+        var details = runtime.watchSpaceCoreDetails(spaceId: space).makeAsyncIterator()
+        while let update = try await details.next() {
+            if case .snapshot(let snapshot) = update.state, snapshot.row != nil { break }
+        }
+        var downloaded: DownloadedSpaceMedia?
+        for try await value in runtime.watchDownloadedSpaceMedia(accountId: context.accountId, spaceId: space, scope: scope) {
+            guard let value, value.isComplete, value.attachments.count == 7 else { continue }
+            downloaded = value; break
+        }
+        let catalog = try #require(downloaded)
+        let attachment = try #require(catalog.attachments.first)
+        #expect(try await runtime.loadDownloadedSpaceMedia(catalog: catalog, attachment: attachment, allowDownload: false) == nil)
+        let bytes = try #require(await runtime.loadDownloadedSpaceMedia(catalog: catalog, attachment: attachment, allowDownload: true))
+        #expect(!bytes.isEmpty)
+        try await runtime.close()
+        try await auth.signOut(scope: .local)
+        var offline = context.dependencies()
+        offline.downloadImage = { _ in Issue.record("Offline Space reopen attempted a download"); throw RuntimeInjectedFailure() }
+        let reopened = try await context.openRuntime(dependencies: offline)
+        let restored = try await reopened.readDownloadedSpaceMedia(accountId: context.accountId, spaceId: space, scope: scope)
+        #expect(restored == catalog)
+        #expect(try await reopened.loadDownloadedSpaceMedia(catalog: restored, attachment: attachment, allowDownload: false) == bytes)
+        try await reopened.lockAccessPreservingPendingWork()
+        await #expect(throws: LedgerOfflineClientRuntimeFailure.runtimeClosed) {
+            try await reopened.loadDownloadedSpaceMedia(catalog: restored, attachment: attachment, allowDownload: false)
+        }
+        try await reopened.close()
+    }
+
     @Test("Space photo bytes survive encrypted restart without another download")
     func spaceMediaOfflineBytesRestart() async throws {
         let context = try RuntimeTestContext(suffix: "space-media-bytes-restart")

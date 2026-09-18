@@ -1,6 +1,6 @@
 {
   "schemaVersion": 2,
-  "stateVersion": 1559,
+  "stateVersion": 1562,
   "userRequestedPause": {
     "date": "2026-09-15",
     "status": "resumed",
@@ -60,9 +60,9 @@
     "acceptanceCheckIds": ["SPACE-MEDIA-CATALOG","SPACE-MEDIA-BYTES","SPACE-MEDIA-OFFLINE"],
     "meaning": "Saved-source media QA planning for the existing Space reader, not production migration.",
     "verificationCommands": ["node --test scripts/tests/real-copy-transaction-media.test.cjs","node scripts/load-hosted-real-copy-item-media.cjs --plan-spaces","npm run conversion:state:check"],
-    "lastResult": "Hosted Space upload/deploy complete.60galleries/206references; all206object bytes verified. Owner image/PDF hash readback and anonymous denial PASS. Hosted sync exact metadata for all60 sequential Spaces PASS. Simultaneous60 hit PSYNC_S2305 parameter-result limit1000; retain capacity gap. See checklist hostedSpaceReadback.14loader tests/conversion checks passed.",
+    "lastResult": "Native spaceMediaHostedOfflineRestart PASS23.602s /tmp/ledger-space-native-hosted-details.log: hosted catalog/image, encrypted offline restart, exact bytes and locked denial. Earlier failure exposed62missing QA Space details; repaired from retained source, not reader relaxation.15script tests and conversion checks pass; all62 SQL retry/conflict rollback verified. Independent space_copy_final_review: no actionable defects. No real-fixture PDF claim.",
     "activeProcesses": {"integrationCI":{"run":35366670601,"commit":"ccee5ac9afb582cc826adb579fa997b102bf8adb","status":"queued","watchSession":39393,"watchLog":"/tmp/ledger-ci-35366670601-watch.log","instruction":"One coherent workflow_dispatch; use existing watcher/results, no repeated model polling or duplicate dispatch. Prior run35359599965 failure remains preserved below."}},
     "integrationCI": {"run":35359599965,"attempt":1,"commit":"cd8be156fa695f92e2b461cfccd961717c2e95ac","status":"failure","meaning":"Strict lint and SQL/races passed; physical stream test rejected approved live_pricing projection. Native jobs skipped. Repaired exact-column expectation and added absent-acquisition null assertion. All four downstream stream/MCP scripts passed locally. No hosted changes; new-commit integration still required."},
-    "nextWorkflowDecision": "Space native hosted/offline readback and combined-subscription capacity remain; bulk60 failed but all60 sequential scopes passed. Upload27955/deploy11381/readbacks47283,93061(failed bulk),57905(passed sequential) terminal. Do not repeat. CI35366670601 iPhone UI still running at16:49Z; Mac failed stale assertions locally fixed. No duplicate CI. Four unrelated local sync changes not deployed. O011 unanswered; O023/O053 excluded."
+    "nextWorkflowDecision": "Native hosted Space proof/review complete; no active local tests. Bulk60 parameter limit remains open (all60 sequential passed), evaluate required combined native subscriptions before closure. CI35366670601 iPhone UI pending; Mac stale assertion fix local only. Preserve exact revisions; no duplicate CI or Firebase edits. O011 unanswered; O023/O053 excluded."
   }
 }

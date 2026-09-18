@@ -1,11 +1,35 @@
 const test=require('node:test'),assert=require('node:assert/strict'),crypto=require('node:crypto');
-const {planMediaReferences,planSpaceMedia,spacePublicationSQL,planTransactionMedia,transactionPublicationSQL,planExpenseReceipts}=require('../real-copy-transaction-media.cjs');
+const {planMediaReferences,planSpaceMedia,spacePublicationSQL,planSpaceDetails,spaceDetailsPublicationSQL,planTransactionMedia,transactionPublicationSQL,planExpenseReceipts}=require('../real-copy-transaction-media.cjs');
 const transaction='realcopy-b9d236394770-transaction-'+crypto.createHash('sha256').update('one').digest('hex').slice(0,24);
 const ids=new Set([transaction]);
 const ref=(object,kind='image')=>({mapValue:{fields:{url:{stringValue:'https://firebasestorage.googleapis.com/v0/b/ledger-nine4.firebasestorage.app/o/'+object},kind:{stringValue:kind}}}});
 const source=fields=>({account:'accounts/test',documents:[{name:'accounts/test/transactions/one',fields}]});
 const array=values=>({arrayValue:{values}});
 const copies=new Map(['image','pdf'].map(object=>[object,{object,contentType:object==='pdf'?'application/pdf':'image/jpeg',bytes:10,sha256:'a'.repeat(64),file:object}]));
+test('Space details preserve source dates and notes, require explicit checklist handling, and reject conflicting replay',()=>{
+  const space=transaction.replace('-transaction-','-space-');
+  const doc={name:'accounts/test/spaces/one',createTime:'2025-01-01T00:00:00.123456Z',updateTime:'2025-01-03T00:00:00Z',
+    fields:{notes:{stringValue:" Owner's note "},createdAt:{timestampValue:'2025-01-02T00:00:00Z'}}};
+  const snapshot={account:'accounts/test',documents:[doc,{...doc,name:'accounts/foreign/spaces/one'}]};
+  const plan=planSpaceDetails(snapshot,new Set([space]));
+  assert.equal(plan.length,1);assert.equal(plan[0].notes,"Owner's note");
+  assert.equal(plan[0].created.source,'createdAt');assert.equal(plan[0].created.milliseconds,Date.parse('2025-01-02T00:00:00Z'));
+  assert.equal(plan[0].updated.source,'updateTime');
+  const sql=spaceDetailsPublicationSQL(plan,'upload-http-owner-test');
+  assert.match(sql,/Owner''s note/);assert.match(sql,/Existing Space detail differs/);assert.match(sql,/QA access changed/);
+  assert.match(sql,/Existing Space checklists need review/);assert.match(sql,/on conflict\(id\) do nothing/);
+  assert.throws(()=>spaceDetailsPublicationSQL(plan,'foreign-owner'));
+  doc.fields.createdAt={nullValue:null};
+  assert.equal(planSpaceDetails(snapshot,new Set([space]))[0].created.milliseconds,Date.parse('2025-01-01T00:00:00.123Z'));
+  doc.fields.checklists=array([{mapValue:{fields:{}}}]);
+  assert.throws(()=>planSpaceDetails(snapshot,new Set([space])),/checklists require conversion/);
+  doc.fields.checklists={nullValue:null};
+  doc.fields.createdAt={timestampValue:'2025-02-30T00:00:00Z'};
+  assert.throws(()=>planSpaceDetails(snapshot,new Set([space])),/Invalid Space timestamp/);
+  doc.fields.createdAt={nullValue:null};delete doc.createTime;
+  assert.throws(()=>planSpaceDetails(snapshot,new Set([space])),/timestamp evidence/);
+  assert.throws(()=>planSpaceDetails({account:'accounts/test',documents:[]},new Set([space])),/Incomplete Space detail/);
+});
 test('Space planning preserves mixed media and refuses partial galleries',()=>{
   const space=transaction.replace('-transaction-','-space-');
   const input={account:'accounts/test',documents:[{name:'accounts/test/spaces/one',fields:{images:array([ref('image'),ref('pdf','pdf')])}}]};

@@ -87,6 +87,52 @@ function transactionPublicationSQL(plan, principal) {
   }
   return publicationSQL({items:[],objects:plan.objects},principal).replace('set constraints all immediate;',()=>statements.join('\n')+'\nset constraints all immediate;');
 }
+// The saved QA copy initially imported Space headers only. Complete their
+// details from retained evidence, never from invented current timestamps.
+function planSpaceDetails(source, spaceIDs) {
+  const prefix=source.account+'/spaces/', details=[];
+  for(const document of source.documents) {
+    if(!document.name.startsWith(prefix) || document.name.slice(prefix.length).includes('/')) continue;
+    const space=id('space',document.name.slice(prefix.length));
+    if(!spaceIDs.has(space)) continue;
+    const fields=document.fields||{};
+    const checklists=fields.checklists;
+    if(checklists && !('nullValue' in checklists) &&
+      !(checklists.arrayValue && Array.isArray(checklists.arrayValue.values??[]) && (checklists.arrayValue.values??[]).length===0)) {
+      throw Error('Source Space checklists require conversion');
+    }
+    if(fields.notes && !('nullValue' in fields.notes) && typeof fields.notes.stringValue!=='string') throw Error('Invalid Space notes');
+    const notes=fields.notes?.stringValue?.trim()||null;
+    if(notes?.includes('\0')) throw Error('Invalid Space notes');
+    const timestamp=(field,metadata)=>{
+      const value=fields[field];
+      const raw=value && !('nullValue' in value)?value.timestampValue:document[metadata];
+      if(typeof raw!=='string' || !/^\d{4}-\d\d-\d\dT\d\d:\d\d:\d\d(?:\.\d{1,9})?Z$/.test(raw)) throw Error('Missing Space timestamp evidence');
+      const milliseconds=Date.parse(raw);
+      if(!Number.isSafeInteger(milliseconds)) throw Error('Invalid Space timestamp');
+      const exactMilliseconds=raw.includes('.')
+        ? raw.replace(/\.(\d+)Z$/,(_,fraction)=>'.'+fraction.slice(0,3).padEnd(3,'0')+'Z')
+        : raw.replace(/Z$/,'.000Z');
+      if(new Date(milliseconds).toISOString()!==exactMilliseconds) throw Error('Invalid Space timestamp');
+      return {milliseconds,source:value && !('nullValue' in value)?field:metadata};
+    };
+    details.push({space,notes,created:timestamp('createdAt','createTime'),updated:timestamp('updatedAt','updateTime')});
+  }
+  if(details.length!==spaceIDs.size || new Set(details.map(x=>x.space)).size!==details.length) throw Error('Incomplete Space detail scope');
+  return details;
+}
+
+function spaceDetailsPublicationSQL(details,principal) {
+  const statements=[];
+  for(const detail of details) {
+    const created=new Date(detail.created.milliseconds).toISOString(),updated=new Date(detail.updated.milliseconds).toISOString();
+    statements.push(`do $$ begin if exists(select 1 from public.spike_space_checklists where account_id=${q(account)} and space_id=${q(detail.space)}) then raise exception 'Existing Space checklists need review'; end if; end $$;`);
+    statements.push(`insert into public.spike_space_core_details(id,account_id,notes,created_at,updated_at,created_at_ms,updated_at_ms) values(${q(detail.space)},${q(account)},${q(detail.notes)},${q(created)}::timestamptz,${q(updated)}::timestamptz,${detail.created.milliseconds},${detail.updated.milliseconds}) on conflict(id) do nothing;`);
+    statements.push(`do $$ begin if not exists(select 1 from public.spike_space_core_details where id=${q(detail.space)} and account_id=${q(account)} and notes is not distinct from ${q(detail.notes)} and created_at_ms=${detail.created.milliseconds} and updated_at_ms=${detail.updated.milliseconds}) then raise exception 'Existing Space detail differs'; end if; end $$;`);
+  }
+  return publicationSQL({items:[],objects:new Map()},principal).replace('set constraints all immediate;',()=>statements.join('\n')+'\nset constraints all immediate;');
+}
+
 function spacePublicationSQL(plan, principal) {
   const statements=[];
   for(const gallery of plan.spaces) {
@@ -176,5 +222,5 @@ async function expenseReceiptCommand() {
   console.log(JSON.stringify({sourceSHA256,accountID:request.targetAccountID,blocked:plan.blocked,
     receipts:plan.receipts.map(({sourceID,images})=>({sourceID,images:images.map(image=>({id:image.id,sha256:image.sha256,byteCount:String(image.bytes),mediaType:image.contentType,storagePath:image.storagePath}))}))}));
 }
-module.exports={planMediaReferences,planSpaceMedia,spacePublicationSQL,planTransactionMedia,transactionPublicationSQL,planExpenseReceipts};
+module.exports={planMediaReferences,planSpaceMedia,spacePublicationSQL,planSpaceDetails,spaceDetailsPublicationSQL,planTransactionMedia,transactionPublicationSQL,planExpenseReceipts};
 if (require.main===module) expenseReceiptCommand().catch(()=>{console.error('Expense receipt preparation failed; no financial import authorized.');process.exitCode=1;});
