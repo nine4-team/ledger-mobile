@@ -2581,6 +2581,7 @@ if (
     ...sync.matchAll(/^  ([a-z][a-z0-9_]*):$/gm),
   ].map((match) => match[1]);
   const expectedStreamNames = [
+    "space_media",
     "item_images",
     "account_business_profile",
     "property_management_report",

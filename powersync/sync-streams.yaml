@@ -2,6 +2,57 @@ config:
   edition: 3
 
 streams:
+  space_media:
+    queries:
+      - |
+        SELECT space_media_sets.id,space_media_sets.account_id,space_media_sets.space_id,
+          space_media_sets.revision::text AS revision,space_media_sets.expected_count
+        FROM space_media_sets
+        JOIN spike_spaces AS space ON space.account_id=space_media_sets.account_id AND space.id=space_media_sets.space_id
+        JOIN spike_account_memberships AS membership ON membership.account_id=space_media_sets.account_id
+        JOIN spike_principals AS principal ON principal.id=membership.principal_id
+        WHERE space_media_sets.account_id=subscription.parameter('account_id')
+          AND space_media_sets.space_id=subscription.parameter('space_id')
+          AND space.account_id=subscription.parameter('account_id') AND space.id=subscription.parameter('space_id')
+          AND (space.lifecycle='active' OR space.sync_current_item_count>0)
+          AND membership.account_id=subscription.parameter('account_id')
+          AND membership.state='active' AND principal.auth_user_id=auth.user_id()
+      - |
+        SELECT space_media_references.id,space_media_references.account_id,space_media_references.space_id,
+          space_media_references.attachment_id,space_media_references.set_revision::text AS set_revision,
+          space_media_references.position,space_media_references.is_primary,space_media_references.file_name
+        FROM space_media_references
+        JOIN space_media_sets AS media_set ON media_set.account_id=space_media_references.account_id
+          AND media_set.space_id=space_media_references.space_id AND media_set.revision=space_media_references.set_revision
+        JOIN spike_spaces AS space ON space.account_id=space_media_references.account_id AND space.id=space_media_references.space_id
+        JOIN spike_account_memberships AS membership ON membership.account_id=space_media_references.account_id
+        JOIN spike_principals AS principal ON principal.id=membership.principal_id
+        WHERE space_media_references.account_id=subscription.parameter('account_id')
+          AND space_media_references.space_id=subscription.parameter('space_id')
+          AND media_set.account_id=subscription.parameter('account_id') AND media_set.space_id=subscription.parameter('space_id')
+          AND space.account_id=subscription.parameter('account_id') AND space.id=subscription.parameter('space_id')
+          AND (space.lifecycle='active' OR space.sync_current_item_count>0)
+          AND membership.account_id=subscription.parameter('account_id')
+          AND membership.state='active' AND principal.auth_user_id=auth.user_id()
+      - |
+        SELECT item_image_objects.id,item_image_objects.account_id,item_image_objects.content_sha256,
+          item_image_objects.byte_count::text AS byte_count,item_image_objects.media_type,item_image_objects.storage_path
+        FROM item_image_objects
+        JOIN spike_account_memberships AS membership ON membership.account_id=item_image_objects.account_id
+        JOIN spike_principals AS principal ON principal.id=membership.principal_id
+        WHERE item_image_objects.account_id=subscription.parameter('account_id')
+          AND membership.account_id=subscription.parameter('account_id')
+          AND membership.state='active' AND principal.auth_user_id=auth.user_id()
+          AND item_image_objects.id IN (
+            SELECT reference.attachment_id FROM space_media_references AS reference
+            JOIN space_media_sets AS media_set ON media_set.account_id=reference.account_id
+              AND media_set.space_id=reference.space_id AND media_set.revision=reference.set_revision
+            JOIN spike_spaces AS space ON space.account_id=reference.account_id AND space.id=reference.space_id
+            WHERE reference.account_id=subscription.parameter('account_id') AND reference.space_id=subscription.parameter('space_id')
+              AND media_set.account_id=subscription.parameter('account_id') AND media_set.space_id=subscription.parameter('space_id')
+              AND space.account_id=subscription.parameter('account_id') AND space.id=subscription.parameter('space_id')
+              AND (space.lifecycle='active' OR space.sync_current_item_count>0)
+          )
   item_images:
     queries:
       - |

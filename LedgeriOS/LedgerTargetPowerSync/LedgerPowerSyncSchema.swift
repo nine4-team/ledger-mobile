@@ -24,6 +24,8 @@ public enum LedgerPowerSyncTable {
     public static let transactions = "spike_transactions"
     public static let transactionReceiptItems = "transaction_receipt_items"
     public static let transactionAttachmentSets = "transaction_attachment_sets"
+    public static let spaceMediaSets = "space_media_sets"
+    public static let spaceMediaReferences = "space_media_references"
     public static let transactionAttachmentReferences = "transaction_attachment_references"
     public static let itemChargeOccurrences = "item_charge_occurrences"
     public static let paidItemReturnCredits = "paid_item_return_credits"
@@ -95,6 +97,13 @@ public enum LedgerPowerSyncSchema {
             columns: [.text("account_id"), .text("transaction_id"), .text("section"),
                       .text("revision"), .integer("expected_count")],
             indexes: [.ascending(name: "transaction_attachment_set", columns: ["account_id", "transaction_id", "section"])]),
+        Table(name: LedgerPowerSyncTable.spaceMediaSets,
+            columns: [.text("account_id"), .text("space_id"), .text("revision"), .integer("expected_count")],
+            indexes: [.ascending(name: "space_media_set", columns: ["account_id", "space_id"])]),
+        Table(name: LedgerPowerSyncTable.spaceMediaReferences,
+            columns: [.text("account_id"), .text("space_id"), .text("attachment_id"), .text("set_revision"),
+                      .integer("position"), .integer("is_primary"), .text("file_name")],
+            indexes: [.ascending(name: "space_media_reference", columns: ["account_id", "space_id"])]),
         Table(name: LedgerPowerSyncTable.transactionAttachmentReferences,
             columns: [.text("account_id"), .text("transaction_id"), .text("section"), .text("attachment_id"),
                       .text("set_revision"), .integer("position"), .integer("is_primary"), .text("file_name"),

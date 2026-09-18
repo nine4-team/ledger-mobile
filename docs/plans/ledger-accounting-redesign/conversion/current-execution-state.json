@@ -1,6 +1,6 @@
 {
   "schemaVersion": 2,
-  "stateVersion": 1544,
+  "stateVersion": 1545,
   "userRequestedPause": {
     "date": "2026-09-15",
     "status": "resumed",
@@ -28,9 +28,9 @@
     "outcome": "Connect existing Space gallery, image/PDF pinning and photo printing to authorized downloaded media, preserving honest missing-byte and access-loss behavior.",
     "baseCommit": "596573186b47a3faa0469c16d81f2187aaa5dcf2",
     "nextActions": [
-      "Space media catalog and reader port implemented; four native tests passed. Continue read-only schema/RLS, scoped stream/provider, existing byte cache and existing UI/print bindings. No capture/delete/primary/markers.",
+      "Space catalog, read-only schema/RLS, exact scoped stream and native tables implemented. Continue native local reader/watch using existing stream ownership helper; then shared byte cache and existing UI/print bindings. No capture/delete/primary/markers.",
       "Prior photo/adjustment batch remains integration-unverified: CI35359599965 failed stale physical-stream expectation; repair59657318 locally passes all four stream/MCP scripts. No running CI or duplicate dispatch. Prior batch base c5226c1 remains in evidence; new Space batch does not waive failures.",
-      "Prior local migrations applied without history; do not replay. Space changes have not touched any database yet."
+      "Space migration20260918151339 applied LOCAL without history, as were prior local migrations; do not replay. Stream config has not been activated by local service restart; no hosted changes."
     ]
   },
   "blockers": [
@@ -60,9 +60,9 @@
     "acceptanceCheckIds": ["SPACE-MEDIA-CATALOG","SPACE-MEDIA-UI","SPACE-MEDIA-BYTES","SPACE-MEDIA-SQL","SPACE-MEDIA-AUTH","SPACE-MEDIA-SYNC","SPACE-MEDIA-OFFLINE"],
     "meaning": "Read-only Space media; reuse existing gallery, PDF/image pinning, print helper and byte vault.",
     "verificationCommands": ["swift test --package-path LedgeriOS --no-parallel --filter DownloadedSpaceMediaTests","npm run conversion:state:check"],
-    "lastResult": "Core catalog/port plus4native tests PASS /tmp/ledger-space-media-core.log. Not a working Space media feature yet: schema/provider/UI/export remain. No new CI, hosted changes or cursor control.",
+    "lastResult": "Core4tests PASS; SQL2466/74 PASS7s; strictlint/advisorsclean; pinned service parameter evaluator and16parser/environment checks PASS. Logs /tmp/ledger-space-media-*.log. Native reader/cache/UI/export/live replication remain; no CI or hosted changes.",
     "activeProcesses": {},
     "integrationCI": {"run":35359599965,"attempt":1,"commit":"cd8be156fa695f92e2b461cfccd961717c2e95ac","status":"failure","meaning":"Strict lint and SQL/races passed; physical stream test rejected approved live_pricing projection. Native jobs skipped. Repaired exact-column expectation and added absent-acquisition null assertion. All four downstream stream/MCP scripts passed locally. No hosted changes; new-commit integration still required."},
-    "nextWorkflowDecision": "Continue active Space media outcome, not another planning pass. Read-only catalog and port now exist; use TransactionAttachmentLocalReader as authorization/revalidation pattern, shared DownloadedMediaObjectReference/vault, SpaceDetailView MEDIA/PhotoPrintHelper, and target ReferencedSpaceDetailView. Add schema/RLS and stream before UI binding. Do not rebuild controls. Capture/delete/markers remain O023/O053-blocked. Sept18 async O052/O053 member editing and O039 note-text questions await replies."
+    "nextWorkflowDecision": "Continue Space media local reader/runtime: reuse withOwnedSyncStreamWatch, shared item_image_objects and vault, SpaceDetailView MEDIA/PhotoPrintHelper, and target ReferencedSpaceDetailView. TransactionAttachmentLocalReader shows revalidation pattern; ItemImageCatalogLocalReaderTests provides SQLite fixtures. Schema/stream already written/tested; no reread of completed SQL work. Need activate local rules once for live proof. Do not rebuild controls. Capture/delete/markers remain O023/O053-blocked; Sept18 async permissions/note questions unanswered."
   }
 }
