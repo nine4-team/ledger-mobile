@@ -40,9 +40,11 @@ test('shared publication retains exact private QA membership and non-overwrite c
   assert.throws(()=>publicationSQL(plan,'upload-http-owner-test'),/Unexpected object destination/);
 });
 test('hosted publication requires one verified QA owner and a private bucket',()=>{
-  const valid={membership_count:1,qa_owner_count:1,private_bucket:true,item_count:1375};
+  const valid={membership_count:1,qa_owner_count:1,private_bucket:true,copied_item_count:1375};
   assert.doesNotThrow(()=>assertQAState(valid));
-  for(const [key,value] of Object.entries({membership_count:2,qa_owner_count:0,private_bucket:false,item_count:0})) {
+  // App-created QA Items must not invalidate the unchanged source-copy scope.
+  assert.doesNotThrow(()=>assertQAState({...valid,item_count:1394}));
+  for(const [key,value] of Object.entries({membership_count:2,qa_owner_count:0,private_bucket:false,copied_item_count:0})) {
     assert.throws(()=>assertQAState({...valid,[key]:value}),/QA scope/);
   }
 });

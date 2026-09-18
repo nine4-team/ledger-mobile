@@ -6,7 +6,7 @@ const path = require('node:path');
 const {execFileSync} = require('node:child_process');
 const {planItemMedia, publicationSQL, uploadVerifiedOriginals} = require('./load-real-copy-item-media.cjs');
 const {verifiedCopies} = require('./copy-authorized-project-media.cjs');
-const {planSpaceMedia,planTransactionMedia,transactionPublicationSQL} = require('./real-copy-transaction-media.cjs');
+const {planSpaceMedia,spacePublicationSQL,planTransactionMedia,transactionPublicationSQL} = require('./real-copy-transaction-media.cjs');
 const root='/Users/benjaminmackenzie/Dev/ledger_mobile_supabase';
 const project='ybwviepljilrkrjoahbl';
 const account='realcopy-b9d236394770-account';
@@ -18,18 +18,20 @@ const q=value=>"'"+String(value).replaceAll("'","''")+"'";
 
 function assertQAState(row) {
   if (!row || row.membership_count!==1 || row.qa_owner_count!==1 || row.private_bucket!==true
-      || row.item_count!==1375) throw Error('Hosted QA scope or private access changed');
+      || row.copied_item_count!==1375) throw Error('Hosted QA scope or private access changed');
 }
 
 async function main() {
   const spacePlan=process.argv[2]==='--plan-spaces';
-  if(process.cwd()!==root || !(process.argv.length===3 || (spacePlan && process.argv.length===4)) || !['--plan','--apply','--verify','--prepare-thumbnails','--publish-thumbnails','--plan-transactions','--apply-transactions','--verify-transactions','--plan-spaces'].includes(process.argv[2])) throw Error('Unexpected loader command or worktree');
+  const spaceMode=['--plan-spaces','--apply-spaces','--verify-spaces'].includes(process.argv[2]);
+  if(process.cwd()!==root || !(process.argv.length===3 || (spaceMode && process.argv.length===4)) || !['--plan','--apply','--verify','--prepare-thumbnails','--publish-thumbnails','--plan-transactions','--apply-transactions','--verify-transactions','--plan-spaces','--apply-spaces','--verify-spaces'].includes(process.argv[2])) throw Error('Unexpected loader command or worktree');
+  if(spaceMode && !spacePlan && !process.argv[3]) throw Error('Verified Space original directory required');
   const bytes=fs.readFileSync(directory+'/source.json');
   const manifest=JSON.parse(fs.readFileSync(directory+'/manifest.json'));
   if(hash(bytes)!=='9e597cb852f5d2048f774f4b20dd76c77fc9eec9bc93fc6ceaa8d6693c348183'
       || manifest.sourceSHA256!==hash(bytes) || manifest.accountID!==account || manifest.kind!=='partial-real-data-qa-copy') throw Error('Unexpected source copy');
   let selectedMediaDirectory=mediaDirectory;
-  if(spacePlan && process.argv[3]) {
+  if(spaceMode && process.argv[3]) {
     selectedMediaDirectory=path.resolve(process.argv[3]);
     if(path.dirname(selectedMediaDirectory)!==root+'/tmp/real-project-copy'
       || !path.basename(selectedMediaDirectory).startsWith('media-')
@@ -48,10 +50,10 @@ async function main() {
       blocked:planned.blocked.length,blockedReasons:planned.blocked.reduce((r,b)=>(r[b.reason]=(r[b.reason]||0)+1,r),{})}));
     return; // Local saved snapshot only; no hosted query, upload or publication.
   }
-  const plan=planItemMedia(JSON.parse(bytes),copies);
+  const plan=spaceMode ? {items:[],objects:new Map(),blocked:[]} : planItemMedia(JSON.parse(bytes),copies);
   const totalBytes=[...plan.objects.values()].reduce((n,image)=>n+image.bytes,0);
-  if(plan.items.length!==725 || plan.objects.size!==819 || totalBytes!==1956762995) throw Error('Reviewed image scope changed');
-  console.log(JSON.stringify({plan:true,galleries:plan.items.length,objects:plan.objects.size,bytes:totalBytes,blocked:plan.blocked.length}));
+  if(!spaceMode && (plan.items.length!==725 || plan.objects.size!==819 || totalBytes!==1956762995)) throw Error('Reviewed image scope changed');
+  if(!spaceMode) console.log(JSON.stringify({plan:true,galleries:plan.items.length,objects:plan.objects.size,bytes:totalBytes,blocked:plan.blocked.length}));
   if(process.argv[2]==='--plan') return;
   if(process.argv[2]==='--prepare-thumbnails') {
     prepareThumbnails(plan);
@@ -73,7 +75,7 @@ async function main() {
       join auth.users u on u.id=p.auth_user_id where m.account_id=${q(account)} and m.principal_id=${q(auth.principalId)}
       and m.role='owner' and m.state='active' and u.id=${q(auth.userId)}::uuid and u.email=${q(auth.email)}) as qa_owner_count,
     (select not public from storage.buckets where id='ledger-attachments') as private_bucket,
-    (select count(*) from public.spike_items where account_id=${q(account)}) as item_count,
+    (select count(*) from public.spike_items where account_id=${q(account)} and starts_with(id,'realcopy-b9d236394770-item-')) as copied_item_count,
     (select count(*) from public.item_image_objects where account_id=${q(account)} and id like 'realcopy-b9d236394770-image-%') as image_object_count,
     (select count(*) from public.item_image_sets where account_id=${q(account)}) as image_set_count,
     (select count(*) from public.item_image_references where account_id=${q(account)}) as image_reference_count,
@@ -81,6 +83,28 @@ async function main() {
   const query=file=>JSON.parse(cli(['db','query','--linked','--project-ref',project,'--file',file]));
   const state=query(preflight).rows?.[0];
   assertQAState(state);
+  let spacePublication;
+  if(spaceMode) {
+    const rows=query(sqlFile('space-media-preflight.sql',`select id from public.spike_spaces where account_id=${q(account)} order by id;`)).rows;
+    if(rows?.length!==62 || rows.some(row=>!row.id.startsWith('realcopy-b9d236394770-space-'))) throw Error('Reviewed Spaces changed');
+    spacePublication=planSpaceMedia(JSON.parse(bytes),copies,new Set(rows.map(row=>row.id)));
+    if(spacePublication.spaces.length!==60 || spacePublication.objects.size!==206
+      || spacePublication.spaces.reduce((n,s)=>n+s.images.length,0)!==206
+      || spacePublication.blocked.length!==2 || spacePublication.blocked.some(b=>b.reason!=='unavailable_source_reference')) throw Error('Space coverage differs from reviewed plan');
+    console.log(JSON.stringify({spaceGalleries:60,spaceReferences:206,spaceObjects:206,blockedGalleries:2}));
+    const observed=query(sqlFile('space-media-schema.sql',`select
+      (select count(*) from public.space_media_sets where account_id=${q(account)}) as galleries,
+      (select count(*) from public.space_media_references where account_id=${q(account)}) as refs;`)).rows[0];
+    if(process.argv[2]==='--verify-spaces') {
+      if(observed.galleries!==60 || observed.refs!==206) throw Error('Space publication counts differ');
+      const objects=[...spacePublication.objects.values()].sort((a,b)=>a.bytes-b.bytes);
+      for(const object of [objects.find(x=>x.contentType.startsWith('image/')),objects.find(x=>x.contentType==='application/pdf')].filter(Boolean)) {
+        await verifyOwnerImageRead(spacePublication,auth,object.id);
+      }
+      console.log(JSON.stringify({verifiedSpaceGalleries:60,verifiedSpaceReferences:206,blockedGalleries:2,ownerBytesVerified:true,anonymousDenied:true}));
+      return;
+    }
+  }
   let transactionPlan;
   if(['--plan-transactions','--apply-transactions','--verify-transactions'].includes(process.argv[2])) {
     const rows=query(sqlFile('transaction-media-preflight.sql',`select id from public.spike_transactions where account_id=${q(account)} order by id;`)).rows;
@@ -114,6 +138,15 @@ async function main() {
   const keys=JSON.parse(cli(['projects','api-keys','--project-ref',project,'-o','json']));
   const key=keys.find(entry=>entry.name==='service_role')?.api_key;
   if(typeof key!=='string' || !key.startsWith('eyJ')) throw Error('Existing service key unavailable');
+  if(spacePublication) {
+    await uploadVerifiedOriginals(spacePublication,{apiURL:'https://'+project+'.supabase.co',
+      mediaDirectory:selectedMediaDirectory,headers:{apikey:key,Authorization:'Bearer '+key},
+      onProgress:(verified,total)=>console.log(JSON.stringify({verifiedSpaceObjects:verified,total}))});
+    assertQAState(query(preflight).rows?.[0]);
+    query(sqlFile('space-media-publication.sql',spacePublicationSQL(spacePublication,auth.principalId)));
+    console.log(JSON.stringify({publishedSpaceGalleries:60,publishedSpaceReferences:206,blockedGalleries:2}));
+    return;
+  }
   if(transactionPlan) {
     await uploadVerifiedOriginals(transactionPlan,{apiURL:'https://'+project+'.supabase.co',
       mediaDirectory,headers:{apikey:key,Authorization:'Bearer '+key},
@@ -257,7 +290,7 @@ async function verifyOwnerImageRead(plan,auth,imageID='realcopy-b9d236394770-ima
 module.exports={assertQAState,thumbnailPublicationSQL};
 if(require.main===module) main().catch(error=>{
   // CLI failures may contain credentials: expose only known transport failures.
-  const safeMessages=['Storage read failed','Storage upload failed','Original bytes changed','Uploaded bytes unavailable','Storage bytes do not match source','Transaction publication counts differ','QA sign-in failed','Reviewed image missing','Authorized image unavailable','Owner received incorrect image','Anonymous image access was not denied'];
+  const safeMessages=['Hosted QA scope or private access changed','Reviewed Spaces changed','Space coverage differs from reviewed plan','Space publication counts differ','Storage read failed','Storage upload failed','Original bytes changed','Uploaded bytes unavailable','Storage bytes do not match source','Transaction publication counts differ','QA sign-in failed','Reviewed image missing','Authorized image unavailable','Owner received incorrect image','Anonymous image access was not denied'];
   const category=safeMessages.includes(error.message)?error.message:
     ['TimeoutError','AbortError'].includes(error.name)?error.name:'private_operation_failed';
   console.error('Hosted private media load stopped ('+category+'). No overwrite fallback; inspect retained state before retry.');
