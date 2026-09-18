@@ -81,7 +81,7 @@ struct ItemImageCatalogLocalReader: Sendable {
                 return try .init(accountId: accountId,itemId: itemId,isComplete: false,images: [])
             }
             let complete = projected.count==images.count && images.count==marker.1 && images.enumerated().allSatisfy { $0.offset==$0.element.position }
-            return try .init(accountId: accountId,itemId: itemId,isComplete: complete,images: images)
+            return try .init(accountId: accountId,itemId: itemId,isComplete: complete,images: images,revision: revision)
         }
     }
 
@@ -102,6 +102,7 @@ struct ItemImageCatalogLocalReader: Sendable {
     }
 
     func run(accountId: AccountID, principalId: PrincipalID, itemId: ItemID,
+             attachmentDatabase: (any PowerSyncDatabaseProtocol)? = nil,
              receive: @Sendable @escaping (DownloadedItemImageCatalog) async -> Bool) async throws {
         let changes = try database.watch(sql: """
                         SELECT EXISTS(SELECT 1 FROM spike_account_memberships WHERE account_id=?)
@@ -111,6 +112,36 @@ struct ItemImageCatalogLocalReader: Sendable {
                         UNION ALL SELECT EXISTS(SELECT 1 FROM item_image_objects WHERE account_id=?)
                         UNION ALL SELECT EXISTS(SELECT 1 FROM item_card_thumbnails WHERE account_id=?)
                         """, parameters: Array(repeating: accountId.rawValue,count: 6)) { try $0.getInt(index: 0) }
+        if let attachmentDatabase {
+            let events = AsyncThrowingStream<Void, Error>.makeStream(bufferingPolicy: .bufferingNewest(1))
+            try await withThrowingTaskGroup(of: Void.self) { group in
+                defer { group.cancelAll(); events.continuation.finish() }
+                group.addTask {
+                    do {
+                        for try await _ in changes { events.continuation.yield(()) }
+                        events.continuation.finish()
+                    } catch { events.continuation.finish(throwing: error) }
+                }
+                group.addTask {
+                    do {
+                        let pending = try attachmentDatabase.watch(sql: """
+                            SELECT id,receipt_fingerprint,state,upload_progress_json
+                            FROM local_attachment_durability_queue
+                            WHERE account_id=? AND parent_kind='item' AND parent_id=?
+                            ORDER BY persisted_at_ms,id
+                            """, parameters: [accountId.rawValue,itemId.rawValue]) { try $0.getString(name: "id") }
+                        for try await _ in pending { events.continuation.yield(()) }
+                        events.continuation.finish()
+                    } catch { events.continuation.finish(throwing: error) }
+                }
+                for try await _ in events.stream {
+                    try Task.checkCancellation()
+                    let value = try await read(accountId: accountId,principalId: principalId,itemId: itemId)
+                    guard await receive(value) else { return }
+                }
+            }
+            return
+        }
         for try await _ in changes {
             try Task.checkCancellation()
             let value = try await read(accountId: accountId,principalId: principalId,itemId: itemId)

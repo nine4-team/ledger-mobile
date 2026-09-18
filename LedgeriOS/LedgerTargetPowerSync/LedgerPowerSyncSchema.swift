@@ -19,6 +19,7 @@ public enum LedgerPowerSyncTable {
     public static let itemPlacementVersions = "item_placement_versions"
     public static let itemProjectPrices = "item_project_prices"
     public static let itemAcquisitionReviews = "item_acquisition_reviews"
+    public static let itemAdjustmentOrders = "item_adjustment_orders"
     public static let itemClientPaymentConnections = "item_client_payment_connections"
     public static let transactions = "spike_transactions"
     public static let transactionReceiptItems = "transaction_receipt_items"
@@ -171,7 +172,8 @@ public enum LedgerPowerSyncSchema {
         Table(name: LedgerPowerSyncTable.itemPlacementVersions,
               columns: [.text("account_id"), .text("revision"), .text("placement_id"), .text("space_id"), .text("project_id")]),
         Table(name: LedgerPowerSyncTable.itemAcquisitionReviews,
-              columns: [.text("account_id"), .text("state"), .text("amount_minor_units"), .text("currency")]),
+              columns: [.text("account_id"), .text("state"), .text("amount_minor_units"), .text("currency"), .text("live_pricing")]),
+        Table(name: LedgerPowerSyncTable.itemAdjustmentOrders, columns: [.text("account_id"), .text("revision"), .text("snapshot")]),
         Table(
             name: LedgerPowerSyncTable.itemPlacements,
             columns: [.text("account_id"), .text("item_id"), .text("scope_kind"),

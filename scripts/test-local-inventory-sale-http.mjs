@@ -56,6 +56,8 @@ if (process.argv.includes('--native-fee-create')) {
         'Fee replication uses the separate uncollected financial fixture');
 }
 assert.ok(!process.argv.includes('--native-price-edit') || process.argv.includes('--price-edit'));
+const liveAdjustments = process.argv.includes('--adjustments');
+assert.ok(!liveAdjustments || process.argv.includes('--native-price-edit'));
 if (process.argv.includes('--native-price-edit') || process.argv.includes('--native-expense') || process.argv.includes('--native-expense-edit') || process.argv.includes('--native-live-invoice') || process.argv.includes('--native-fee-create')) {
     const ready = await fetch('http://127.0.0.1:5590/probes/readiness', {
         redirect:'error', signal:AbortSignal.timeout(3000),
@@ -145,6 +147,7 @@ try {
                 LEDGER_SALE_LOCAL_ITEM:selectedItem,LEDGER_SALE_LOCAL_PROJECT:selectedProject,LEDGER_SALE_LOCAL_KEY:local.PUBLISHABLE_KEY,
                 LEDGER_SALE_LOCAL_DESTINATION_PROJECT:project,
                 ...(process.argv.includes('--native-price-edit')?{LEDGER_PRICE_LOCAL:'1'}:{}),
+                ...(liveAdjustments?{LEDGER_PRICE_ADJUSTMENTS_LOCAL:'1'}:{}),
                 ...(process.argv.includes('--native-return')?{LEDGER_RETURN_LOCAL:'1'}:{}),
                 ...(process.argv.includes('--native-resale')?{LEDGER_RESALE_LOCAL:'1'}:{}),
                 ...(process.argv.includes('--native-resale-other-project')?{LEDGER_RESALE_PROJECT:key+'-native-project'}:{}),
@@ -797,6 +800,21 @@ try {
         assert.equal(inventoryReview.purchaseCost.state,'absent');
         console.log('PASS actual MCP Inventory price review through authenticated shared endpoint');
         if(process.argv.includes('--native-price-edit')) {
+            if (liveAdjustments) {
+                sql(`begin;
+                  insert into public.spike_transactions(id,account_id,amount_minor_units,currency,type,origin,scope_kind,category_id,non_item_receipt_lines)
+                  values(${q(key+'-order')},${q(account)},15000,'USD','purchase','vendor_payment','business_inventory',${q(category)},
+                    '[{"id":"shipping","description":"Shipping","amountMinorUnits":"3000","effect":"increase"}]');
+                  insert into public.transaction_receipt_items(id,account_id,transaction_id,item_id,currency,amount_minor_units,membership_kind)
+                  values(${q(key+'-receipt')},${q(account)},${q(key+'-order')},${q(item)},'USD',12345,'linked');
+                  insert into ledger_private.item_adjustment_inputs(account_id,transaction_id,item_id,input,updated_by_principal_id)
+                  values(${q(account)},${q(key+'-order')},${q(item)},ledger_private.item_price_inverse(12346,15000,3000),${q(principal)});
+                  select ledger_private.refresh_item_adjustments(${q(account)},${q(key+'-order')});
+                  commit;`);
+                const adjusted = await priceMCP.itemPriceEditReviewTool({projectId:project,itemId:item},priceContext,service);
+                assert.equal(adjusted.livePricing.price.projectPriceMinorUnits,'12346');
+                assert.equal(adjusted.livePricing.price.adjustmentsMinorUnits,'2469');
+            }
             await runNative('itemPriceLiveReplication');
             assert.equal(sql(`select revision||':'||coalesce(amount_minor_units::text,'cleared') from ledger_private.item_project_prices
               where account_id=${q(account)} and item_id=${q(item+'-inventory')}`),'2:cleared');
@@ -807,12 +825,12 @@ try {
             assert.equal(clearedReview.currency,'USD');
             const afterNative=await service.reviewItemPriceEdit({projectId:project,itemId:item},priceContext);
             assert.equal(afterNative.currentPrice.amountMinorUnits,'12347');
-            assert.equal(afterNative.chargeRevision,'3');
+            assert.equal(afterNative.chargeRevision,liveAdjustments?'4':'3');
             const invoiceAfterNative=await call('/rest/v1/rpc/spike_read_live_invoice',
                 {p_account_id:account,p_project_id:project,p_invoice_id:key+'-invoice'},token);
             assert.equal(invoiceAfterNative.status,200);
             assert.equal((await invoiceAfterNative.json()).totalMinorUnits,'12347');
-            assert.equal(sql(`select count(*) from public.spike_transactions where account_id=${q(account)}`),'0');
+            assert.equal(sql(`select count(*) from public.spike_transactions where account_id=${q(account)}`),liveAdjustments?'1':'0');
         }
     }
     if(returnMCP) {

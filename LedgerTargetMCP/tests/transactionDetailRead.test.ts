@@ -140,7 +140,7 @@ test("foreign identity, invented origins, malformed dates and rounded money fail
     ["category", null], ["transactionDate", "2023-02-29"], ["transactionDate", "1900-02-29"],
     ["transactionDate", "2024-04-31"], ["transactionDate", "0000-01-01"], ["transactionDate", "2024-1-01"],
     ["createdAtMilliseconds", "-0"], ["amountMinorUnits", 9007199254740993],
-    ["amountMinorUnits", "0"], ["amountMinorUnits", "01"], ["amountMinorUnits", "9223372036854775808"],
+    ["amountMinorUnits", "-1"], ["amountMinorUnits", "01"], ["amountMinorUnits", "9223372036854775808"],
   ]) assert.throws(() => transactionDetail({ ...fixture(), [key as string]: value }, "detail-inventory", context),
     { code: "transaction_detail_server_result_mismatch" });
 });

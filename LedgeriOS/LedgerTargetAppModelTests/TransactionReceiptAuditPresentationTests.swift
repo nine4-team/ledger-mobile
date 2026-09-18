@@ -5,6 +5,38 @@ import Testing
 
 @Suite("Exact Transaction audit presentation")
 struct TransactionReceiptAuditPresentationTests {
+    @Test func validLiveAuditIgnoresOverflowingLegacyAcquisitionSum() throws {
+        let value = try receipt { json in
+            json["amountMinorUnits"] = "2"; json["requiresLiveAdjustments"] = true
+            json["nonItemReceiptLines"] = []
+            json["items"] = ["a","b"].map { ["itemId":$0,"amountMinorUnits":"9223372036854775807","membershipKind":"linked"] }
+            json["liveAdjustments"] = ["totalMinorUnits":"2","adjustmentsMinorUnits":"0",
+                "differenceNumerator":"0","differenceDenominator":"1","isBalanced":true,"isProvisional":false,
+                "items":["a","b"].map { ["itemId":$0,"numerator":"1","denominator":"1",
+                    "unadjustedMinorUnits":"1","adjustmentsMinorUnits":"0","projectPriceMinorUnits":"1"] }]
+        }
+        #expect(value.reconstruction == nil)
+        #expect(value.items.allSatisfy { $0.amount?.minorUnits == .max })
+        let model = try TransactionReceiptAuditPresentation(receipt:value)
+        #expect(model.isComplete && model.statusLabel == "Balanced")
+    }
+    @Test func liveAuditUsesOriginalFractionAndDoesNotCallSubcentDifferenceBalanced() throws {
+        let value = try receipt { json in
+            json["amountMinorUnits"] = "3"; json["requiresLiveAdjustments"] = true
+            json["nonItemReceiptLines"] = [["id":"shipping","description":"Shipping","amountMinorUnits":"1","effect":"increase"]]
+            json["items"] = [["itemId":"a","amountMinorUnits":"99","membershipKind":"linked"]]
+            json["liveAdjustments"] = ["totalMinorUnits":"3","adjustmentsMinorUnits":"1",
+                "differenceNumerator":"1","differenceDenominator":"3","isBalanced":false,"isProvisional":true,
+                "items":[["itemId":"a","numerator":"5","denominator":"3",
+                    "unadjustedMinorUnits":"2","adjustmentsMinorUnits":"1","projectPriceMinorUnits":"3"]]]
+        }
+        let model = try TransactionReceiptAuditPresentation(receipt: value, locale: Locale(identifier:"en_US"))
+        #expect(!model.isComplete)
+        #expect(model.statusLabel.contains("exactly 1/3 cents"))
+        #expect(model.details.contains("Items subtotal: $0.02"))
+        #expect(model.details.contains("Adjustments: $0.01"))
+        #expect(model.details.contains("Allocations are provisional while the receipt is unbalanced."))
+    }
     private func receipt(_ edit: (inout [String: Any]) -> Void = { _ in }) throws -> TransactionReceiptSnapshot {
         let root = URL(fileURLWithPath: #filePath).deletingLastPathComponent()
             .deletingLastPathComponent().deletingLastPathComponent()

@@ -50,7 +50,7 @@ select set_config('request.jwt.claims','{"sub":"10000000-0000-0000-0000-00000000
 insert into public.spike_transactions(id,account_id,amount_minor_units,currency,type,origin,scope_kind,category_id)
 values('price-acquisition','account-primary',150,'USD','purchase','vendor_payment','business_inventory','category-furnishings');
 insert into public.transaction_receipt_items(id,account_id,transaction_id,item_id,currency,amount_minor_units,membership_kind)
-values('price-receipt','account-primary','price-acquisition','price-item','USD',150,'linked');
+values('price-receipt','account-primary','price-acquisition','price-item','USD',150,'sold');
 select is(public.spike_read_item_price_edit('account-primary','price-project','price-item')->'purchaseCost'->>'amountMinorUnits',
  '150','Review uses actual purchase receipt cost');
 create function pg_temp.next_price_command(op text, requested text, reviewed text) returns text language sql as $$

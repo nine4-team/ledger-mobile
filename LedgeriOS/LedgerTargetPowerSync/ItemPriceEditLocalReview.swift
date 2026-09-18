@@ -1,3 +1,4 @@
+import Foundation
 import LedgerTargetCore
 import PowerSync
 
@@ -25,6 +26,12 @@ enum ItemPriceEditLocalReview {
         }
         _ = try PropertyManagementReportPowerSyncQuery.completedStreamCheckpoint(transaction: local,
             identity: PhysicalIdentity(account))
+        let liveJSON = try local.getOptional(sql: "SELECT live_pricing FROM item_acquisition_reviews WHERE account_id=? AND id=?",
+            parameters: [account.rawValue,item.rawValue]) { try $0.getStringOptional(index: 0) }
+        let livePricing = try liveJSON.flatMap { $0 }.map {
+            try JSONDecoder().decode(LiveItemPricingContext.self, from: Data($0.utf8))
+        }
+        guard livePricing == nil || livePricing?.itemId == item else { throw Failure.unavailable }
         let charge: (String, String, String)?
         let inventoryPlacement: String?
         if let project {
@@ -43,8 +50,8 @@ enum ItemPriceEditLocalReview {
             JOIN spike_item_placements p ON p.account_id=c.account_id AND p.id=c.placement_id AND p.item_id=c.item_id
             WHERE c.account_id=? AND c.project_id=? AND c.item_id=? AND p.project_id=c.project_id
               AND p.scope_kind='project' AND p.ended_at IS NULL
-              AND NOT EXISTS(SELECT 1 FROM return_paid_memberships paid WHERE paid.account_id=c.account_id AND paid.source_id=c.id)
-            """, parameters: [account.rawValue,project.rawValue,item.rawValue]) {
+              AND (?=1 OR NOT EXISTS(SELECT 1 FROM return_paid_memberships paid WHERE paid.account_id=c.account_id AND paid.source_id=c.id))
+            """, parameters: [account.rawValue,project.rawValue,item.rawValue,livePricing == nil ? 0 : 1]) {
                 (try $0.getString(index: 0),try $0.getString(index: 1),try $0.getString(index: 2))
             }
         guard charges.count == 1 else { throw Failure.unavailable }
@@ -64,7 +71,9 @@ enum ItemPriceEditLocalReview {
                 (try $0.getString(index: 0),try $0.getString(index: 1),try $0.getStringOptional(index: 2))
             }
         let current: Money?
-        if let price {
+        if let livePricing {
+            current = livePricing.projectPrice
+        } else if let price {
             let currency = try CurrencyCode(validating: price.1)
             if let text = price.2 {
                 guard let amount = Int64(text), String(amount) == text else { throw Failure.unavailable }
@@ -85,17 +94,21 @@ enum ItemPriceEditLocalReview {
             guard let text = acquisition.1, let value = Int64(text), String(value) == text,
                   value >= 0, let currency = acquisition.2 else { throw Failure.unavailable }
             cost = .known(Money(minorUnits: value, currency: try .init(validating: currency)))
-        default: throw Failure.unavailable
+        default:
+            guard livePricing != nil else { throw Failure.unavailable }
+            cost = .unavailable
         }
         guard let priceRevision = Int64(price?.0 ?? "0"), String(priceRevision) == (price?.0 ?? "0") else { throw Failure.unavailable }
-        let priceCurrency = try price.map { try CurrencyCode(validating: $0.1) }
+        let priceCurrency = try livePricing?.total.currency ?? price.map { try CurrencyCode(validating: $0.1) }
         if let inventoryPlacement {
             return try .init(inventoryItemId: item, placementId: .init(validating: inventoryPlacement),
-                priceRevision: priceRevision, currentPrice: current, purchaseCost: cost, priceCurrency: priceCurrency)
+                priceRevision: livePricing?.priceRevision ?? priceRevision, currentPrice: current,
+                purchaseCost: cost, priceCurrency: priceCurrency, livePricing: livePricing)
         }
         guard let project, let charge, let chargeRevision = Int64(charge.2), String(chargeRevision) == charge.2 else { throw Failure.unavailable }
         return try .init(projectId: project, itemId: item, placementId: .init(validating: charge.1),
-            occurrenceId: .init(validating: charge.0), priceRevision: priceRevision,
-            chargeRevision: chargeRevision, currentPrice: current, purchaseCost: cost, priceCurrency: priceCurrency)
+            occurrenceId: .init(validating: charge.0), priceRevision: livePricing?.priceRevision ?? priceRevision,
+            chargeRevision: chargeRevision, currentPrice: current, purchaseCost: cost, priceCurrency: priceCurrency,
+            livePricing: livePricing)
     }
 }

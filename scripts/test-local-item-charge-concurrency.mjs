@@ -194,6 +194,7 @@ try {
   assert.equal(sql("select to_regprocedure('ledger_private.lock_item_charge_source(text,text)') is not null and to_regprocedure('ledger_private.validate_collected_item_charge()') is not null"), 't');
   sql(`insert into public.spike_projects(id,account_id,client_id,display_name,created_at,updated_at,created_at_ms,updated_at_ms,created_by_principal_id)
     values('race-project','account-primary','client-existing','Synthetic concurrency',now(),now(),1,1,'principal-owner');`);
+  if (!process.argv.includes('--adjustments-only')) {
   prepare('correction-first');
   for (const scenario of ['exact', 'changed', 'rollback']) {
     const id = `mixed-import-${scenario}`;
@@ -623,6 +624,40 @@ try {
       denied ? 'none' : scenario === 'competing' ? 'rejected:transaction_receipt_edit_stale' : 'applied');
   }
   console.log('PASS Transaction receipt-line retry, competing edit, rollback, removal and financial-visibility races');
+  }
+  if (process.argv.includes('--adjustments-only')) {
+    for (const scenario of ['retry','competing','rollback','header','collected-first','edit-first']) {
+      const name = `adjustments-${scenario}`, id = source(name);
+      prepare(name);
+      sql(`insert into public.spike_transactions(id,account_id,amount_minor_units,currency,type,origin,scope_kind,category_id,non_item_receipt_lines)
+        values('${id}-order','account-primary',120,'USD','purchase','vendor_payment','business_inventory','category-furnishings',
+          '[{"id":"shipping","description":"Shipping","amountMinorUnits":"20","effect":"increase"}]');
+        insert into public.transaction_receipt_items(id,account_id,transaction_id,item_id,currency,amount_minor_units,membership_kind)
+        values('${id}-receipt','account-primary','${id}-order','${id}','USD',100,'linked');`);
+      const revision = sql(`select revision from ledger_private.item_adjustment_orders where id='${id}-order'`);
+      const editAdjustment = suffix => `select set_config('request.jwt.claims','{"sub":"10000000-0000-0000-0000-000000000001","role":"authenticated"}',true);
+        select (public.spike_edit_uncollected_item_price('${JSON.stringify({operationId:`${id}-${suffix}`,
+          accountId:'account-primary',actorPrincipalId:'principal-owner',contractVersion:'item-live-adjustment-price-edit-v3',
+          createdAtMs:'1000',projectId:'race-project',itemId:id,placementId:id,occurrenceId:id,
+          transactionId:`${id}-order`,expectedAdjustmentRevision:revision,expectedPriceRevision:'0',expectedChargeRevision:'1',
+          requestedPriceMinorUnits:'120',reviewedPriceMinorUnits:'120',currency:'USD'})}')).phase;`;
+      const holder = scenario === 'header' ? `update public.spike_transactions set amount_minor_units=121 where id='${id}-order';`
+        : scenario === 'collected-first' ? collect(name) : editAdjustment('first');
+      const waiter = scenario === 'edit-first' ? collect(name) : editAdjustment(scenario === 'retry'?'first':'second');
+      await race(name,holder,waiter,scenario === 'rollback'?'rollback':'commit',scenario === 'edit-first'?'23514':undefined);
+      if (scenario !== 'edit-first') {
+        assert.equal(sql(`select phase||coalesce(':'||error_code,'') from public.spike_operation_results
+          where operation_id='${id}-${scenario === 'retry'?'first':'second'}'`),
+          ['competing','header'].includes(scenario)?'rejected:price_revision_stale':'applied');
+      }
+      assert.equal(sql(`select count(*) from ledger_private.item_adjustment_inputs where item_id='${id}'`),scenario === 'header'?'0':'1');
+      if (scenario === 'collected-first') {
+        assert.equal(sql(`select amount_minor_units from ledger_private.item_project_prices where item_id='${id}'`),'120');
+        assert.equal(sql(`select signed_amount_minor_units from ledger_private.collected_invoice_lines where item_id='${id}'`),'12345');
+      }
+    }
+    console.log('PASS live adjustments: exact retry, competing revision, rollback, header edit and both collection orders');
+  }
 } finally {
   for (const child of sessions) if (!child.stdin.destroyed && !child.stdin.writableEnded) child.stdin.end('rollback;\n');
   if (created) {

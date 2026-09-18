@@ -38,7 +38,7 @@ public enum LedgerOfflineClientRuntimeFailure: Error, Equatable, Sendable {
 }
 
 public final class LedgerOfflineClientRuntime:
-    ItemSpaceAssigning, ItemSpaceAssignmentClearing, SpaceChecklistRevising, CategoryManaging, ExpenseCreating, ExpenseEditing, TransactionBrowsing, TransactionReceiptWatching, TransactionExportReading, DownloadedTransactionAttachmentReading, TransactionAttachmentCapturing,
+    ItemSpaceAssigning, ItemSpaceAssignmentClearing, SpaceChecklistRevising, CategoryManaging, ExpenseCreating, ExpenseEditing, TransactionBrowsing, TransactionReceiptWatching, TransactionExportReading, DownloadedTransactionAttachmentReading, TransactionAttachmentCapturing, ItemImageCapturing,
     RejectedOperationRecoveryQuerying, DownloadedItemPlacementReading, DownloadedItemPlacementHistoryReading, PropertyManagementReportReading,
     PropertyManagementReportWatching, ClientSummaryPhysicalReportReading, ClientSummaryPhysicalReportWatching, AccountBusinessProfileReading, DownloadedProjectItemsReading, DownloadedItemImageReading, ProjectInvoicingReading, ProjectBudgetReading, Sendable
 {
@@ -761,6 +761,14 @@ public final class LedgerOfflineClientRuntime:
 
     public func encryptionCipher() async throws -> String {
         try await lifecycleOwner.encryptionCipher()
+    }
+
+    public func itemImageCaptureScope(accountId: AccountID, itemId: ItemID) async throws -> AttachmentCaptureScope {
+        try await lifecycleOwner.itemImageCaptureScope(accountId: accountId, itemId: itemId)
+    }
+
+    public func captureItemImage(_ capture: LocalAttachmentCapture) async throws -> AttachmentLocalDurabilityReceipt {
+        try await lifecycleOwner.captureItemImage(capture)
     }
 
     public func transactionAttachmentCaptureScope(scope: TransactionScope, transactionId: TransactionID)

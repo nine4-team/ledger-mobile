@@ -72,9 +72,15 @@ public struct TransactionReceiptSnapshot: Codable, Equatable, Sendable {
     public let items: [Item]
     public let lines: [NonItemReceiptLine]
     public let reconstruction: TransactionReceiptReconstruction?
+    public let liveAdjustments: LiveItemAdjustmentOrder?
+    public let requiresLiveAdjustments: Bool
 
     public var auditStatus: AuditStatus {
         guard categoryKind == .itemized else { return .notApplicable }
+        if requiresLiveAdjustments {
+            guard let liveAdjustments, liveAdjustments.differenceNumerator != nil else { return .incompleteEvidence }
+            return liveAdjustments.isBalanced ? .balanced : .mismatch
+        }
         guard let reconstruction else { return .incompleteEvidence }
         return reconstruction.variance.isZero ? .balanced : .mismatch
     }
@@ -104,7 +110,7 @@ public struct TransactionReceiptSnapshot: Codable, Equatable, Sendable {
             accountId: accountId, projectId: wire.projectId.map { try ProjectID(validating: $0) },
             clientId: wire.clientId.map { try ClientID(validating: $0) }), role: .standalone)
         let currency = try CurrencyCode(validating: wire.currency)
-        finalAmount = Money(minorUnits: try Self.integer(wire.amountMinorUnits, minimum: 1), currency: currency)
+        finalAmount = Money(minorUnits: try Self.integer(wire.amountMinorUnits, minimum: wire.requiresLiveAdjustments == true && type == .purchase ? 0 : 1), currency: currency)
         categoryId = try BudgetCategoryID(validating: wire.category.id)
         guard !wire.category.name.isEmpty else { throw Failure.invalidEvidence }
         categoryName = wire.category.name
@@ -125,6 +131,22 @@ public struct TransactionReceiptSnapshot: Codable, Equatable, Sendable {
         }
         guard Set(items.map(\.id)).count == items.count,
               Set(lines.map(\.id)).count == lines.count else { throw Failure.invalidEvidence }
+        requiresLiveAdjustments = wire.requiresLiveAdjustments ?? false
+        if let allocation = wire.liveAdjustments,
+           allocation.totalMinorUnits == String(finalAmount.minorUnits),
+           let signedSum = try? lines.reduce(Money.zero(currency: currency), { sum, line in
+               try line.effect == .increase ? sum.adding(line.magnitude) : sum.subtracting(line.magnitude)
+           }), allocation.adjustmentsMinorUnits == String(signedSum.minorUnits),
+           Set(allocation.items.map(\.itemId)) == Set(items.map { $0.id.rawValue }),
+           allocation.items.count == items.count {
+            liveAdjustments = allocation
+        } else { liveAdjustments = nil }
+        if requiresLiveAdjustments {
+            // Legacy acquisition amounts remain evidence, not inputs to the
+            // approved live audit or a competing overflow/validity gate.
+            reconstruction = nil
+            return
+        }
         let known = Dictionary(uniqueKeysWithValues: items.compactMap { item in item.amount.map { (item.id, $0) } })
         if known.count != items.count {
             // Check known amounts and line sums, but do not reconstruct a total
@@ -158,7 +180,8 @@ public struct TransactionReceiptSnapshot: Codable, Equatable, Sendable {
                 imageCount: $0.imageCount.map(String.init),
                 amountMinorUnits: $0.amount.map { String($0.minorUnits) }, membershipKind: $0.membership) },
             nonItemReceiptLines: lines.map { .init(id: $0.id.rawValue, description: $0.description.rawValue,
-                amountMinorUnits: String($0.magnitude.minorUnits), effect: $0.effect, quantity: $0.quantity.map(String.init)) })
+                amountMinorUnits: String($0.magnitude.minorUnits), effect: $0.effect, quantity: $0.quantity.map(String.init)) },
+            liveAdjustments: liveAdjustments, requiresLiveAdjustments: requiresLiveAdjustments)
             .encode(to: encoder)
     }
 
@@ -174,6 +197,8 @@ public struct TransactionReceiptSnapshot: Codable, Equatable, Sendable {
         let category: Category
         let items: [ReceiptItem]
         let nonItemReceiptLines: [Line]
+        let liveAdjustments: LiveItemAdjustmentOrder?
+        let requiresLiveAdjustments: Bool?
         struct Category: Codable {
             let id, name, revision: String
             let kind: BudgetCategoryKind

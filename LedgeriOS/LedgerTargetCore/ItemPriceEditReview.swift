@@ -18,18 +18,20 @@ public struct ItemPriceEditReview: Equatable, Sendable {
     public let currentPrice: Money?
     public let priceCurrency: CurrencyCode?
     public let purchaseCost: InventorySalePrice.Evidence
+    public let livePricing: LiveItemPricingContext?
 
     public init(inventoryItemId: ItemID, placementId: EntityID, priceRevision: Int64,
                 currentPrice: Money?, purchaseCost: InventorySalePrice.Evidence,
-                priceCurrency: CurrencyCode? = nil) throws {
+                priceCurrency: CurrencyCode? = nil, livePricing: LiveItemPricingContext? = nil) throws {
         guard priceRevision >= 0, priceRevision < Int64.max,
               currentPrice.map({ $0.minorUnits >= 0 }) ?? true,
-              priceRevision != 0 || currentPrice == nil, purchaseCost != .unavailable else {
+              priceRevision != 0 || currentPrice == nil, purchaseCost != .unavailable || livePricing != nil else {
             throw EditUncollectedItemPriceCommand.Failure.invalidRevision
         }
         projectId = nil; itemId = inventoryItemId; self.placementId = placementId
         occurrenceId = nil; chargeRevision = nil; self.priceRevision = priceRevision
         self.currentPrice = currentPrice; self.purchaseCost = purchaseCost
+        self.livePricing = livePricing
         self.priceCurrency = priceCurrency ?? currentPrice?.currency
         if let currentPrice, let priceCurrency, currentPrice.currency != priceCurrency {
             throw InventorySalePrice.Failure.currencyMismatch
@@ -39,15 +41,16 @@ public struct ItemPriceEditReview: Equatable, Sendable {
     public init(projectId: ProjectID, itemId: ItemID, placementId: EntityID,
                 occurrenceId: BillableItemOccurrenceID, priceRevision: Int64, chargeRevision: Int64,
                 currentPrice: Money?, purchaseCost: InventorySalePrice.Evidence,
-                priceCurrency: CurrencyCode? = nil) throws {
+                priceCurrency: CurrencyCode? = nil, livePricing: LiveItemPricingContext? = nil) throws {
         guard priceRevision >= 0, priceRevision < Int64.max, chargeRevision > 0, chargeRevision < Int64.max,
               currentPrice.map({ $0.minorUnits >= 0 }) ?? true,
-              (priceRevision != 0 || currentPrice == nil), purchaseCost != .unavailable else {
+              (priceRevision != 0 || currentPrice == nil), purchaseCost != .unavailable || livePricing != nil else {
             throw EditUncollectedItemPriceCommand.Failure.invalidRevision
         }
         self.projectId = projectId; self.itemId = itemId; self.placementId = placementId
         self.occurrenceId = occurrenceId; self.priceRevision = priceRevision; self.chargeRevision = chargeRevision
         self.currentPrice = currentPrice; self.purchaseCost = purchaseCost
+        self.livePricing = livePricing
         self.priceCurrency = priceCurrency ?? currentPrice?.currency
         if let currentPrice, let priceCurrency, currentPrice.currency != priceCurrency {
             throw InventorySalePrice.Failure.currencyMismatch
@@ -63,8 +66,9 @@ public struct ItemPriceEditReview: Equatable, Sendable {
         }
         return try .init(projectId: projectId, itemId: itemId, placementId: placementId,
             occurrenceId: occurrenceId, expectedPriceRevision: priceRevision, expectedChargeRevision: chargeRevision,
-            requestedPrice: requested, reviewedPrice: InventorySalePrice.review(projectPrice: .known(requested),
-                purchaseCost: purchaseCost, currency: requested.currency))
+            requestedPrice: requested, reviewedPrice: livePricing != nil ? requested : InventorySalePrice.review(projectPrice: .known(requested),
+                purchaseCost: purchaseCost, currency: requested.currency),
+            adjustmentTransactionId: livePricing?.transactionId, expectedAdjustmentRevision: livePricing?.revision)
     }
 
     public func clearingInventoryPrice(currency: CurrencyCode) throws -> EditUncollectedItemPriceCommand.Payload {
@@ -75,6 +79,11 @@ public struct ItemPriceEditReview: Equatable, Sendable {
     }
 
     private func inventoryPayload(requested: Money, clear: Bool) throws -> EditUncollectedItemPriceCommand.Payload {
+        if let livePricing {
+            return try .init(inventoryItemId: itemId, placementId: placementId, expectedPriceRevision: priceRevision,
+                requestedPrice: requested, reviewedPrice: requested, clearPrice: clear,
+                adjustmentTransactionId: livePricing.transactionId, expectedAdjustmentRevision: livePricing.revision)
+        }
         let normalized = try InventorySalePrice.reviewCurrentPrice(
             projectPrice: clear ? .confirmedAbsent : .known(requested), purchaseCost: purchaseCost,
             currency: requested.currency) ?? Money(minorUnits: 0, currency: requested.currency)

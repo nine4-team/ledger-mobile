@@ -1,5 +1,9 @@
 # Transaction Completeness (`isComplete`)
 
+> Target update2026-09-17: [Live Item Adjustments](../plans/non-item-receipt-lines/design.md#live-item-adjustments--confirmed-2026-09-17)
+> defines the exact unadjusted-price audit, live allocation and Balanced label.
+> Do not implement the source formulas below or add adjustments twice.
+
 > **Source-only specification:** This documents the shipped Firebase system.
 > Canonical receipt-line/accounting specs and O-030/O-031/O-032 replace its
 > tax/subtotal/percentage-tolerance and blanket `isComplete` rules in the target.

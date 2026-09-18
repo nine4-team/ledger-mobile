@@ -1,6 +1,11 @@
 # Decision Packet — O-008/O-030 Receipt-Line Treatment and Rounding
 
 Status: proposed recommendation; product decision not yet approved
+
+> Superseded in part2026-09-17: [approved live Item adjustments](../../non-item-receipt-lines/design.md#live-item-adjustments--confirmed-2026-09-17)
+> governs proportional project-price allocation, exact audit and rounding.
+> Do not require the proposed manual per-line treatment workflow for that feature.
+> Other proposals below remain unapproved; this packet is historical context.
 Last reviewed: 2026-08-31
 Owners: Receipt Evidence, Transaction Posting, Expenses, Item Basis, Migration
 Unlocks: 19 unique residual surfaces (O-008: 11; O-030: 11; overlap: 3)

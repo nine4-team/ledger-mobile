@@ -85,6 +85,47 @@ struct LedgerPowerSyncAttachmentDurabilityProviderTests {
         try await finalDB.close()
     }
 
+    @Test("Item publication waits for exact synced reference and retains bytes through restart")
+    func itemPublicationReadback() async throws {
+        let fixture = try Fixture()
+        defer { fixture.removeDirectory() }
+        let capture = try LocalAttachmentCapture(attachmentId: Fixture.attachmentID,
+            scope: .init(environment: Fixture.scope.environment, principalId: Fixture.scope.principalId,
+                accountId: Fixture.scope.accountId, parent: .init(kind: .item, id: .init(validating: "item-upload"))),
+            capturedAt: Fixture.capturedAt, bytes: Fixture.bytes,
+            metadata: .init(mediaType: "image/png", fileName: "Original.png",
+                placement: .init(localPosition: 0, makePrimaryIfEmpty: true)))
+        let db = try fixture.openDatabase()
+        let store = fixture.makeStore(database: db, vault: try fixture.makeVault())
+        let receipt = try await store.enqueue(capture)
+        #expect(try await store.pendingItemUploads() == [receipt])
+        #expect(try await store.publishItemAttachment(receipt) { _, _, _ in .applied(revision: 2, position: 0) }
+            == .applied(revision: 2, position: 0))
+        try await db.close()
+        let reopened = try fixture.openDatabase()
+        let restored = fixture.makeStore(database: reopened, vault: try fixture.makeVault())
+        #expect(try await restored.publishItemAttachment(receipt) { _, _, _ in
+            Issue.record("Do not retransmit an applied Item photo"); throw InjectedFailure()
+        } == .applied(revision: 2, position: 0))
+        let item = try ItemID(validating: "item-upload")
+        let empty = try DownloadedItemImageCatalog(accountId: receipt.scope.accountId, itemId: item,
+            isComplete: true, images: [], revision: 2)
+        #expect(try await restored.reconcileItemAttachment(receipt, catalog: empty) == false)
+        #expect(try await restored.pendingCount() == 1)
+        let projected = try empty.includingPending([receipt], scope: receipt.scope)
+        #expect(try await restored.reconcileItemAttachment(receipt, catalog: projected) == false)
+        let pending = try #require(projected.images.first)
+        let synced = try DownloadedItemImage(referenceId: pending.referenceId, itemId: item, object: pending.object,
+            position: 0, isPrimary: true, setRevision: 2)
+        let catalog = try DownloadedItemImageCatalog(accountId: receipt.scope.accountId, itemId: item,
+            isComplete: true, images: [synced], revision: 2)
+        #expect(try await restored.reconcileItemAttachment(receipt, catalog: catalog))
+        #expect(try await restored.pendingCount() == 0)
+        #expect(try await restored.cachedDownloadedImage(synced.object) == Fixture.bytes)
+        #expect(try await restored.orphanInventory().isEmpty)
+        try await reopened.close()
+    }
+
     @Test("Transaction publisher resumes saved progress after interruption and retains confirmed bytes")
     func publicationRunnerRestart() async throws {
         let fixture = try Fixture()

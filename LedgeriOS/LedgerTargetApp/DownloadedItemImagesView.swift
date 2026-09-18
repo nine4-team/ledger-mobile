@@ -23,6 +23,16 @@ struct DownloadedItemImagesView: View {
     @State private var refresh = UUID()
     @State private var pinnedZoom: CGFloat = 1
     @State private var exportNotice: String?
+    @State private var showCaptureMenu = false
+    @State private var capturing = false
+    @State private var captureError: String?
+    @State private var captureGeneration = UUID()
+    private var capturer: (any ItemImageCapturing)? { reader as? any ItemImageCapturing }
+    private var captureSlots: Int {
+        guard capturer != nil, case .downloaded(let catalog) = model.state,
+              catalog.isComplete, catalog.accountId == accountId, catalog.itemId == itemId else { return 0 }
+        return max(0, ItemImageCaptureAdmission.maximumImages - catalog.images.count)
+    }
     private struct Request: Equatable {
         let accountId: AccountID
         let itemId: ItemID
@@ -79,8 +89,23 @@ struct DownloadedItemImagesView: View {
                                     isPresented: Binding(get: { true }, set: { if !$0 { close() } }),
                                     onPinImage: onPin.map { action in { action(catalog.images[$0].id) } },
                                     onShareImage: { export(catalog.images[$0], saveToDevice: false) },
+                                    onCopyImage: { index in
+                                        let image = catalog.images[index]
+                                        try await model.exportImage(accountId: accountId, itemId: itemId,
+                                            image: image, reader: reader, prepareDestination: {}, handoff: {
+                                                try Clipboard.copyImage($0, mediaType: image.object.mediaType)
+                                            })
+                                    },
                                     onRequestSave: saveAction(catalog.images),
-                                    caption: { catalog.images[$0].isPrimary ? "Primary image" : nil },
+                                    caption: { index in
+                                        let image = catalog.images[index]
+                                        if image.localReceipt != nil {
+                                            return catalog.localUploadRejections[image.object.attachmentId] == nil
+                                                ? "Saved on this device; upload pending"
+                                                : "Upload rejected; original saved on this device"
+                                        }
+                                        return image.isPrimary ? "Primary image" : nil
+                                    },
                                     onSelectionChange: { selection = catalog.images[$0].id },
                                     actionsDisabled: model.isExporting,
                                     accessibilityPrefix: "target-item",
@@ -105,16 +130,30 @@ struct DownloadedItemImagesView: View {
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .safeAreaInset(edge: .bottom) {
             if !isPinned {
-                HStack {
+                VStack {
+                    if let captureError { Text(captureError).font(.caption).foregroundStyle(.red)
+                        .accessibilityIdentifier("target-item-image-capture-error") }
+                    if capturing { ProgressView("Saving image on this device…") }
+                    HStack {
+                    if capturer != nil {
+                        Button("Add Image", systemImage: "plus") { showCaptureMenu = true }
+                            .disabled(captureSlots == 0 || capturing)
+                            .accessibilityIdentifier("target-item-image-add")
+                    }
                     Button("Refresh images") { refresh = UUID() }
                         .accessibilityIdentifier("target-item-images-refresh")
                     if model.isExporting {
                         ProgressView("Preparing or delivering image…")
                             .accessibilityIdentifier("target-item-image-exporting")
                     }
+                    }
                 }
             }
         }
+        .modifier(MediaCapturePresentation(showAddSourceMenu: $showCaptureMenu, isUploading: $capturing,
+            uploadError: $captureError, remainingSlots: captureSlots, allowedKinds: [.image],
+            onUploadAttachmentFile: capturer == nil ? nil : { try await capture($0.data, fileName: $0.displayFileName) },
+            allowsImagePaste: true))
         .alert("Image", isPresented: Binding(get: { exportNotice != nil }, set: { if !$0 { exportNotice = nil } })) {
             Button("OK") { exportNotice = nil }
         } message: { Text(exportNotice ?? "") }
@@ -124,12 +163,28 @@ struct DownloadedItemImagesView: View {
         .task(id: Request(accountId: accountId, itemId: itemId, refresh: refresh)) {
             await model.load(accountId: accountId, itemId: itemId, reader: reader)
         }
-        .onDisappear { model.clear(); selection = nil; pinnedZoom = 1 }
+        .onDisappear { model.clear(); selection = nil; pinnedZoom = 1; captureGeneration = UUID() }
+    }
+
+    private func capture(_ bytes: Data, fileName: String) async throws {
+        let generation = captureGeneration
+        guard let capturer, captureSlots > 0 else { throw ItemImageCaptureFailure.unavailable }
+        let scope = try await capturer.itemImageCaptureScope(accountId: accountId, itemId: itemId)
+        let prepared = try await Task.detached(priority: .userInitiated) { @Sendable in
+            try AttachmentCapturePreparation.prepare(bytes: bytes, fileName: fileName, allowsPDF: false,
+                attachmentId: AttachmentID(validating: UUID().uuidString.lowercased()), scope: scope,
+                transactionSection: nil,
+                capturedAt: AttachmentEpochMilliseconds(validating: Int64(Date().timeIntervalSince1970 * 1000)))
+        }.value
+        guard generation == captureGeneration, captureSlots > 0 else { throw CancellationError() }
+        _ = try await capturer.captureItemImage(prepared)
+        guard generation == captureGeneration else { return }
+        selection = try EntityID(validating: prepared.attachmentId.rawValue)
     }
 
     private func identity(_ image: DownloadedItemImage) -> AnyHashable {
         AnyHashable([accountId.rawValue, itemId.rawValue, image.referenceId.rawValue,
-            String(image.setRevision), image.object.attachmentId.rawValue,
+            image.object.attachmentId.rawValue,
             image.object.contentSHA256.rawValue].map { Data($0.utf8) })
     }
 

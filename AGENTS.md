@@ -7,6 +7,29 @@
 
 ## Supabase/PowerSync redesign continuity
 
+- Keep active context bounded: use focused log excerpts and give delegated test
+  agents only the assignment, relevant files, constraints and evidence needed,
+  not full conversation history. Resume from the existing checkpoint after
+  compaction; do not repeat completed checks to rebuild context. Use explicit
+  output limits (normally 2,000 tokens) and filter summaries before returning
+  verbose output. User-level configuration requests the same tool-output default;
+  model-default compaction is restored. See Context Continuity in the method.
+  For the authorized follow-up efficiency run, use one fresh-context execution
+  owner for implementation and ordinary shell tests, then one independent final
+  review. No nested supervisors or routine status inquiries. Check service
+  readiness, fixture consistency and selected test names before dependent runs.
+  Root may finish the offline analyzer in parallel; do not review each worker
+  edit while it is still implementing. Required progress updates are not a reason
+  to solicit unchanged worker status. Report unavoidable wake-ups honestly.
+
+- Live-test agent model (user direction2026-09-17): use **Luna Max**,
+  model `gpt-5.6-luna` with reasoning effort `max`, for delegated live app/UI
+  and live backend integration testing. Pass these settings explicitly when
+  launching the test agent; do not inherit the coordinator's model or silently
+  substitute Astra. If unavailable, report that before substituting. This does
+  not change the main implementation agent or require agents for ordinary shell
+  test commands. See the workflow method's Verification execution section.
+
 - User authorization (2026-09-15): cursor/keyboard control is permitted when
   needed for Ledger testing; this supersedes the earlier session-approval
   restriction. Prefer non-disruptive checks when sufficient, and announce when
@@ -147,8 +170,20 @@
   unrelated surplus tests when safe; do not wait for unrelated UI to close a
   backend task. Keep the real overall CI conclusion: scoped passes are not a
   green whole-app/release gate. Check actual CI behavior before the next push.
-- For requested token-efficiency measurements, follow sections 2-3 of
+- For the authorized follow-up run, analyze existing session JSONL offline with
+  `scripts/analyze-agent-usage.mjs`; record session paths and start/end boundaries
+  in the existing assessment. Validate against prior trial totals first. Exact
+  input/cache/output counts and request counts are distinct from approximate
+  content categories and heuristic action labels. Keep encrypted/unavailable
+  context unknown; do not allocate billed tokens by character percentages or
+  claim a matched savings experiment. No per-action counter reads, extra model
+  instrumentation, or new tracking system. This overrides the older activity
+  ledger requirement for this run.
+- For other requested token-efficiency measurements, follow sections 2-3 of
   `docs/plans/ledger-accounting-redesign/token-efficiency-diagnostic-plan.md`.
+  Exception for the September17 bounded Item-photo trial: use per-agent start/end
+  session counters and request counts only, as authorized; report no guessed
+  activity split or savings percentage. See the existing efficiency assessment.
   Read the same live counter at start, each activity switch, and closure; one
   reading closes one activity and opens the next. Separate implementation,
   verification, rework, environment, process repair, discussion, monitoring,

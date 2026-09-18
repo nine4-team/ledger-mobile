@@ -60,6 +60,11 @@ protocol AccountWorkspaceAttachmentStoring:
         authorize: @Sendable @escaping () async throws -> Void) async throws -> AttachmentLocalDurabilityReceipt
     func pendingCaptureReceipts(parent: LedgerEntityReference) async throws -> [AttachmentLocalDurabilityReceipt]
     func pendingTransactionUploads() async throws -> [AttachmentLocalDurabilityReceipt]
+    func pendingItemUploads() async throws -> [AttachmentLocalDurabilityReceipt]
+    func publishItemAttachment(_ receipt: AttachmentLocalDurabilityReceipt,
+        publish: TransactionAttachmentPublisher) async throws -> TransactionAttachmentPublication
+    func reconcileItemAttachment(_ receipt: AttachmentLocalDurabilityReceipt,
+        catalog: DownloadedItemImageCatalog) async throws -> Bool
     func verifiedExpenseReceipts(for command: CreateExpenseCommand) async throws -> Set<AttachmentID>
     func verifiedExpenseReceipts(for command: EditExpenseCommand) async throws -> Set<AttachmentID>
     func publishExpenseAttachment(_ receipt: AttachmentLocalDurabilityReceipt, projectId: EntityID,
@@ -764,6 +769,7 @@ actor AccountWorkspacePendingWorkRuntime {
     private var downloadImage: (@Sendable (DownloadedImageObjectReference) async throws -> Data)?
     private var finiteLeaseCount = 0
     private var transactionCaptureSections: Set<[String]> = []
+    private var capturingItems: Set<ItemID> = []
     private var streamTasks: [UUID: Task<Void, Never>] = [:]
     private var commandUploadTask: Task<Void, Error>?
     private var syncConnectionTask: Task<Void, Error>?
@@ -1391,8 +1397,20 @@ actor AccountWorkspacePendingWorkRuntime {
                     try await resources.structuredDatabase.syncStream(name: "item_images",
                         params: ["account_id": .string(accountId.rawValue), "item_id": .string(itemId.rawValue)]).subscribe()
                 }, observe: {
-                    try await reader.run(accountId: accountId, principalId: resources.principalId, itemId: itemId) { value in
-                        await self.forwardStreamValue(value, to: continuation)
+                    try await reader.run(accountId: accountId, principalId: resources.principalId, itemId: itemId,
+                                         attachmentDatabase: resources.attachmentDatabase) { value in
+                        do {
+                            let scope = try AttachmentCaptureScope(environment: resources.environment,
+                                principalId: resources.principalId, accountId: accountId,
+                                parent: .init(kind: .item, id: .init(validating: itemId.rawValue)))
+                            let receipts = try await resources.attachmentStore.pendingCaptureReceipts(parent: scope.parent)
+                            let rejections = try await resources.attachmentStore.pendingCaptureRejections(parent: scope.parent)
+                            let combined = try value.includingPending(receipts, scope: scope, rejections: rejections)
+                            return await self.forwardStreamValue(combined, to: continuation)
+                        } catch {
+                            await self.finishStream(continuation, error: error)
+                            return false
+                        }
                     }
                 })
                 continuation.finish()
@@ -1417,12 +1435,23 @@ actor AccountWorkspacePendingWorkRuntime {
             @Sendable func authorize() async throws {
                 try Task.checkCancellation()
                 guard !resources.accessFence.isRemoved else { throw LedgerOfflineClientRuntimeFailure.runtimeClosed }
-                let current = try await reader.read(accountId: accountId, principalId: resources.principalId, itemId: itemId)
+                let downloaded = try await reader.read(accountId: accountId, principalId: resources.principalId, itemId: itemId)
+                let scope = try AttachmentCaptureScope(environment: resources.environment,
+                    principalId: resources.principalId, accountId: accountId,
+                    parent: .init(kind: .item, id: .init(validating: itemId.rawValue)))
+                let pending = try await resources.attachmentStore.pendingCaptureReceipts(parent: scope.parent)
+                let current = try downloaded.includingPending(pending, scope: scope)
                 guard current.images.contains(image) else { throw DownloadedItemImageFailure.unavailable }
                 if thumbnail, !current.isComplete { throw DownloadedItemImageFailure.unavailable }
                 guard !resources.accessFence.isRemoved else { throw LedgerOfflineClientRuntimeFailure.runtimeClosed }
             }
             guard let object else { try await authorize(); return nil }
+            if let receipt = image.localReceipt {
+                try await authorize()
+                let bytes = try await resources.attachmentStore.resolveLocalAttachmentBytes(for: receipt)
+                try await authorize()
+                return bytes
+            }
             guard let cache = resources.attachmentStore as? any DownloadedImageCaching else {
                 throw DownloadedItemImageFailure.unavailable
             }
@@ -2208,6 +2237,47 @@ actor AccountWorkspacePendingWorkRuntime {
         }
     }
 
+    func itemImageCaptureScope(accountId: AccountID, itemId: ItemID) async throws -> AttachmentCaptureScope {
+        try await withFiniteLease(.captureAttachment) { resources in
+            guard accountId == resources.accountId else { throw LedgerOfflineClientRuntimeFailure.accountScopeMismatch }
+            return try .init(environment: resources.environment, principalId: resources.principalId,
+                accountId: accountId, parent: .init(kind: .item, id: EntityID(validating: itemId.rawValue)))
+        }
+    }
+
+    func captureItemImage(_ capture: LocalAttachmentCapture) async throws -> AttachmentLocalDurabilityReceipt {
+        guard capture.scope.parent.kind == .item else { throw ItemImageCaptureFailure.invalidCapture }
+        let itemId = try ItemID(validating: capture.scope.parent.id.rawValue)
+        guard capturingItems.insert(itemId).inserted else { throw ItemImageCaptureFailure.alreadyCapturing }
+        defer { capturingItems.remove(itemId) }
+        return try await withFiniteLease(.captureAttachment) { resources in
+            guard capture.scope.environment == resources.environment,
+                  capture.scope.principalId == resources.principalId,
+                  capture.scope.accountId == resources.accountId else {
+                throw AttachmentCapturePowerSyncStoreFailure.scopeMismatch
+            }
+            let reader = ItemImageCatalogLocalReader(database: resources.structuredDatabase)
+            let initial = try await reader.read(accountId: resources.accountId,
+                principalId: resources.principalId, itemId: itemId)
+            let pending = try await resources.attachmentStore.pendingCaptureReceipts(parent: capture.scope.parent)
+            let positioned = try ItemImageCaptureAdmission.assigningPlacement(capture, catalog: initial, pending: pending)
+            return try await resources.attachmentStore.enqueue(positioned, authorize: {
+                try Task.checkCancellation()
+                guard !resources.accessFence.isRemoved else { throw LedgerOfflineClientRuntimeFailure.runtimeClosed }
+                let current = try await reader.read(accountId: resources.accountId,
+                    principalId: resources.principalId, itemId: itemId)
+                guard current == initial else { throw ItemImageCaptureFailure.unavailable }
+                let pending = try await resources.attachmentStore.pendingCaptureReceipts(parent: capture.scope.parent)
+                // Recompute from the original capture: a new placement is server-independent
+                // local intent, while a retry must preserve its already persisted placement.
+                guard try ItemImageCaptureAdmission.assigningPlacement(capture, catalog: current, pending: pending) == positioned else {
+                    throw ItemImageCaptureFailure.unavailable
+                }
+                guard !resources.accessFence.isRemoved else { throw LedgerOfflineClientRuntimeFailure.runtimeClosed }
+            })
+        }
+    }
+
     func captureAttachment(
         _ capture: LocalAttachmentCapture
     ) async throws -> AttachmentLocalDurabilityReceipt {
@@ -2261,7 +2331,7 @@ actor AccountWorkspacePendingWorkRuntime {
                         group.addTask {
                             do {
                                 for try await _ in try resources.attachmentDatabase.watch(sql:
-                                    "SELECT id,receipt_fingerprint FROM \(AttachmentCapturePowerSyncTable.queue) WHERE parent_kind IN ('transaction','expense')",
+                                    "SELECT id,receipt_fingerprint FROM \(AttachmentCapturePowerSyncTable.queue) WHERE parent_kind IN ('transaction','expense','item')",
                                     parameters: nil, mapper: { try $0.getString(name: "id") }) {
                                     continuation.yield(())
                                 }
@@ -2270,7 +2340,7 @@ actor AccountWorkspacePendingWorkRuntime {
                         group.addTask {
                             do {
                                 for try await _ in try resources.structuredDatabase.watch(sql:
-                                    "SELECT id FROM transaction_attachment_references UNION ALL SELECT id FROM expense_receipt_attachments UNION ALL SELECT id FROM item_image_objects",
+                                    "SELECT id FROM transaction_attachment_references UNION ALL SELECT id FROM expense_receipt_attachments UNION ALL SELECT id FROM item_image_objects UNION ALL SELECT id FROM item_image_references UNION ALL SELECT id FROM item_image_sets",
                                     parameters: nil, mapper: { try $0.getString(name: "id") }) {
                                     continuation.yield(())
                                 }
@@ -2304,6 +2374,7 @@ actor AccountWorkspacePendingWorkRuntime {
             for await _ in events {
                 if Task.isCancelled { break }
                 await self.uploadPendingTransactionAttachments(using: client)
+                await self.uploadPendingItemAttachments(using: SupabaseItemAttachmentUpload(transport: client))
                 await self.uploadPendingExpenseAttachments(using: SupabaseExpenseAttachmentUpload(transport: client))
                 await self.reconcilePendingExpenseAttachments()
             }
@@ -2335,11 +2406,68 @@ actor AccountWorkspacePendingWorkRuntime {
     }
     #endif
 
+    func uploadPendingItemAttachments(using client: SupabaseItemAttachmentUpload) async {
+        guard !normalAccessLocked, case .open = state, let resources,
+              let pending = try? await resources.attachmentStore.pendingItemUploads() else { return }
+        let ids = Set(pending.map { "item:" + $0.attachmentId.rawValue })
+        attachmentRetryAfter = attachmentRetryAfter.filter { !$0.key.hasPrefix("item:") || ids.contains($0.key) }
+        var waitingParents = Set<String>()
+        // Persisted milliseconds can tie. The accepted placement owns picker
+        // order, and a retrying original must not be overtaken by later images.
+        for receipt in pending.sorted(by: {
+            if $0.scope.parent.id != $1.scope.parent.id { return $0.scope.parent.id.rawValue < $1.scope.parent.id.rawValue }
+            return ($0.metadata?.placement?.localPosition ?? .max) < ($1.metadata?.placement?.localPosition ?? .max)
+        }) {
+            if Task.isCancelled || normalAccessLocked { return }
+            let parent = receipt.scope.parent.id.rawValue
+            if waitingParents.contains(parent) { continue }
+            let key = "item:" + receipt.attachmentId.rawValue
+            if let retry = attachmentRetryAfter[key], retry > resources.now() {
+                waitingParents.insert(parent); continue
+            }
+            do {
+                let result = try await withFiniteLease(.captureAttachment) { owned in
+                    guard receipt.scope.environment == owned.environment,
+                          receipt.scope.principalId == owned.principalId,
+                          receipt.scope.accountId == owned.accountId,
+                          receipt.scope.parent.kind == .item else {
+                        throw AttachmentCapturePowerSyncStoreFailure.scopeMismatch
+                    }
+                    let itemId = try ItemID(validating: receipt.scope.parent.id.rawValue)
+                    let reader = ItemImageCatalogLocalReader(database: owned.structuredDatabase)
+                    let authorize: @Sendable () async throws -> Void = {
+                        try Task.checkCancellation()
+                        guard !owned.accessFence.isRemoved else { throw LedgerOfflineClientRuntimeFailure.runtimeClosed }
+                        let catalog = try await reader.read(accountId: owned.accountId,
+                            principalId: owned.principalId, itemId: itemId)
+                        guard catalog.isComplete, !owned.accessFence.isRemoved else {
+                            throw ItemImageCaptureFailure.unavailable
+                        }
+                    }
+                    try await authorize()
+                    let result = try await owned.attachmentStore.publishItemAttachment(receipt) { candidate, checkpoint, save in
+                        try await client.publish(candidate, resumeFrom: checkpoint, onCheckpoint: save, authorize: authorize)
+                    }
+                    try await authorize()
+                    let synced = try await reader.read(accountId: owned.accountId, principalId: owned.principalId, itemId: itemId)
+                    guard !owned.accessFence.isRemoved else { throw LedgerOfflineClientRuntimeFailure.runtimeClosed }
+                    _ = try await owned.attachmentStore.reconcileItemAttachment(receipt, catalog: synced)
+                    return result
+                }
+                attachmentRetryAfter[key] = result == .incomplete ? resources.now().addingTimeInterval(30) : nil
+                if result == .incomplete { waitingParents.insert(parent) }
+            } catch {
+                attachmentRetryAfter[key] = resources.now().addingTimeInterval(30)
+                waitingParents.insert(parent)
+            }
+        }
+    }
+
     func uploadPendingTransactionAttachments(using client: SupabaseTransactionAttachmentUpload) async {
         guard !normalAccessLocked, case .open = state, let resources else { return }
         guard let pending = try? await resources.attachmentStore.pendingTransactionUploads() else { return }
         let ids = Set(pending.map { $0.attachmentId.rawValue })
-        attachmentRetryAfter = attachmentRetryAfter.filter { ids.contains($0.key) || $0.key.hasPrefix("expense:") }
+        attachmentRetryAfter = attachmentRetryAfter.filter { ids.contains($0.key) || $0.key.hasPrefix("expense:") || $0.key.hasPrefix("item:") }
         for receipt in pending {
             if Task.isCancelled || normalAccessLocked { return }
             let id = receipt.attachmentId.rawValue
@@ -3322,6 +3450,10 @@ public enum LedgerPowerSyncLocalBootstrap {
                 INSERT OR IGNORE INTO transaction_attachment_sets(id,account_id,transaction_id,section,revision,expected_count)
                 VALUES('capture-ui-set',?,'capture-ui-parent','receipts','1',0)
                 """, parameters: [account.rawValue])
+            if ProcessInfo.processInfo.arguments.contains("--ledger-ui-test-item-capture") {
+                _ = try await database.execute(sql: "INSERT OR IGNORE INTO spike_items(id,account_id,description) VALUES('capture-ui-item',?,'Capture Item')", parameters: [account.rawValue])
+                _ = try await database.execute(sql: "INSERT OR IGNORE INTO item_image_sets(id,account_id,item_id,revision,expected_count) VALUES('capture-ui-item',?,'capture-ui-item','1',0)", parameters: [account.rawValue])
+            }
             let identity = TransactionReceiptStreamIdentity(scope: .businessInventory(accountId: account))
             _ = try await database.syncStream(name: identity.name, params: identity.parameters).subscribe()
             // Synthetic service completeness, not live replication evidence.

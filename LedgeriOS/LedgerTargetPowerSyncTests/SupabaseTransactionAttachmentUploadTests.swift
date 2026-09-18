@@ -5,6 +5,103 @@ import Testing
 
 @Suite("Supabase Transaction attachment resumable upload", .serialized)
 struct SupabaseTransactionAttachmentUploadTests {
+    @Test("Item adapter preserves scope, placement and applied retry without retransferring")
+    func itemAdapter() async throws {
+        let fixture = try UploadFixture(bytes: Data("item image".utf8), parentKind: .item)
+        let identity: [String: String] = ["attachmentId": fixture.receipt.attachmentId.rawValue,
+            "accountId": fixture.receipt.scope.accountId.rawValue, "principalId": fixture.receipt.scope.principalId.rawValue,
+            "itemId": fixture.receipt.scope.parent.id.rawValue]
+        let reserved = try JSONSerialization.data(withJSONObject: identity.merging([
+            "phase": "awaiting_upload", "bucket": "ledger-attachments", "storagePath": fixture.storagePath,
+            "contentSHA256": fixture.receipt.contentSHA256.rawValue, "byteCount": String(fixture.bytes.count),
+            "mediaType": "image/png"]) { _, new in new })
+        var applied: [String: Any] = identity
+        applied["phase"] = "applied"; applied["revision"] = "2"; applied["position"] = 0
+        let result = try JSONSerialization.data(withJSONObject: applied)
+        let http = UploadHTTPSequence { request, index in
+            if index == 0 {
+                #expect(request.url?.path == "/rest/v1/rpc/spike_begin_item_attachment_upload")
+                let body = try #require(JSONSerialization.jsonObject(with: Self.requestBody(request)) as? [String: Any])
+                #expect(body["p_item_id"] as? String == fixture.receipt.scope.parent.id.rawValue)
+                #expect(body["p_local_position"] as? Int == 7)
+                #expect(body["p_transaction_id"] == nil)
+                return Self.response(status: 200, data: reserved)
+            }
+            #expect(request.url?.path == "/functions/v1/verify-item-attachment")
+            return Self.response(status: 200, data: result)
+        }
+        let client = SupabaseItemAttachmentUpload(transport: try fixture.client(http: http))
+        #expect(try await client.publish(fixture.candidate) == .applied(revision: 2, position: 0))
+        #expect(http.requestCount == 2)
+        let noRequests = UploadHTTPSequence { _, _ in Self.response(status: 500) }
+        let cancelled = SupabaseItemAttachmentUpload(transport: try fixture.client(http: noRequests))
+        await #expect(throws: CancellationError.self) {
+            try await cancelled.publish(fixture.candidate, authorize: { throw CancellationError() })
+        }
+        #expect(noRequests.requestCount == 0)
+    }
+
+    @Test("Actual local Item upload resumes, verifies and idempotently publishes",
+          .enabled(if: ProcessInfo.processInfo.environment["LEDGER_ATTACHMENT_ITEM_HTTP"] == "1",
+                   "Run scripts/test-local-item-attachment-upload.mjs"),
+          .timeLimit(.minutes(1)))
+    func actualLocalItemService() async throws {
+        let environment = ProcessInfo.processInfo.environment
+        let baseURLString = try #require(environment["LEDGER_ATTACHMENT_LOCAL_URL"])
+        let baseURL = try #require(URL(string: baseURLString))
+        let key = try #require(environment["LEDGER_ATTACHMENT_LOCAL_KEY"])
+        let token = try #require(environment["LEDGER_ATTACHMENT_LOCAL_TOKEN"])
+        let account = try #require(environment["LEDGER_ATTACHMENT_LOCAL_ACCOUNT"])
+        let principal = try #require(environment["LEDGER_ATTACHMENT_LOCAL_PRINCIPAL"])
+        let item = try #require(environment["LEDGER_ATTACHMENT_LOCAL_ITEM"])
+        let attachment = try #require(environment["LEDGER_ATTACHMENT_LOCAL_ATTACHMENT"])
+        let bytes = Data(repeating: 0x4d, count: SupabaseTransactionAttachmentUpload.chunkSize + 17)
+        let fixture = try UploadFixture(bytes: bytes, account: account, principal: principal,
+            transaction: item, attachment: attachment, parentKind: .item, localPosition: 0)
+        let transport = try SupabaseTransactionAttachmentUpload(supabaseURL: baseURL,
+            storageURL: baseURL, publishableKey: key, accessToken: { token })
+        let reservationURL = baseURL.appendingPathComponent("rest/v1/rpc/spike_begin_item_attachment_upload")
+        let reservationBody = try JSONSerialization.data(withJSONObject: [
+            "p_id": attachment, "p_account_id": account, "p_item_id": item,
+            "p_content_sha256": fixture.receipt.contentSHA256.rawValue,
+            "p_byte_count": String(bytes.count), "p_media_type": "image/png",
+            "p_file_name": "Item original.png", "p_local_position": 0,
+            "p_make_primary_if_empty": true,
+        ])
+        let (reservationData, reservationResponse) = try await transport.send(method: "POST",
+            url: reservationURL, headers: ["Content-Type": "application/json",
+                "Accept": "application/vnd.pgrst.object+json"], body: reservationBody)
+        #expect(reservationResponse.statusCode == 200)
+        let reservation = try #require(JSONSerialization.jsonObject(with: reservationData) as? [String: Any])
+        let path = "accounts/\(account)/attachments/\(attachment)/\(fixture.receipt.contentSHA256.rawValue)"
+        #expect(reservation["phase"] as? String == "awaiting_upload")
+        #expect(reservation["storagePath"] as? String == path)
+
+        let checkpoints = UploadCheckpointRecorder()
+        await #expect(throws: LocalUploadInterruption.self) {
+            _ = try await transport.uploadReservedBytes(fixture.candidate, bucket: "ledger-attachments",
+                storagePath: path, mediaType: "image/png", byteCount: UInt64(bytes.count),
+                onCheckpoint: { checkpoint in
+                    await checkpoints.append(checkpoint)
+                    if checkpoint.offset == UInt64(SupabaseTransactionAttachmentUpload.chunkSize) {
+                        throw LocalUploadInterruption()
+                    }
+                })
+        }
+        let interrupted = try #require(await checkpoints.snapshot().first {
+            $0.offset == UInt64(SupabaseTransactionAttachmentUpload.chunkSize)
+        })
+        let complete = try await transport.uploadReservedBytes(fixture.candidate,
+            bucket: "ledger-attachments", storagePath: path, mediaType: "image/png",
+            byteCount: UInt64(bytes.count), resumeFrom: interrupted,
+            onCheckpoint: { await checkpoints.append($0) })
+        #expect(complete.offset == UInt64(bytes.count))
+
+        let client = SupabaseItemAttachmentUpload(transport: transport)
+        #expect(try await client.publish(fixture.candidate) == .applied(revision: 2, position: 0))
+        #expect(try await client.publish(fixture.candidate) == .applied(revision: 2, position: 0))
+    }
+
     @Test("Actual Expense receipt uses scoped RPC, existing TUS and byte verifier",
           .enabled(if: ProcessInfo.processInfo.environment["LEDGER_EXPENSE_LOCAL_TOKEN"] != nil,
                    "Run expense HTTP runner with --native-expense-media"))
@@ -435,12 +532,13 @@ private struct UploadFixture {
 
     init(bytes: Data, account: String = "account-upload", principal: String = "principal-upload",
          transaction: String = "transaction-upload", attachment: String = "attachment-upload",
-         parentKind: LedgerEntityKind = .transaction) throws {
+         parentKind: LedgerEntityKind = .transaction, localPosition: UInt32 = 7) throws {
         self.bytes = bytes
         receipt = try Self.makeReceipt(bytes: bytes, account: account, principal: principal,
             transaction: transaction, attachment: attachment, parentKind: parentKind, metadata: AttachmentCaptureMetadata(
-            mediaType: "image/png", fileName: "Receipt original.png", transactionSection: parentKind == .transaction ? .receipts : nil,
-            placement: AttachmentCapturePlacement(localPosition: 7, makePrimaryIfEmpty: true)
+            mediaType: "image/png", fileName: parentKind == .item ? "Item original.png" : "Receipt original.png",
+            transactionSection: parentKind == .transaction ? .receipts : nil,
+            placement: AttachmentCapturePlacement(localPosition: localPosition, makePrimaryIfEmpty: true)
         ))
     }
 

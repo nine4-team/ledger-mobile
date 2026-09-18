@@ -886,11 +886,23 @@ private struct UITestFixtureItemReader: DownloadedItemPlacementReading, Download
                         purchaseCost: .confirmedAbsent))
                     return
                 }
+                let adjustmentFixture = ProcessInfo.processInfo.arguments.contains("--ledger-ui-test-live-adjustments")
+                let invalidBase = ProcessInfo.processInfo.arguments.contains("--ledger-ui-test-adjustment-invalid-base")
+                let live: LiveItemPricingContext? = adjustmentFixture ? try JSONDecoder().decode(LiveItemPricingContext.self,
+                    from: JSONSerialization.data(withJSONObject: [
+                        "transactionId": "order", "revision": "1", "priceRevision": "1", "currency": "USD",
+                        "totalMinorUnits": invalidBase ? "60" : "300", "adjustmentsMinorUnits": "60", "isProvisional": true,
+                        "price": ["itemId": item.rawValue, "requestedProjectPriceMinorUnits": "250",
+                            "unadjustedMinorUnits": invalidBase ? NSNull() : "200" as Any,
+                            "adjustmentsMinorUnits": invalidBase ? NSNull() : "50" as Any,
+                            "projectPriceMinorUnits": invalidBase ? NSNull() : "250" as Any,
+                            "issue": invalidBase ? "nonpositiveBase" : NSNull() as Any]
+                    ])) : nil
                 continuation.yield(try .init(projectId: project, itemId: item,
                     placementId: .init(validating: "history-current"), occurrenceId: .init(validating: "price-charge"),
                     priceRevision: 1, chargeRevision: 1,
-                    currentPrice: Money(minorUnits: 250, currency: .init(validating: "USD")),
-                    purchaseCost: .known(Money(minorUnits: 200, currency: .init(validating: "USD")))))
+                    currentPrice: invalidBase ? nil : Money(minorUnits: 250, currency: .init(validating: "USD")),
+                    purchaseCost: .known(Money(minorUnits: 200, currency: .init(validating: "USD"))), livePricing: live))
                 if ProcessInfo.processInfo.arguments.contains("--ledger-ui-test-price-changed") {
                     continuation.yield(try .init(projectId: project, itemId: item,
                         placementId: .init(validating: "history-current"), occurrenceId: .init(validating: "price-charge"),
@@ -916,7 +928,8 @@ private struct UITestFixtureItemReader: DownloadedItemPlacementReading, Download
         }
         guard payload.projectId?.rawValue == "project-ui-test", payload.itemId.rawValue == "physical-ui-chair",
               payload.placementId.rawValue == "history-current", payload.expectedPriceRevision == 1,
-              payload.requestedPrice.minorUnits == 100, payload.reviewedPrice.minorUnits == 200 else {
+              payload.requestedPrice.minorUnits == 100,
+              payload.reviewedPrice.minorUnits == (ProcessInfo.processInfo.arguments.contains("--ledger-ui-test-live-adjustments") ? 100 : 200) else {
             throw InventorySaleReview.Failure.invalidEvidence
         }
         if ProcessInfo.processInfo.arguments.contains("--ledger-ui-test-price-retry") {

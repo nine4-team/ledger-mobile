@@ -27,7 +27,7 @@ const detailSchema = z.object({
   scopeKind: z.enum(["project", "business_inventory"]), projectId: identifier.nullable(), clientId: identifier.nullable(),
   type: z.enum(["purchase", "return"]), role: z.literal("standalone"),
   origin: z.enum(["firebase_client_payment", "vendor_payment"]),
-  amountMinorUnits: positive, currency: z.string().regex(/^[A-Z]{3}$/),
+  amountMinorUnits: integer, currency: z.string().regex(/^[A-Z]{3}$/),
   category: z.object({ id: identifier, name: z.string().refine(v => v.trim().length > 0),
     kind: z.enum(["general", "itemized", "fee"]), revision: positive }).strict().nullable(),
   source: z.string().nullable(), transactionDate: calendarDate.nullable(),
@@ -51,6 +51,7 @@ export function transactionDetail(value: unknown, transactionId: string, context
       || detail.transactionId !== transactionId
       || (detail.scopeKind === "project" ? detail.projectId === null || detail.clientId === null
         : detail.projectId !== null || detail.clientId !== null)
+      || (BigInt(detail.amountMinorUnits) < 0n || (detail.amountMinorUnits === "0" && (detail.origin !== "vendor_payment" || detail.type !== "purchase")))
       || (detail.origin === "vendor_payment" ? detail.category === null
         : detail.category !== null || detail.type !== "purchase" || detail.scopeKind !== "project")) {
       throw new Error("invalid evidence");

@@ -6,7 +6,7 @@ import Testing
 
 @Suite(.serialized)
 struct ItemPriceEditQueueStorageTests {
-    @Test func encryptedRestartRetainsExactCommandAndRollbackLeavesNoUpload() async throws {
+    @Test(arguments: [false, true]) func encryptedRestartRetainsExactCommandAndRollbackLeavesNoUpload(live: Bool) async throws {
         let directory = FileManager.default.temporaryDirectory
             .appendingPathComponent("ledger-price-queue-\(UUID().uuidString)")
         try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
@@ -23,25 +23,27 @@ struct ItemPriceEditQueueStorageTests {
             payload: .init(projectId: .init(validating: "project"), itemId: .init(validating: "item"),
                 placementId: .init(validating: "placement"), occurrenceId: .init(validating: "charge"),
                 expectedPriceRevision: 0, expectedChargeRevision: 1,
-                requestedPrice: amount, reviewedPrice: amount))
+                requestedPrice: amount, reviewedPrice: amount,
+                adjustmentTransactionId: live ? .init(validating: "order") : nil,
+                expectedAdjustmentRevision: live ? 3 : nil))
         let request = try EditUncollectedItemPriceUploadRequest(command)
         let json = String(decoding: try OperationContractCodec.encode(command.envelope), as: UTF8.self)
         let sql = """
             INSERT INTO spike_item_price_edit_commands
               (id,account_id,actor_principal_id,item_id,contract_version,fingerprint,envelope_json)
-            VALUES (?,?,?,'item','item-uncollected-price-edit-v1',?,?)
+            VALUES (?,?,?,'item',?,?,?)
             """
         enum InjectedFailure: Error { case rollback }
         do {
             try await database.writeTransaction { tx in
-                try tx.execute(sql: sql, parameters: ["rolled-back", account.rawValue, "actor", request.fingerprint, json])
+                try tx.execute(sql: sql, parameters: ["rolled-back", account.rawValue, "actor", command.envelope.contractVersion.rawValue, request.fingerprint, json])
                 throw InjectedFailure.rollback
             }
             Issue.record("Expected transaction rollback")
         } catch InjectedFailure.rollback {}
         try await database.writeTransaction { tx in
             try tx.execute(sql: sql, parameters: [command.envelope.operationId.rawValue,
-                account.rawValue, "actor", request.fingerprint, json])
+                account.rawValue, "actor", command.envelope.contractVersion.rawValue, request.fingerprint, json])
         }
         try await database.close()
         let reopened = try LedgerPowerSyncDatabaseFactory.open(absolutePath: path, encryptionKey: key)

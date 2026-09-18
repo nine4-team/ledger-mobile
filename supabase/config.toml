@@ -428,3 +428,9 @@ enabled = true
 verify_jwt = true
 import_map = "./functions/verify-expense-attachment/deno.json"
 entrypoint = "./functions/verify-expense-attachment/index.ts"
+
+[functions.verify-item-attachment]
+enabled = true
+verify_jwt = true
+import_map = "./functions/verify-item-attachment/deno.json"
+entrypoint = "./functions/verify-item-attachment/index.ts"

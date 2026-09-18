@@ -1,6 +1,11 @@
 # Decision Packet — O-031 Item Tax and Acquisition Basis
 
 Status: proposed recommendation; product decision not yet approved
+
+> Superseded in part2026-09-17: [approved live Item adjustments](../../non-item-receipt-lines/design.md#live-item-adjustments--confirmed-2026-09-17)
+> automatically allocates signed order-wide adjustments, including tax, into
+> current Item project prices. Do not block that work on this proposal.
+> Separate acquisition-basis/tax-reporting proposals below remain unapproved.
 Last reviewed: 2026-08-31
 Owners: Item Accounting, Receipt Evidence, Inventory, Pricing, Migration
 Unlocks: 16 residual surfaces; O-008/O-030 still govern which non-Item lines are

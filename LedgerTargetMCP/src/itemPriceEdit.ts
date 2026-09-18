@@ -11,6 +11,15 @@ const integer = z.string().refine(value => /^(0|[1-9][0-9]*)$/.test(value)
 const revision = integer.refine(value => BigInt(value) < 9223372036854775807n);
 const currency = z.string().regex(/^[A-Z]{3}$/);
 const money = z.object({ amountMinorUnits: integer, currency }).strict();
+const signedInteger = z.string().refine(value => /^-?(0|[1-9][0-9]*)$/.test(value)
+  && BigInt(value) >= -9223372036854775808n && BigInt(value) <= 9223372036854775807n);
+const livePricingSchema = z.object({ transactionId: identifier, revision, priceRevision: revision,
+  totalMinorUnits: signedInteger, adjustmentsMinorUnits: signedInteger, currency, isProvisional: z.boolean(),
+  price: z.object({ itemId: identifier, numerator: z.string().nullable(), denominator: z.string().nullable(),
+    requestedProjectPriceMinorUnits: integer.nullable().optional(), unadjustedMinorUnits: signedInteger.nullable(),
+    adjustmentsMinorUnits: signedInteger.nullable(), projectPriceMinorUnits: signedInteger.nullable(),
+    issue: z.enum(["unknownInput", "nonpositiveBase", "zeroFactor", "arithmeticRange"]).nullable() }).strict(),
+}).strict();
 export const itemPriceEditReviewInputSchema = z.object({ projectId: identifier.nullable(), itemId: identifier }).strict();
 export type ItemPriceEditReviewInput = z.infer<typeof itemPriceEditReviewInputSchema>;
 const reviewSchema = z.object({ accountId: identifier, principalId: identifier,
@@ -19,7 +28,9 @@ const reviewSchema = z.object({ accountId: identifier, principalId: identifier,
   currentPrice: money.nullable(), purchaseCost: z.discriminatedUnion("state", [
     z.object({ state: z.literal("absent") }).strict(),
     money.extend({ state: z.literal("known") }).strict(),
+    z.object({ state: z.literal("unavailable") }).strict(),
   ]),
+  livePricing: livePricingSchema.nullable().optional(),
 }).strict();
 
 /** Preserve absent evidence and exact minor units; never infer zero from missing data. */
@@ -39,6 +50,13 @@ export function validateItemPriceEditReview(value: unknown, input: ItemPriceEdit
     || (row.purchaseCost.state === "known" && row.purchaseCost.currency !== row.currency)) {
     throw new TargetMCPFailure("price_review_mismatch");
   }
+  if (row.livePricing && (row.livePricing.price.itemId !== row.itemId || row.livePricing.currency !== row.currency
+    || row.livePricing.priceRevision !== row.priceRevision
+    || row.livePricing.price.projectPriceMinorUnits !== (row.currentPrice?.amountMinorUnits ?? null)
+    || (row.livePricing.price.issue !== null && row.currentPrice !== null))) {
+    throw new TargetMCPFailure("price_review_mismatch");
+  }
+  if (row.purchaseCost.state === "unavailable" && !row.livePricing) throw new TargetMCPFailure("price_review_mismatch");
   return row;
 }
 
@@ -48,12 +66,17 @@ export const itemPriceEditInputSchema = z.object({
   payload: z.union([z.object({ projectId: identifier, itemId: identifier, placementId: identifier,
     occurrenceId: identifier, expectedPriceRevision: revision,
     expectedChargeRevision: revision.refine(value => BigInt(value) > 0n),
-    requestedPriceMinorUnits: integer, reviewedPriceMinorUnits: integer.refine(value => BigInt(value) > 0n),
-    currency }).strict(),
+    requestedPriceMinorUnits: integer, reviewedPriceMinorUnits: integer,
+    transactionId: identifier.optional(), expectedAdjustmentRevision: revision.optional(),
+    currency }).strict().refine(value => value.transactionId !== undefined || BigInt(value.reviewedPriceMinorUnits) > 0n),
     z.object({ itemId: identifier, placementId: identifier, expectedPriceRevision: revision,
       requestedPriceMinorUnits: integer, reviewedPriceMinorUnits: integer, currency,
-      clearPrice: z.boolean() }).strict().refine(value => !value.clearPrice || value.requestedPriceMinorUnits === "0"),
-  ]).refine(value => BigInt(value.reviewedPriceMinorUnits) >= BigInt(value.requestedPriceMinorUnits)),
+      clearPrice: z.boolean(), transactionId: identifier.optional(), expectedAdjustmentRevision: revision.optional(),
+    }).strict().refine(value => !value.clearPrice || value.requestedPriceMinorUnits === "0"),
+  ]).refine(value => BigInt(value.reviewedPriceMinorUnits) >= BigInt(value.requestedPriceMinorUnits)
+    && (value.transactionId === undefined) === (value.expectedAdjustmentRevision === undefined)
+    && (value.transactionId === undefined || (value.requestedPriceMinorUnits === value.reviewedPriceMinorUnits
+      && BigInt(value.expectedAdjustmentRevision!) > 0n))),
 }).strict();
 export type ItemPriceEditInput = z.infer<typeof itemPriceEditInputSchema>;
 export type ItemPriceEditRequest = Readonly<{ operationId: string; accountId: string; actorPrincipalId: string;
@@ -72,7 +95,8 @@ export function makeItemPriceEditRequest(input: ItemPriceEditInput, context: Tar
   const payload = "clearPrice" in parsed.data.payload
     ? { ...parsed.data.payload, clearPrice: String(parsed.data.payload.clearPrice) } : parsed.data.payload;
   const commandJSON = canonicalJSON({ ...payload, operationId, accountId, actorPrincipalId,
-    contractVersion: inventory ? "item-inventory-price-edit-v2" : "item-uncollected-price-edit-v1",
+    contractVersion: parsed.data.payload.transactionId !== undefined ? "item-live-adjustment-price-edit-v3"
+      : inventory ? "item-inventory-price-edit-v2" : "item-uncollected-price-edit-v1",
     createdAtMs: String(parsed.data.clientCreatedAtMilliseconds) }, "price_payload_invalid");
   return { operationId, accountId, actorPrincipalId, itemId: parsed.data.payload.itemId,
     createdAtMs: parsed.data.clientCreatedAtMilliseconds, commandJSON,

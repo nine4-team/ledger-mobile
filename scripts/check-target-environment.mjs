@@ -613,6 +613,7 @@ if (
     "transactionDetailsEditStatus", "editTransactionDetails", "watchTransactionDetailsEdit",
     "pendingTransactionDetailsEdit",
     "editTransactionReceiptLines", "pendingTransactionReceiptLinesEdit", "watchTransactionReceiptLinesEdit",
+    "itemImageCaptureScope", "captureItemImage",
     "itemPriceEditStatus", "reviewItemPrice", "editItemPrice", "watchItemPriceEdit", "watchItemPriceReview",
     "readInvoicingCharges", "watchInvoicingCharges",
     "readProjectBudget", "watchProjectBudget",

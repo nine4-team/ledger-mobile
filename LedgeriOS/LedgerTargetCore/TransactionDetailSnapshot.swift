@@ -89,7 +89,7 @@ public struct TransactionDetailSnapshot: Codable, Equatable, Sendable {
             clientId: wire.clientId.map { try ClientID(validating: $0) }), role: .standalone)
         origin = wire.origin
         let minorUnits = try Self.integer(wire.amountMinorUnits)
-        guard minorUnits > 0 else { throw Failure.invalidEvidence }
+        guard minorUnits > 0 || (minorUnits == 0 && origin.rawValue == "vendor_payment" && wire.type == "purchase") else { throw Failure.invalidEvidence }
         amount = Money(minorUnits: minorUnits, currency: try CurrencyCode(validating: wire.currency))
         if let value = wire.category {
             let revision = try Self.integer(value.revision)

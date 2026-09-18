@@ -47,7 +47,12 @@ struct TransactionCaptureUITestFixture: View {
             VStack {
                 Text("LOCAL CAPTURE TEST • NO NETWORK")
                 if let runtime {
-                    if ProcessInfo.processInfo.arguments.contains("--ledger-ui-test-expense-capture") {
+                    if ProcessInfo.processInfo.arguments.contains("--ledger-ui-test-item-capture") {
+                        DownloadedItemImagesView(
+                            accountId: try! AccountID(validating: "capture-ui-\(fixtureID.uuidString)"),
+                            itemId: try! ItemID(validating: "capture-ui-item"), reader: runtime)
+                            .frame(minHeight: 600)
+                    } else if ProcessInfo.processInfo.arguments.contains("--ledger-ui-test-expense-capture") {
                         ExpenseCaptureUITestContent(runtime: runtime,
                             accountId: try! AccountID(validating: "capture-ui-\(fixtureID.uuidString)"))
                     } else {

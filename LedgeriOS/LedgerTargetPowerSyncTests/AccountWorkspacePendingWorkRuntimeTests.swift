@@ -195,6 +195,87 @@ struct AccountWorkspacePendingWorkRuntimeTests {
         }
     }
 
+    @Test("Actual Item capture uploads, synchronizes stable references and retains originals after restart",
+          .enabled(if: ProcessInfo.processInfo.environment["LEDGER_ATTACHMENT_ITEM_RUNTIME"] == "1",
+                   "Run Item attachment provider script with LEDGER_ATTACHMENT_ITEM_RUNTIME=1"),
+          .timeLimit(.minutes(1)))
+    func actualItemLiveReplication() async throws {
+        let input = ProcessInfo.processInfo.environment
+        guard input["LEDGER_ATTACHMENT_LOCAL_URL"] == "http://127.0.0.1:54321",
+              let account = input["LEDGER_ATTACHMENT_LOCAL_ACCOUNT"], account == "account-primary",
+              let principal = input["LEDGER_ATTACHMENT_LOCAL_PRINCIPAL"],
+              let parent = input["LEDGER_ATTACHMENT_LOCAL_ITEM"],
+              let attachment = input["LEDGER_ATTACHMENT_LOCAL_ATTACHMENT"],
+              let key = input["LEDGER_ATTACHMENT_LOCAL_KEY"], let email = input["LEDGER_ATTACHMENT_LOCAL_EMAIL"],
+              let password = input["LEDGER_ATTACHMENT_LOCAL_PASSWORD"] else { throw RuntimeInjectedFailure() }
+        let context = try RuntimeTestContext(suffix: "item-live-\(UUID())",
+            accountId: AccountID(validating: account), principalId: PrincipalID(validating: principal))
+        defer { context.remove() }
+        let url = URL(string: "http://127.0.0.1:54321")!
+        let auth = AuthClient(configuration: .init(url: url.appendingPathComponent("auth/v1"),
+            headers: ["apikey": key], storageKey: "item-live-\(UUID())", localStorage: CategoryAuthTestStorage(),
+            fetch: { try await URLSession.shared.data(for: $0) }, autoRefreshToken: false,
+            emitLocalSessionAsInitialSession: true))
+        let entry = await SupabaseOnlineSignIn(client: auth, supabaseURL: url, publishableKey: key)
+        try await entry.signIn(email: email, password: password)
+        let directory = try await entry.accounts(environment: context.environment.manifest.environment)
+        let authorization = try await entry.authorize(AccountSelectionPolicy.makeIntent(selecting: context.accountId,
+            from: directory.snapshot, requestedAt: Date()))
+        let item = try ItemID(validating: parent)
+        let originals = [Data(base64Encoded: "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVQIHWP4z8DwHwAFgAI/ScLbtAAAAABJRU5ErkJggg==")!,
+                         Data(base64Encoded: "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVQIHWP4z8DwHwAFgAI/ScLbtAAAAABJRU5ErkJggg==")!]
+        var runtime = try await context.openRuntime()
+        do {
+            try await entry.startWorkspaceSync(runtime, authorization: authorization,
+                powerSyncURL: URL(string: "http://127.0.0.1:5590")!)
+            // The real navigation path opens an Item from the physical browser;
+            // its scoped subscription supplies the Item row used by image access.
+            try await runtime.waitForCategoryWorkspaceReady(authorization)
+            var items = runtime.watchDownloadedItemPlacements(accountId: context.accountId,
+                scope: .businessInventory).makeAsyncIterator()
+            while let snapshot = try await items.next() {
+                if snapshot.rows.contains(where: { $0.itemId == item }) { break }
+            }
+            var updates = runtime.watchDownloadedItemImages(accountId: context.accountId, itemId: item).makeAsyncIterator()
+            while let catalog = try await updates.next() { if catalog.isComplete { break } }
+            let scope = try await runtime.itemImageCaptureScope(accountId: context.accountId, itemId: item)
+            for (index, bytes) in originals.enumerated() {
+                let capture = try LocalAttachmentCapture(attachmentId: .init(validating: "\(attachment)-\(index)"),
+                    scope: scope, capturedAt: .init(validating: Int64(Date().timeIntervalSince1970 * 1000)),
+                    bytes: bytes, metadata: .init(mediaType: "image/png", fileName: "Original \(index).png"))
+                _ = try await runtime.captureItemImage(capture)
+                var pendingID: EntityID?
+                var published = false
+                while let catalog = try await updates.next() {
+                    guard let image = catalog.images.first(where: { $0.object.attachmentId == capture.attachmentId }) else { continue }
+                    if image.localReceipt != nil { pendingID = image.id; continue }
+                    guard try await runtime.pendingWorkSummary().unverifiedAttachmentCount == 0 else { continue }
+                    #expect(image.id == pendingID)
+                    #expect(image.position == index)
+                    #expect(image.isPrimary == (index == 0))
+                    #expect(try await runtime.loadDownloadedItemImage(accountId: context.accountId,
+                        itemId: item, image: image, allowDownload: false) == bytes)
+                    published = true; break
+                }
+                #expect(published)
+            }
+            try await runtime.close()
+            runtime = try await context.openRuntime()
+            var offline = runtime.watchDownloadedItemImages(accountId: context.accountId, itemId: item).makeAsyncIterator()
+            let catalog = try #require(await offline.next())
+            #expect(catalog.isComplete && catalog.images.count == 2)
+            for (index, image) in catalog.images.enumerated() {
+                #expect(image.localReceipt == nil)
+                #expect(image.position == index)
+                #expect(try await runtime.loadDownloadedItemImage(accountId: context.accountId,
+                    itemId: item, image: image, allowDownload: false) == originals[index])
+            }
+            #expect(try await runtime.pendingWorkSummary().unverifiedAttachmentCount == 0)
+            try await runtime.close()
+            try await auth.signOut(scope: .local)
+        } catch { try? await runtime.close(); throw error }
+    }
+
     @Test("Item original and thumbnail bytes require the same live reference after download",
           arguments: ["unchanged", "reference", "removed", "thumbnail-link"], [false,true])
     func itemImageDownloadAuthorization(change: String, thumbnail: Bool) async throws {
@@ -1820,6 +1901,83 @@ struct AccountWorkspacePendingWorkRuntimeTests {
         context.remove()
     }
 
+    @Test("Item capture reuses the protected queue with scoped admission and encrypted restart",
+        arguments: ["allowed", "removed", "unknown-gallery", "foreign-principal", "foreign-account"])
+    func itemPhotoCaptureAdmission(scenario: String) async throws {
+        let context = try RuntimeTestContext(suffix: "item-photo-\(scenario)")
+        defer { context.remove() }
+        var dependencies = context.dependencies()
+        let validate = dependencies.validateStructuredDatabase
+        dependencies.validateStructuredDatabase = { database in
+            try await validate(database)
+            _ = try await database.execute(sql: """
+                INSERT INTO spike_account_memberships(id,account_id,principal_id,state,financial_access)
+                VALUES('photo-member',?,?,?,'none')
+                """, parameters: [context.accountId.rawValue, context.principalId.rawValue,
+                    scenario == "removed" ? "removed" : "active"])
+            _ = try await database.execute(sql: "INSERT INTO spike_items(id,account_id,description) VALUES('photo-item',?,'Chair')",
+                parameters: [context.accountId.rawValue])
+            if scenario != "unknown-gallery" {
+                _ = try await database.execute(sql: """
+                    INSERT INTO item_image_sets(id,account_id,item_id,revision,expected_count)
+                    VALUES('photo-item',?,'photo-item','1',0)
+                    """, parameters: [context.accountId.rawValue])
+            }
+        }
+        var runtime = try await context.openRuntime(dependencies: dependencies)
+        let original = try context.capture(id: "item-original")
+        let capture = try LocalAttachmentCapture(attachmentId: original.attachmentId,
+            scope: .init(environment: original.scope.environment,
+                principalId: scenario == "foreign-principal" ? .init(validating: "foreign") : original.scope.principalId,
+                accountId: scenario == "foreign-account" ? .init(validating: "foreign") : original.scope.accountId,
+                parent: .init(kind: .item, id: .init(validating: "photo-item"))),
+            capturedAt: original.capturedAt, bytes: original.bytes,
+            metadata: .init(mediaType: "image/png", fileName: "Original.png"))
+        if scenario == "allowed" {
+            #expect(try await runtime.itemImageCaptureScope(accountId: context.accountId,
+                itemId: .init(validating: "photo-item")) == capture.scope)
+            let receipt = try await runtime.captureItemImage(capture)
+            #expect(receipt.metadata?.placement == .init(localPosition: 0, makePrimaryIfEmpty: true))
+            #expect(try await runtime.captureItemImage(capture) == receipt)
+            try await runtime.close()
+            runtime = try await context.openRuntime()
+            #expect(try await runtime.resolveLocalAttachmentBytes(for: receipt) == capture.bytes)
+            #expect(try await runtime.pendingWorkSummary().unverifiedAttachmentCount == 1)
+            #expect(try await runtime.captureItemImage(capture) == receipt)
+            let catalog = try DownloadedItemImageCatalog(accountId: context.accountId,
+                itemId: .init(validating: "photo-item"), isComplete: true, images: [], revision: 1)
+                .includingPending([receipt], scope: capture.scope)
+            let image = try #require(catalog.images.first)
+            #expect(try await runtime.loadDownloadedItemImage(accountId: context.accountId,
+                itemId: image.itemId, image: image, allowDownload: false) == capture.bytes)
+            let second = try LocalAttachmentCapture(attachmentId: .init(validating: "a-second-item-original"),
+                scope: capture.scope, capturedAt: capture.capturedAt, bytes: Data("Second original".utf8),
+                metadata: .init(mediaType: "image/png", fileName: "Second.png"))
+            let secondReceipt = try await runtime.captureItemImage(second)
+            #expect(secondReceipt.metadata?.placement == .init(localPosition: 1, makePrimaryIfEmpty: false))
+            var updates = runtime.watchDownloadedItemImages(accountId: context.accountId,
+                itemId: image.itemId).makeAsyncIterator()
+            let ordered = try #require(await updates.next())
+            #expect(ordered.images.map(\.id.rawValue) == [capture.attachmentId.rawValue, second.attachmentId.rawValue])
+            let attempts = LockedRecorder<String>()
+            let transport = try SupabaseTransactionAttachmentUpload(
+                supabaseURL: URL(string: "http://127.0.0.1:54321")!, publishableKey: "sb_publishable_test",
+                accessToken: { attempts.append("attempt"); throw CancellationError() })
+            await runtime.lifecycleOwner.uploadPendingItemAttachments(using: .init(transport: transport))
+            #expect(attempts.values.count == 1) // Later images cannot overtake an interrupted first original.
+            await runtime.lifecycleOwner.uploadPendingItemAttachments(using: .init(transport: transport))
+            #expect(attempts.values.count == 1) // Queue events do not bypass its retry cooldown.
+            #expect(try await runtime.pendingWorkSummary().unverifiedAttachmentCount == 2)
+        } else {
+            await #expect(throws: (any Error).self) { _ = try await runtime.captureItemImage(capture) }
+            #expect(try await runtime.pendingWorkSummary().unverifiedAttachmentCount == 0)
+        }
+        try await runtime.close()
+        await #expect(throws: LedgerOfflineClientRuntimeFailure.runtimeClosed) {
+            _ = try await runtime.captureItemImage(capture)
+        }
+    }
+
     @Test("Transaction capture uses live member/financial scope and survives encrypted runtime reopen",
         arguments: ["allowed", "upload-removal", "transfer-removal", "foreign-account", "foreign-principal", "removed", "hidden-fee", "unknown-section"])
     func transactionCaptureAdmission(scenario: String) async throws {
@@ -2472,10 +2630,38 @@ struct AccountWorkspacePendingWorkRuntimeTests {
             if let value { initial = value; break }
         }
         #expect(try #require(initial).currentPrice?.minorUnits == 12346)
+        func adjustmentReceipt(_ runtime: LedgerOfflineClientRuntime) async throws -> TransactionReceiptSnapshot {
+            // The fixture's vendor order belongs to Inventory even though its
+            // physical Item is now placed in a Project.
+            let scope = TransactionScope.businessInventory(accountId: context.accountId)
+            for try await update in runtime.watchTransactionReceipt(scope: scope,
+                transactionId: try .init(validating: account.replacingOccurrences(of: "-account", with: "-order"))) {
+                if case .ready(let receipt) = update { return receipt }
+                if case .unavailable = update { throw RuntimeInjectedFailure() }
+            }
+            throw RuntimeInjectedFailure()
+        }
+        if env["LEDGER_PRICE_ADJUSTMENTS_LOCAL"] == "1" {
+            let pricing = try #require(initial?.livePricing)
+            #expect(pricing.itemAdjustments?.minorUnits == 2469)
+            #expect(pricing.isProvisional)
+            let receipt = try await adjustmentReceipt(first)
+            #expect(receipt.liveAdjustments?.differenceNumerator == "10616")
+            #expect(receipt.liveAdjustments?.differenceDenominator == "5")
+        }
         try await first.close()
         let offline = try await context.openRuntime()
+        if env["LEDGER_PRICE_ADJUSTMENTS_LOCAL"] == "1" {
+            let receipt = try await adjustmentReceipt(offline)
+            #expect(receipt.liveAdjustments?.differenceNumerator == "10616")
+            #expect(receipt.liveAdjustments?.differenceDenominator == "5")
+        }
         let amount = Money(minorUnits: 12347, currency: try .init(validating: "USD"))
         let payload = try await offline.reviewItemPrice(project: projectId, item: itemId, requested: amount)
+        if env["LEDGER_PRICE_ADJUSTMENTS_LOCAL"] == "1" {
+            #expect(payload.adjustmentTransactionId != nil)
+            #expect(payload.expectedAdjustmentRevision != nil)
+        }
         let originalChargeRevision = try #require(payload.expectedChargeRevision)
         let uuid = UUID(), capturedAt = Date()
         let receipt = try await offline.editItemPrice(payload, operationUUID: uuid, capturedAt: capturedAt)

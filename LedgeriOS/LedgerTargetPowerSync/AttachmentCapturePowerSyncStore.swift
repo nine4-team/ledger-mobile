@@ -442,9 +442,17 @@ actor AttachmentCapturePowerSyncStore:
     }
 
     func pendingTransactionUploads() async throws -> [AttachmentLocalDurabilityReceipt] {
+        try await pendingReferenceUploads(kind: .transaction)
+    }
+
+    func pendingItemUploads() async throws -> [AttachmentLocalDurabilityReceipt] {
+        try await pendingReferenceUploads(kind: .item)
+    }
+
+    private func pendingReferenceUploads(kind: LedgerEntityKind) async throws -> [AttachmentLocalDurabilityReceipt] {
         try await ensureScopeBinding()
         return try await scopedRows().compactMap { row in
-            guard row.parentKind == "transaction" else { return nil }
+            guard row.parentKind == kind.rawValue else { return nil }
             guard let record = row.validatedRecord, scope.contains(record.receipt.scope) else {
                 throw AttachmentCapturePowerSyncStoreFailure.malformedQueueEvidence
             }
@@ -537,6 +545,19 @@ actor AttachmentCapturePowerSyncStore:
         guard receipt.scope.parent.kind == .transaction else {
             throw SupabaseTransactionAttachmentUploadFailure.unsupportedReceipt
         }
+        return try await publishReferenceAttachment(receipt, publish: publish)
+    }
+
+    func publishItemAttachment(_ receipt: AttachmentLocalDurabilityReceipt,
+        publish: TransactionAttachmentPublisher) async throws -> TransactionAttachmentPublication {
+        guard receipt.scope.parent.kind == .item else {
+            throw SupabaseTransactionAttachmentUploadFailure.unsupportedReceipt
+        }
+        return try await publishReferenceAttachment(receipt, publish: publish)
+    }
+
+    private func publishReferenceAttachment(_ receipt: AttachmentLocalDurabilityReceipt,
+        publish: TransactionAttachmentPublisher) async throws -> TransactionAttachmentPublication {
         guard publishingAttachmentIDs.insert(receipt.attachmentId.rawValue).inserted else {
             throw AttachmentCapturePowerSyncStoreFailure.attachmentBusy
         }
@@ -639,6 +660,21 @@ actor AttachmentCapturePowerSyncStore:
               attachment.object.contentSHA256 == receipt.contentSHA256,
               UInt64(attachment.object.byteCount) == receipt.byteCount,
               attachment.object.mediaType == receipt.metadata?.mediaType else { return false }
+        return try await retainReconciledBytes(receipt, progress: progress)
+    }
+
+    func reconcileItemAttachment(_ receipt: AttachmentLocalDurabilityReceipt,
+        catalog: DownloadedItemImageCatalog) async throws -> Bool {
+        let progress = try await uploadProgress(for: receipt)
+        guard case let .applied(revision, _) = progress?.publication,
+              receipt.scope.parent.kind == .item, catalog.accountId == receipt.scope.accountId,
+              catalog.itemId.rawValue.utf8.elementsEqual(receipt.scope.parent.id.rawValue.utf8),
+              catalog.isComplete, let currentRevision = catalog.revision, currentRevision >= revision,
+              let image = catalog.images.first(where: { $0.referenceId.rawValue == receipt.attachmentId.rawValue }),
+              image.localReceipt == nil, image.object.attachmentId == receipt.attachmentId,
+              image.object.contentSHA256 == receipt.contentSHA256,
+              UInt64(image.object.byteCount) == receipt.byteCount,
+              image.object.mediaType == receipt.metadata?.mediaType else { return false }
         return try await retainReconciledBytes(receipt, progress: progress)
     }
 
@@ -905,7 +941,7 @@ actor AttachmentCapturePowerSyncStore:
         guard evidence.scope.environment == scope.environment,
               evidence.scope.principalId.rawValue.utf8.elementsEqual(scope.principalId.rawValue.utf8),
               evidence.scope.accountId.rawValue.utf8.elementsEqual(scope.accountId.rawValue.utf8),
-              (evidence.scope.parent.kind == .transaction || evidence.scope.parent.kind == .expense ||
+              (evidence.scope.parent.kind == .transaction || evidence.scope.parent.kind == .expense || evidence.scope.parent.kind == .item ||
                (evidence.scope.parent.kind == .account &&
                 evidence.scope.parent.id.rawValue.utf8.elementsEqual(scope.accountId.rawValue.utf8))) else {
             throw AttachmentCapturePowerSyncStoreFailure.scopeMismatch

@@ -2,6 +2,183 @@
 
 Date: 2026-09-10. Original assessment only; the separately requested process repair is recorded in the addendum below.
 
+## September 17 follow-up — live Item adjustments (locally completed)
+
+Implemented proportional shipping/tax/discount allocation, inclusive Project price
+edits, exact receipt balance, existing editor breakdown, atomic offline/sync writes,
+MCP parity and frozen collected-history preservation. Independent final review
+caught and corrected overflow disagreement, inconsistent displayed pennies, an
+overbroad zero-Transaction exception and obsolete reconstruction of live results.
+Added decoder tampering and positive-Invoice-with-zero-Item regressions.
+
+Final evidence: 29 native tests; 23 MCP tests and TypeScript check; 2,449 SQL
+assertions across73 files (5s); focused iPhone editor test (27.265s).
+Logs: `/tmp/ledger-adjustments-review-{native-final,mcp-final,tscheck,full-sql,ui,conversion}.log`.
+Earlier batch evidence includes fresh135-migration replay, six observed concurrency
+races and actual Auth/offline restart/RPC/PowerSync/reopen. Root reviewed final
+code corrections and saved pass summaries. No commit/push/hosted deployment;
+exact-commit CI, new macOS UI and release readiness remain unproven. Local migration
+was applied without history; do not blindly replay it against the existing DB.
+
+Measured boundary: initiating request00:09:58.763Z through02:20:00Z on2026-09-18,
+approximately2h10m elapsed. Final record edits/handoff after this boundary excluded.
+Both sessions reconcile: zero counter resets or delta/last-usage mismatches;
+duplicate counter events excluded. Each session compacted once.
+
+| Execution | Requests | Uncached input | Cached input | Output | Total |
+|---|---:|---:|---:|---:|---:|
+| Coordinator/reviewer | 86 | 212,622 | 13,295,360 | 31,367 | 13,539,349 |
+| Implementation/test owner | 171 | 489,373 | 22,015,872 | 110,580 | 22,615,825 |
+| Total | 257 | 701,995 | 35,311,232 | 141,947 | 36,155,174 |
+
+Cache writes0. At supplied Astra short-context API-equivalent rates ($10/$1/$50
+per million uncached/cached/output), cost is $49.43, not measured subscription
+consumption. Cached input accounts for $35.31. Maximum reported request input:
+214,067 coordinator;225,282 worker.
+
+Heuristic action distribution (not exact activity or waste attribution): test/build
+commands37.7%; editing27.0%; waiting/polling14.9%; reading10.8%; coordination5.8%;
+other/no-tool3.8%. Tests include setup, diagnosis and evidence—not just waiting.
+Coordinator alone consumed37.4% of processed tokens, including analyzer development,
+guidance edits and useful independent review, but also5.02M on32 wait-associated
+requests. Repeated coordinator wakeups were not eliminated. Do not claim the
+completion-driven waiting recommendation was fully achieved.
+
+Readable repeated-context proxy is dominated by guidance/spec reads and source/log
+reads; commands, patches, instructions and exchanges are also measured by the
+analyzer. This is character exposure, NOT allocation of the35.31M cached tokens:
+encrypted records, tool definitions and compaction retention prevent exact attribution.
+Raw summaries are reproducible from the two session paths and boundaries below.
+
+Compared with the previous trial, raw tokens are27.95% lower and requests44.37%
+lower, but elapsed time is longer and the work differs substantially. These are
+observations, not a demonstrated efficiency improvement or a50% savings claim.
+Next practical improvement: avoid a waiting coordinator—let the execution owner
+do the work and request one independent review after completion. Keep the analyzer
+offline and reuse it; do not repeat its development or introduce per-turn ledgers.
+
+User authorized autonomous planning, implementation and verification of the next
+ready workflow plus offline measurement. Execution owner:
+`/root/item_adjustments_execution`, fresh history, inherited implementation model;
+no nested test agents. Coordinator owns analyzer/guidance and one final independent
+review, not intermediate implementation supervision. Canonical authority is
+`non-item-receipt-lines/design.md` → Live Item Adjustments — Confirmed2026-09-17;
+checklist outcome `receipt-completeness`, execution ID `live-item-adjustments`.
+Fixed batch base remains `c5226c11992a46357a9d4a51b81c53f68e814d24`; existing dirty
+Item-photo work is preserved and is not new feature work in this sample.
+
+Measurement uses existing rollout files only via `scripts/analyze-agent-usage.mjs`.
+Eight unit tests passed. Prior implementation/HTTP/UI totals reproduced exactly:
+22,314,601 /13,574,761 /4,230,229 tokens,175/136/55 requests, zero counter resets or
+delta/last-usage mismatches. HTTP worker had one compaction. Encrypted context
+prevents exact cached-content allocation; approximate categories remain explicitly
+separate from exact usage. Prior implementation has53 heuristic coordination
+requests; these are not automatically all waste. No model calls to instrument work.
+Analyzer validation: `/tmp/ledger-prior-trial-context-analysis.jsonl`.
+
+Start:2026-09-18T00:09:58.763Z (Sept17 local). Coordinator file is the same
+September3 rollout named in the prior trial below. Last pre-request counter:
+input3,677,866,613; cached3,628,329,984; output9,442,151; total3,687,308,764;
+cache writes0. Use `--from 2026-09-18T00:09:58.763Z` and subtract the preceding
+counter automatically. Fresh execution rollout:
+`/Users/benjaminmackenzie/.codex/sessions/2026/09/17/rollout-2026-09-17T17-11-08-01a0b1da-4991-7093-9443-df6af326ed3f.jsonl`.
+
+The table includes coordinator delta from the initiating user message and the
+fresh execution worker once. No matched-workflow savings claim.
+
+## September 17 — bounded Item-photo execution trial (locally completed)
+
+Result: existing Item capture controls reuse the shared picker/gallery/clipboard
+and protected upload queue. Coordinator reviewed the presentation, pending order,
+stale-view completion guard and privileged publication fix, and independently
+checked saved native/UI/SQL pass summaries. No commit, push, hosted change or CI
+dispatch. Old goal remains preserved below, not falsely completed.
+
+Passing evidence: actual private upload → PowerSync → encrypted reopen → exact
+original bytes (1 test, 1.916s); admission/order/retry; pending overlay; byte
+authorization/lifecycle (2 tests, 8 authorization cases); interrupted HTTP/TUS
+resume, tenant denial and hash rejection; 53 focused SQL assertions and 2,397
+full SQL assertions/71 files/7s; concurrent service-role commits and atomic
+rollback; 3 focused iPhone Item/Transaction/Expense tests; conversion/whitespace
+checks. Exact logs are linked in the existing Item-photo checklist record.
+Not proven here: hosted deployment, physical camera, new macOS UI execution or
+exact-commit CI. These are not implied by local completion.
+
+Useful product fixes were upload ordering, primary selection under reversed
+completion and deferred constraint execution in the existing publisher scope.
+Extra work also included fixture reservation/cleanup/readiness repairs and a
+60-second timeout from a stopped local PowerSync service. The runner now checks
+service readiness first. Do not classify that rework as feature implementation.
+
+Whole-trial measurement through 2026-09-17T23:50:04.465Z (final record edits and
+handoff after this boundary excluded). Fresh workers' counters counted once;
+coordinator is the delta from the baseline below. No counter resets observed;
+duplicate status events excluded from request counts. Cached input is included
+in input, and reasoning is included in output—not additional tokens.
+
+| Execution | Requests | Uncached input | Cached input | Output | Total |
+|---|---:|---:|---:|---:|---:|
+| Coordinator, Astra | 96 | 113,173 | 9,938,304 | 13,235 | 10,064,712 |
+| Implementation, Astra | 175 | 257,600 | 22,016,384 | 40,617 | 22,314,601 |
+| HTTP/native/SQL worker, Luna Max | 136 | 423,430 | 13,096,960 | 54,371 | 13,574,761 |
+| iPhone worker, Luna Max | 55 | 112,497 | 4,106,112 | 11,620 | 4,230,229 |
+| Total | 462 | 906,700 | 49,157,760 | 119,843 | 50,184,303 |
+
+This is roughly 42 minutes elapsed and 50.18M cumulative processed tokens, not
+50.18M new text or subscription-billed tokens. No defensible percentage saving:
+there is no equivalent controlled baseline. About 20% of processed tokens were
+coordinator overhead; repeated waits/status turns remain overhead even with
+small outputs. The completed feature is evidence of correctness, not proof that
+the efficiency problem is solved. No per-activity attribution was measured.
+
+Worker rollout files under `/Users/benjaminmackenzie/.codex/sessions/2026/09/17/`:
+`rollout-2026-09-17T16-08-41-01a0b1a1-1df6-7e82-b679-84b07502ea7b.jsonl`,
+`rollout-2026-09-17T16-09-46-01a0b1a2-1c95-7c63-9726-db018a69fa5f.jsonl`,
+`rollout-2026-09-17T16-15-44-01a0b1a7-9451-7593-b313-119cf3f5222b.jsonl`.
+
+User authorized guidance/config updates and completion of this real implementation
+trial. Scope is the existing `existing-item-photo-capture` record, resuming its
+already-written backend work; not a from-zero cost sample. Required behavior and
+verification remain in that checklist. Implementation worker
+`/root/item_photo_trial_implementation` starts without inherited conversation;
+delegated live tests use Luna Max. Coordinator owns review and final measurement.
+Do not infer comparative savings from this one trial.
+
+Preserved goal wording (goal remains paused; its counter is not this sample):
+> Complete Ledger’s Supabase + PowerSync implementation through verified cutover readiness. Follow the existing canonical specs, confirmed decisions, product checklist, and implementation guidance. Work in the Supabase worktree, delivering coherent workflows and continuing through their dependencies without stopping for routine checkpoint approval. Maintain the existing progress records, follow the documented token-efficient verification process, and raise only genuine unresolved decisions or authorization needs.
+
+Trial finish condition: implemented Item capture controls using existing UI,
+actual upload/readback and relevant offline/security/concurrency proof, independent
+review, truthful remaining integration/CI status, and measured execution report.
+Do not mark the larger implementation goal complete to replace its wording.
+
+Coordinator baseline: immediately preceding the initiating user request,
+2026-09-17T23:07:59.710Z. Session file:
+`/Users/benjaminmackenzie/.codex/sessions/2026/09/03/rollout-2026-09-03T10-23-44-01a0597e-a903-72f1-83da-ad0e7d114ac0_01a0684c-483f-7cc1-8810-354d376933d4.jsonl`.
+Counters: input 3,666,529,847; cached input 3,617,206,272; output 9,421,941;
+cache writes 0; total 3,675,951,788. Reasoning is already included in output.
+Include configuration/setup and coordinator overhead in the final delta. Record
+each fresh worker's own counter once; do not assume the parent includes it.
+Use only start/end readings plus an offline reconciliation at closure, not a
+per-call or per-activity ledger. Report requests separately from repeated status
+events. Actual subscription consumption is not derivable from these counters.
+
+Configuration: remove the experimental global 200K compaction override; request
+2,000-token tool-output default. Explicit per-call budgets and filtered log reads
+are the immediate controls. Parser support and running-desktop adoption must be
+reported separately. Existing pending test14288 completed successfully before
+the trial: 3 tests/2 suites, including 5 admission cases, in0.958s; prior evidence
+is reused, not claimed as trial-produced verification.
+
+Configuration verification: fresh installed CLI app-server `config/read` returned
+`tool_output_token_limit: 2000` and null compaction overrides. This proves that
+the installed CLI loads the saved setting; adoption by the already-running
+desktop remains unverified. Explicit per-call budgets apply immediately.
+Live-test child: `/root/item_photo_trial_implementation/item_http_tests`, Luna Max,
+no inherited history. No goal replacement attempted: the unfinished larger goal
+cannot be truthfully completed just to create a trial goal; this user turn owns
+the authorized trial through completion.
+
 ## September 11 — original-gallery reuse integration (locally completed)
 
 Reported-goal counter created1789167117, starting0. Updates can lag; cached/uncached split unavailable. Not subscription usage. Mixed intervals remain mixed. Verification includes model reasoning, result review and diagnosis—not tokens consumed by dormant tests. No subagents or GitHub CI ran for this trial.

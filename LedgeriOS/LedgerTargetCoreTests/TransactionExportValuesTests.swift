@@ -139,6 +139,79 @@ struct TransactionExportValuesTests {
         #expect(throws: TransactionDetailSnapshot.Failure.invalidEvidence) { try TransactionDetailSnapshotTests.decode(wire) }
     }
 
+    @Test func liveExportUsesOriginalInputsNotLegacyOrAdjustedPrices() throws {
+        let row = try liveRow(total: 120, adjustments: 20, originals: [10, 90])
+        let currency = row.amount.currency
+        #expect(row.receipt?.reconstruction == nil)
+        for (field, expected): (String, Int64) in [("receiptItemTotal", 100), ("receiptAdjustments", 20),
+            ("receiptReconstructedTotal", 120), ("receiptDifference", 0), ("receiptVariance", 0),
+            ("receiptLineIncreaseTotal", 20), ("receiptLineDecreaseTotal", 0)] {
+            #expect(try cell(field, row) == .money(Money(minorUnits: expected, currency: currency)))
+        }
+        guard case .text(let json) = try cell("receiptAuditJSON", row) else {
+            Issue.record("Missing exact audit export"); return
+        }
+        #expect(try JSONDecoder().decode(LiveItemAdjustmentOrder.self, from: Data(json.utf8)) == row.receipt?.liveAdjustments)
+    }
+
+    @Test func liveExportKeepsPartialEvidenceAndDifferenceSign() throws {
+        let row = try liveRow(total: 120, adjustments: 20, originals: [10])
+        #expect(try cell("receiptItemTotal", row) == .money(Money(minorUnits: 10, currency: row.amount.currency)))
+        #expect(try cell("receiptReconstructedTotal", row) == .money(Money(minorUnits: 30, currency: row.amount.currency)))
+        #expect(try cell("receiptDifference", row) == .money(Money(minorUnits: 90, currency: row.amount.currency)))
+        #expect(try cell("receiptVariance", row) == .money(Money(minorUnits: -90, currency: row.amount.currency)))
+        #expect(try cell("receiptAuditStatus", row) == .text("mismatch"))
+        let discount = try liveRow(total: 80, adjustments: -20, originals: [100])
+        #expect(try cell("receiptAdjustments", discount) == .money(Money(minorUnits: -20, currency: row.amount.currency)))
+        #expect(try cell("receiptLineDecreaseTotal", discount) == .money(Money(minorUnits: 20, currency: row.amount.currency)))
+    }
+
+    @Test func fractionalCentExportNeverRoundsMismatchToZero() throws {
+        let row = try liveRow(total: 3, adjustments: 1, originals: [], inclusive: [1, 1])
+        #expect(try cell("receiptItemTotal", row) == .text("4/3 USD minor units"))
+        #expect(try cell("receiptDifference", row) == .text("2/3 USD minor units"))
+        #expect(try cell("receiptVariance", row) == .text("-2/3 USD minor units"))
+        #expect(try cell("receiptReconstructedTotal", row) == .text("7/3 USD minor units"))
+    }
+
+    @Test func missingLiveInputsExportUnknownTotalsButRetainKnownLines() throws {
+        let row = try liveRow(total: 120, adjustments: 20, originals: [nil])
+        for field in ["receiptItemTotal", "receiptDifference", "receiptVariance", "receiptReconstructedTotal"] {
+            #expect(try cell(field, row) == .unknown)
+        }
+        #expect(try cell("receiptAdjustments", row) == .money(Money(minorUnits: 20, currency: row.amount.currency)))
+        #expect(try cell("receiptAuditStatus", row) == .text("incompleteEvidence"))
+    }
+
+    private func liveRow(total: Int64, adjustments: Int64, originals: [Int64?], inclusive: [Int64] = []) throws -> TransactionDetailSnapshot {
+        let inputs = inclusive.isEmpty ? originals.enumerated().map {
+            LiveItemAdjustments.Input(itemId: "item-\($0.offset)", unadjustedMinorUnits: $0.element)
+        } : inclusive.enumerated().map {
+            LiveItemAdjustments.Input(itemId: "item-\($0.offset)", requestedProjectPriceMinorUnits: $0.element,
+                totalMinorUnits: total, adjustmentsMinorUnits: adjustments)
+        }
+        let result = LiveItemAdjustments.calculate(totalMinorUnits: total, adjustmentsMinorUnits: adjustments, inputs: inputs)
+        let items: [[String: Any]] = zip(inputs, result.prices).map { input, price in
+            ["itemId": input.itemId, "numerator": input.numerator as Any? ?? NSNull(),
+             "denominator": input.denominator as Any? ?? NSNull(),
+             "requestedProjectPriceMinorUnits": input.requestedProjectPriceMinorUnits.map(String.init) as Any? ?? NSNull(),
+             "unadjustedMinorUnits": price.unadjustedMinorUnits.map(String.init) as Any? ?? NSNull(),
+             "adjustmentsMinorUnits": price.adjustmentsMinorUnits.map(String.init) as Any? ?? NSNull(),
+             "projectPriceMinorUnits": price.projectPriceMinorUnits.map(String.init) as Any? ?? NSNull(),
+             "issue": price.issue?.rawValue as Any? ?? NSNull()]
+        }
+        var wire = try TransactionReceiptSnapshotTests.fixture()
+        wire["amountMinorUnits"] = String(total); wire["requiresLiveAdjustments"] = true
+        wire["items"] = inputs.map { ["itemId": $0.itemId, "membershipKind": "linked", "amountMinorUnits": "999"] }
+        wire["nonItemReceiptLines"] = [["id": "adjustment", "description": "Order adjustment",
+            "amountMinorUnits": String(abs(adjustments)), "effect": adjustments < 0 ? "decrease" : "increase"]]
+        wire["liveAdjustments"] = ["totalMinorUnits": String(total), "adjustmentsMinorUnits": String(adjustments),
+            "differenceNumerator": result.differenceNumerator as Any? ?? NSNull(),
+            "differenceDenominator": result.differenceDenominator as Any? ?? NSNull(),
+            "isBalanced": result.isBalanced, "isProvisional": result.isProvisional, "items": items]
+        return try detail(wire)
+    }
+
     private func cell(_ field: String, _ row: TransactionDetailSnapshot) throws -> TransactionExportValues.Cell {
         try TransactionExportValues.cell(fieldID: field, row: row)
     }

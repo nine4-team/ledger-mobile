@@ -73,6 +73,13 @@ struct TransactionReceiptPowerSyncQueryTests {
                     "amount_minor_units": "9007199254740993", "currency": "USD", "source": "Client payment"]),
                 ("transaction_receipt_items", "link-a", ["account_id": account.rawValue, "transaction_id": "receipt",
                     "item_id": "a", "amount_minor_units": "1000", "currency": "USD", "membership_kind": "linked"]),
+                ("item_adjustment_orders", "receipt", ["account_id": account.rawValue, "revision": "1", "snapshot": try json([
+                    "totalMinorUnits": "3050", "adjustmentsMinorUnits": "50", "differenceNumerator": "0", "differenceDenominator": "1",
+                    "isBalanced": true, "isProvisional": false, "items": [
+                        ["itemId": "a", "numerator": "1000", "denominator": "1", "unadjustedMinorUnits": "1000",
+                         "adjustmentsMinorUnits": "17", "projectPriceMinorUnits": "1017", "issue": NSNull()],
+                        ["itemId": "b", "numerator": "2000", "denominator": "1", "unadjustedMinorUnits": "2000",
+                         "adjustmentsMinorUnits": "33", "projectPriceMinorUnits": "2033", "issue": NSNull()]]])]),
                 ("transaction_receipt_items", "link-b", ["account_id": account.rawValue, "transaction_id": "receipt",
                     "item_id": "b", "amount_minor_units": "2000", "currency": "USD", "membership_kind": "sold"]),
                 ("spike_items", "b", ["account_id": account.rawValue, "name": "Historical chair", "sku": "CHAIR-2", "source": "Original vendor", "current_source": "Display vendor"]),
@@ -220,7 +227,8 @@ struct TransactionReceiptPowerSyncQueryTests {
             #expect(originalDetail.notes == "Preserved notes" && originalDetail.paymentMethod == "Company card")
             #expect(originalDetail.classification.scope == scope)
             #expect(original.auditStatus == .balanced)
-            #expect(original.reconstruction?.physicalItemTotal.minorUnits == 3000)
+            #expect(original.liveAdjustments?.unadjustedSubtotal == 3000)
+            #expect(original.reconstruction == nil)
             #expect(original.items.last?.membership == .sold)
             #expect(original.items.last?.name == "Historical chair" && original.items.last?.sku == "CHAIR-2")
             #expect(original.items.last?.source == "Original vendor" && original.items.last?.currentSource == "Display vendor")
@@ -324,6 +332,10 @@ struct TransactionReceiptPowerSyncQueryTests {
                 }
             }
             _ = try await db.execute(sql: "UPDATE transaction_receipt_items SET amount_minor_units=NULL WHERE id='link-b'", parameters: nil)
+            // Acquisition evidence is independent from the explicitly recorded
+            // unadjusted input. Losing the calculation snapshot is unknown.
+            #expect(try await read(db).auditStatus == .balanced)
+            _ = try await db.execute(sql: "DELETE FROM item_adjustment_orders WHERE id='receipt'", parameters: nil)
             #expect(try await read(db).auditStatus == .incompleteEvidence)
             while true {
                 if case .ready(let value) = try #require(try await iterator.next()), value.auditStatus == .incompleteEvidence { break }

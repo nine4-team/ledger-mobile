@@ -38,7 +38,7 @@ select throws_ok($$select ledger_private.edit_inventory_item_price(pg_temp.inven
 insert into public.spike_transactions(id,account_id,amount_minor_units,currency,type,origin,scope_kind,category_id)
 values('inventory-cost','account-primary',150,'USD','purchase','vendor_payment','business_inventory','category-furnishings');
 insert into public.transaction_receipt_items(id,account_id,transaction_id,item_id,currency,amount_minor_units,membership_kind)
-values('inventory-cost-line','account-primary','inventory-cost','inventory-price-item','USD',150,'linked');
+values('inventory-cost-line','account-primary','inventory-cost','inventory-price-item','USD',150,'sold');
 select is((ledger_private.edit_inventory_item_price(pg_temp.inventory_price('inventory-below-cost','2','0','0','true'))).error_code,
  'price_review_stale','Clear cannot bypass known positive cost');
 select is((ledger_private.edit_inventory_item_price(pg_temp.inventory_price('inventory-floor','2','0','150','true'))).phase,

@@ -387,6 +387,46 @@ final class WorkspaceChecklistUITests: XCTestCase {
         XCTAssertTrue(unfinished.waitForExistence(timeout: 5))
     }
 
+    func testItemPhotoCaptureSurvivesAppRestart() throws {
+        continueAfterFailure = false
+        let app = XCUIApplication()
+        app.launchArguments = ["--ledger-ui-test-transaction-capture", "--ledger-ui-test-item-capture",
+            "--capture-fixture-id=\(UUID().uuidString)"]
+        app.launch()
+        defer { app.terminate() }
+        let add = app.buttons["target-item-image-add"]
+        XCTAssertTrue(add.waitForExistence(timeout: 15), app.debugDescription)
+        XCTAssertTrue(add.isEnabled)
+        add.tap()
+        let library = app.buttons["Photo Library"]
+        XCTAssertTrue(library.waitForExistence(timeout: 5), app.debugDescription)
+        library.tap()
+        let photo = app.images["PXGGridLayout-Info"].firstMatch
+        XCTAssertTrue(photo.waitForExistence(timeout: 15), app.debugDescription)
+        photo.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5)).tap()
+        let confirm = app.navigationBars["Photos"].buttons["Done"]
+        XCTAssertTrue(confirm.waitForExistence(timeout: 5), app.debugDescription)
+        confirm.tap()
+        let rendered = app.images["target-item-image-rendered"].firstMatch
+        XCTAssertTrue(rendered.waitForExistence(timeout: 15), app.debugDescription)
+        XCTAssertTrue(app.staticTexts["Saved on this device; upload pending"].exists, app.debugDescription)
+        app.terminate(); app.launch()
+        XCTAssertTrue(rendered.waitForExistence(timeout: 15), app.debugDescription)
+        let copy = app.buttons["target-item-image-copy"]
+        XCTAssertTrue(copy.waitForExistence(timeout: 5), app.debugDescription)
+        copy.tap()
+        XCTAssertTrue(waitUntil { copy.value as? String == "Copied" }, app.debugDescription)
+        add.tap()
+        let paste = app.buttons["Paste Image"]
+        XCTAssertTrue(paste.waitForExistence(timeout: 5), app.debugDescription)
+        paste.tap()
+        XCTAssertTrue(app.buttons["target-item-images-previous"].waitForExistence(timeout: 15), app.debugDescription)
+        XCTAssertFalse(app.staticTexts["target-item-image-capture-error"].exists, app.debugDescription)
+        app.terminate(); app.launch()
+        XCTAssertTrue(rendered.waitForExistence(timeout: 15), app.debugDescription)
+        XCTAssertTrue(app.buttons["target-item-images-next"].exists, app.debugDescription)
+    }
+
     func testTransactionPhotoCaptureSurvivesAppRestart() throws {
         continueAfterFailure = false
         let app = XCUIApplication()
@@ -2550,8 +2590,19 @@ final class WorkspaceChecklistUITests: XCTestCase {
             XCTAssertTrue(app.staticTexts[description].waitForExistence(timeout: 5))
         }
         openExport(expectedCount: 1)
+        let exportFields = app.scrollViews.containing(.button, identifier: "transaction-export-field-source").firstMatch
+        XCTAssertTrue(exportFields.exists)
+        for id in ["receiptItemTotal", "receiptAdjustments", "receiptDifference", "receiptAuditJSON"] {
+            let field = app.buttons["transaction-export-field-\(id)"]
+            reveal(field, in: app, within: exportFields)
+            XCTAssertTrue(field.exists)
+            field.tap()
+            XCTAssertEqual(field.value as? String, "Selected")
+        }
         let source = app.buttons["transaction-export-field-source"]
+        reveal(source, in: app, upwards: false, within: exportFields)
         XCTAssertEqual(source.value as? String, "Selected")
+        reveal(app.buttons["Select All"], in: app, upwards: false, within: exportFields)
         app.buttons["Select All"].tap()
         XCTAssertTrue(app.buttons["Reset to Default"].exists)
         app.buttons["Reset to Default"].tap()
@@ -4338,7 +4389,16 @@ final class WorkspaceChecklistUITests: XCTestCase {
         try exerciseItemPriceEditor(retry: false, changed: true)
     }
 
-    private func exerciseItemPriceEditor(retry: Bool, changed: Bool = false, inventory: Bool = false, clear: Bool = false) throws {
+    func testItemPriceInclusiveAdjustmentEdit() throws {
+        try exerciseItemPriceEditor(retry: false, adjustments: true)
+    }
+
+    func testItemPriceCalculationIssueKeepsSaveAvailable() throws {
+        try exerciseItemPriceEditor(retry: false, adjustments: true, invalidBase: true)
+    }
+
+    private func exerciseItemPriceEditor(retry: Bool, changed: Bool = false, inventory: Bool = false, clear: Bool = false,
+                                         adjustments: Bool = false, invalidBase: Bool = false) throws {
         continueAfterFailure = false
         let app = XCUIApplication()
         app.launchArguments = ["--ledger-ui-test-workspace-checklist", "--ledger-ui-test-item-detail-copy"]
@@ -4348,6 +4408,8 @@ final class WorkspaceChecklistUITests: XCTestCase {
         if clear { app.launchArguments.append("--ledger-ui-test-inventory-price-clear") }
         if retry { app.launchArguments.append("--ledger-ui-test-price-retry") }
         if changed { app.launchArguments.append("--ledger-ui-test-price-changed") }
+        if adjustments { app.launchArguments.append("--ledger-ui-test-live-adjustments") }
+        if invalidBase { app.launchArguments.append("--ledger-ui-test-adjustment-invalid-base") }
         app.launch()
         defer { app.terminate() }
         let project = app.buttons[inventory ? "target-business-inventory-card" : "target-active-project-card-project-ui-test"]
@@ -4374,9 +4436,11 @@ final class WorkspaceChecklistUITests: XCTestCase {
         app.buttons["Cancel"].tap()
         XCTAssertTrue(app.buttons["Save Changes"].waitForNonExistence(timeout: 5))
         openEditor()
-        app.buttons["Save Changes"].tap()
-        XCTAssertTrue(app.buttons["Save Changes"].waitForNonExistence(timeout: 5))
-        openEditor()
+        if !invalidBase {
+            app.buttons["Save Changes"].tap()
+            XCTAssertTrue(app.buttons["Save Changes"].waitForNonExistence(timeout: 5))
+            openEditor()
+        }
         let field = app.textFields["0.00"]
         field.tap()
         #if os(macOS)
@@ -4386,7 +4450,16 @@ final class WorkspaceChecklistUITests: XCTestCase {
         field.typeText(String(repeating: XCUIKeyboardKey.delete.rawValue, count: 4))
         #endif
         if !clear { field.typeText(inventory ? "0.00" : "1.00") }
-        if !inventory {
+        if adjustments {
+            XCTAssertTrue(app.otherElements["target-item-price-adjustments"].exists
+                || app.staticTexts.matching(NSPredicate(format: "label BEGINSWITH 'Unadjusted:'")).firstMatch.exists)
+            if invalidBase {
+                XCTAssertTrue(app.staticTexts["target-item-price-calculation-issue"].exists)
+                XCTAssertTrue(app.buttons["Save Changes"].isEnabled)
+            } else {
+                XCTAssertTrue(app.staticTexts["target-item-price-provisional"].exists)
+            }
+        } else if !inventory {
             XCTAssertTrue(app.staticTexts["The project price will be raised to 2.00 to match the purchase cost."].waitForExistence(timeout: 5))
         }
         app.buttons["Save Changes"].tap()

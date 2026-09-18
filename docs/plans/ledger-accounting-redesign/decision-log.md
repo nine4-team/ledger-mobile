@@ -64,6 +64,20 @@ not its implementation. O-034 remains open. See the canonical
 
 ## Derived Implementation Proposals
 
+### Confirmed live Item adjustments — 2026-09-17
+
+User approved [Live Item Adjustments](../non-item-receipt-lines/design.md#live-item-adjustments--confirmed-2026-09-17):
+Transaction adjustments sum signed nonphysical lines; Item unadjusted project
+price determines its proportional share using Transaction total minus adjustments.
+Calculate live even before all Items/lines exist; audit the exact Difference and
+label zero Balanced. Project price edits are inclusive of adjustments. Use the
+specified beneath-price UI or compact disclosure. Invalid allocation/inverse
+inputs show calculation errors without blocking saving/editing; this handling is
+approved, not an open question. Current edits never rewrite collected history.
+This supersedes conflicting O-008/O-030/O-031 proposal text for this price allocation;
+it does not approve their unrelated acquisition-basis, tax-reporting or Expense
+creation proposals. Implementation and migration verification remain required.
+
 These are senior-level migration recommendations, not yet user-confirmed product
 decisions.
 

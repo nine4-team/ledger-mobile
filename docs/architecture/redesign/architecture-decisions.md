@@ -2,6 +2,67 @@
 
 Status: active
 
+### 2026-09-17 — Exact, revision-bound live Item adjustments
+
+The confirmed live Item adjustment contract in
+`docs/plans/non-item-receipt-lines/design.md` uses a whole-order base (`T-A`),
+not the entered Item subtotal. Inclusive edits preserve their inverse as reduced
+integer fractions; derived cents never become the next input. PostgreSQL,
+native and MCP use the same checked38-digit integer envelope, exact division
+and stable Item-identity penny allocation. Out-of-range or invalid-base intent
+remains saved and explicitly uncalculable. Subcent audit Difference includes its
+exact fraction instead of implying that a displayed rounded zero is balanced.
+
+Private per-order input records are distinct from acquisition evidence. A
+single atomic order snapshot and bundled per-Item context carry input/output
+revisions through existing PowerSync streams. The existing price-edit queue
+carries v3 order/revision provenance; stale legacy edits against an active
+adjustment order are rejected rather than bypassing that contract. Receipt
+membership, header and adjustment-line changes refresh from original inputs.
+Unknown legacy adjustment inclusion is not guessed from purchase cost or an
+old Project price. This preserves original acquisition/migration evidence.
+
+Current Item price and uncollected sources change together; collected sources,
+Invoice lines and payments remain frozen. Adjustment provenance narrowly permits
+zero or uncalculable current charge amounts without weakening ordinary source
+constraints. Invalid sources use existing incomplete-Invoice readiness. Zero
+whole-Invoice totals retain the existing noncollectible guard; no cancellation,
+settlement, automatic withdrawal or blanket positive-Invoice zero-line policy
+is introduced (O-010 remains separate).
+
+Verification is recorded under `live-item-adjustments` in the existing checklist:
+native exact arithmetic/queue/encrypted reopen, authenticated HTTP/MCP and real
+PowerSync readback, iPhone editor issue/save scenarios, full local SQL, and six
+observed two-session races after replaying135 migrations into an owned empty
+application schema. No production/hosted migration or exact-commit CI claim.
+The existing shared UI is reused; no new editor, invoice lifecycle or receipt
+entry mode was introduced.
+
+Final local structural checks: `npm run conversion:check` and `git diff --check`
+passed (`/tmp/ledger-live-item-adjustments-conversion.log`). The final handler
+keeps price-row locking after shared Invoice headers; its six-race rerun passed
+in `/tmp/ledger-live-item-adjustments-races-final.log`. Supported money/header
+aggregates remain Int64, with38-digit bounded fraction intermediates; this is
+not an arbitrary-precision monetary API.
+
+Independent-review repairs: unadjusted cent overflow invalidates the calculation
+equally on all three runtimes (including the exact Difference). Display cents
+use final allocated Project price minus its allocated adjustment share, so each
+Item's two labels reconcile while original fractional inputs remain unchanged.
+An unchanged editor uses its authoritative order-wide penny assignment instead
+of recomputing an isolated Item. Snapshot verification includes displayed
+Unadjusted cents. Live audit decoding no longer evaluates obsolete acquisition
+totals, and the zero vendor Transaction exception is Purchase-only. Narrow
+collection coverage distinguishes a positive Invoice containing a zero Item
+from a zero-total Invoice.
+
+Focused review verification: native29tests/5suites, MCP23affected tests plus
+TypeScript, full SQL73files2449assertions, and one iPhone editor test27.265s
+passed. Logs: `/tmp/ledger-adjustments-review-native-final.log`,
+`-mcp-final.log`, `-tscheck.log`, `-full-sql.log`, and `-ui.log` with the same
+prefix. The initial obsolete reconstruction expectation in the downloaded
+receipt fixture was updated to assert the live subtotal and nil legacy result.
+
 ### 2026-09-16 — Repeated created-Invoice edits retain membership revisions
 
 Extend the existing live membership key with `joined_at_revision`; do not add

@@ -33,11 +33,14 @@ struct ProjectTransactionExportButton: View {
             .init(id: "receiptLines", label: "Receipt Lines", defaultSelected: false),
             .init(id: "receiptLinesJSON", label: "Receipt Lines JSON", defaultSelected: false),
             .init(id: "receiptAuditStatus", label: "Receipt Audit", defaultSelected: false),
-            .init(id: "receiptItemTotal", label: "Receipt Item Total", defaultSelected: false),
+            .init(id: "receiptItemTotal", label: "Items Subtotal", defaultSelected: false),
+            .init(id: "receiptAdjustments", label: "Adjustments", defaultSelected: false),
+            .init(id: "receiptDifference", label: "Difference", defaultSelected: false),
+            .init(id: "receiptAuditJSON", label: "Exact Item Adjustment Details JSON", defaultSelected: false),
             .init(id: "receiptLineIncreaseTotal", label: "Receipt Increases", defaultSelected: false),
             .init(id: "receiptLineDecreaseTotal", label: "Receipt Decreases", defaultSelected: false),
             .init(id: "receiptReconstructedTotal", label: "Reconstructed Receipt Total", defaultSelected: false),
-            .init(id: "receiptVariance", label: "Receipt Variance", defaultSelected: false)]
+            .init(id: "receiptVariance", label: "Receipt Variance (Reconstructed − Total)", defaultSelected: false)]
     }
 
     var body: some View {

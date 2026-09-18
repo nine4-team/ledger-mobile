@@ -134,6 +134,31 @@ struct TransactionExportCSVTests {
         #expect(csv.hasSuffix(",0.00,"))
     }
 
+    @Test func liveAuditCSVRetainsFractionalEvidenceAndSelectedFields() throws {
+        var wire = base("live-export")
+        wire["origin"] = "vendor_payment"; wire["amountMinorUnits"] = "3"
+        wire["category"] = ["id": "items", "name": "Items", "kind": "itemized", "revision": "1"]
+        var receipt = wire
+        receipt["requiresLiveAdjustments"] = true
+        receipt["items"] = ["a", "b"].map { ["itemId": $0, "membershipKind": "linked", "amountMinorUnits": "999"] }
+        receipt["nonItemReceiptLines"] = [["id": "tax", "description": "Tax", "amountMinorUnits": "1", "effect": "increase"]]
+        receipt["liveAdjustments"] = ["totalMinorUnits": "3", "adjustmentsMinorUnits": "1",
+            "differenceNumerator": "2", "differenceDenominator": "3", "isBalanced": false, "isProvisional": true,
+            "items": ["a", "b"].map { ["itemId": $0, "numerator": "2", "denominator": "3",
+                "requestedProjectPriceMinorUnits": "1", "unadjustedMinorUnits": "1",
+                "adjustmentsMinorUnits": "0", "projectPriceMinorUnits": "1"] }] as [String: Any]
+        wire["receipt"] = receipt
+        let row = try JSONDecoder().decode(TransactionDetailSnapshot.self, from: JSONSerialization.data(withJSONObject: wire))
+        let ids = ["receiptAuditStatus", "receiptItemTotal", "receiptAdjustments", "receiptDifference", "receiptAuditJSON"]
+        let selected = ids.map { ExportFieldConfig(id: $0, label: $0, defaultSelected: false) }
+        let csv = try TransactionExportCalculations.exportTransactionsCSV(snapshot: snapshot([row]), selectedFields: selected)
+        #expect(csv.contains("transaction,live-export,USD,mismatch,4/3 USD minor units,0.01,2/3 USD minor units,"))
+        #expect(csv.contains("\"\"differenceNumerator\"\":\"\"2\"\""))
+        #expect(csv.contains("\"\"denominator\"\":\"\"3\"\""))
+        #expect(try manifest(csv, selectedCount: ids.count)["selectedFieldIds"] as? [String] == ids)
+        #expect(!csv.contains("9.99")) // Preserved acquisition evidence is not today's audit basis.
+    }
+
     private func base(_ id: String) -> [String: Any] {
         ["accountId": "account", "principalId": "principal", "transactionId": id,
          "scopeKind": "project", "projectId": "project", "clientId": "client", "type": "purchase",

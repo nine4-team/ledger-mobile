@@ -17,7 +17,8 @@ public enum TransactionExportValues {
         case "transactionId", "transactionDate", "source", "transactionType", "paymentMethod", "amount",
              "budgetCategory", "categoryId", "notes", "receiptEmailed", "createdAt", "projectId", "currency", "purchasedBy",
              "receiptAuditStatus", "receiptItemTotal", "receiptLineIncreaseTotal", "receiptLineDecreaseTotal",
-             "receiptReconstructedTotal", "receiptVariance", "receiptLines", "receiptLinesJSON", "taxRatePct", "subtotal", "itemCategories": return
+             "receiptReconstructedTotal", "receiptVariance", "receiptDifference", "receiptAdjustments", "receiptAuditJSON",
+             "receiptLines", "receiptLinesJSON", "taxRatePct", "subtotal", "itemCategories": return
         case "reimbursementType", "status", "receiptImages",
              "inventorySaleDirection": throw Failure.unavailableField(fieldID)
         default: throw Failure.unknownField(fieldID)
@@ -28,6 +29,8 @@ public enum TransactionExportValues {
     /// fail explicitly until their owning target data/policy is implemented.
     /// Missing values in an otherwise supported field remain unknown, not false/0.
     public static func cell(fieldID: String, row: TransactionDetailSnapshot) throws -> Cell {
+        if let receipt = row.receipt, receipt.requiresLiveAdjustments,
+           let value = try liveAuditCell(fieldID: fieldID, receipt: receipt) { return value }
         switch fieldID {
         case "transactionId": return .text(row.transactionId.rawValue)
         case "transactionDate": return row.transactionDate.map(Cell.text) ?? .unknown
@@ -74,6 +77,15 @@ public enum TransactionExportValues {
         case "receiptLineDecreaseTotal": return row.receipt?.reconstruction.map { .money($0.lineDecreaseTotal) } ?? .unknown
         case "receiptReconstructedTotal": return row.receipt?.reconstruction.map { .money($0.reconstructedTotal) } ?? .unknown
         case "receiptVariance": return row.receipt?.reconstruction.map { .money($0.variance) } ?? .unknown
+        case "receiptDifference":
+            guard let value = row.receipt?.reconstruction?.variance else { return .unknown }
+            return exactCell(try LiveItemAdjustments.Fraction(-Decimal(value.minorUnits), 1), currency: value.currency)
+        case "receiptAdjustments":
+            guard let receipt = row.receipt else { return .unknown }
+            return .money(try receipt.lines.reduce(.zero(currency: row.amount.currency)) { sum, line in
+                try line.effect == .increase ? sum.adding(line.magnitude) : sum.subtracting(line.magnitude)
+            })
+        case "receiptAuditJSON": return .unknown
         case "receiptLines":
             guard let receipt = row.receipt else { return .unknown }
             return .text(ReceiptLineExport.readable(receipt.lines))
@@ -84,4 +96,44 @@ public enum TransactionExportValues {
         }
     }
 
+    private static func liveAuditCell(fieldID: String, receipt: TransactionReceiptSnapshot) throws -> Cell? {
+        switch fieldID {
+        case "receiptItemTotal", "receiptLineIncreaseTotal", "receiptLineDecreaseTotal", "receiptReconstructedTotal",
+             "receiptVariance", "receiptDifference", "receiptAdjustments", "receiptAuditJSON": break
+        default: return nil
+        }
+        guard let order = receipt.liveAdjustments else { return .unknown }
+        if fieldID == "receiptAuditJSON" {
+            let encoder = JSONEncoder(); encoder.outputFormatting = [.sortedKeys, .withoutEscapingSlashes]
+            return .text(String(decoding: try encoder.encode(order), as: UTF8.self))
+        }
+        let currency = receipt.finalAmount.currency
+        let adjustments = try LiveItemAdjustments.Fraction(Decimal(string: order.adjustmentsMinorUnits)!, 1)
+        if fieldID == "receiptAdjustments" { return exactCell(adjustments, currency: currency) }
+        if fieldID == "receiptLineIncreaseTotal" || fieldID == "receiptLineDecreaseTotal" {
+            let effect: NonItemReceiptLineEffect = fieldID == "receiptLineIncreaseTotal" ? .increase : .decrease
+            let total = try receipt.lines.filter { $0.effect == effect }.reduce(Money.zero(currency: currency)) {
+                try $0.adding($1.magnitude)
+            }
+            return .money(total)
+        }
+        guard let n = order.differenceNumerator.flatMap({ Decimal(string: $0) }),
+              let d = order.differenceDenominator.flatMap({ Decimal(string: $0) }) else { return .unknown }
+        let difference = try LiveItemAdjustments.Fraction(n, d)
+        if fieldID == "receiptDifference" { return exactCell(difference, currency: currency) }
+        // Preserve the historical CSV variance sign (reconstructed minus total).
+        if fieldID == "receiptVariance" { return exactCell(difference.negated, currency: currency) }
+        let reconstructed = try LiveItemAdjustments.Fraction(Decimal(receipt.finalAmount.minorUnits), 1).adding(difference.negated)
+        let value = fieldID == "receiptItemTotal" ? try reconstructed.adding(adjustments.negated) : reconstructed
+        return exactCell(value, currency: currency)
+    }
+
+    /// Whole cents stay numeric. A fractional cent remains explicitly exact,
+    /// never rounded to zero in a column that explains an unbalanced receipt.
+    private static func exactCell(_ value: LiveItemAdjustments.Fraction, currency: CurrencyCode) -> Cell {
+        if value.d == 1, let minorUnits = Int64(value.n.description) {
+            return .money(Money(minorUnits: minorUnits, currency: currency))
+        }
+        return .text("\(value.n)/\(value.d) \(currency.rawValue) minor units")
+    }
 }

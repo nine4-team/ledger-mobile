@@ -224,6 +224,25 @@ work.
 
 ### Verification execution
 
+For the authorized post-Item-photo efficiency run, one fresh-context execution
+owner plans, implements and runs ordinary shell checks. The coordinator performs
+one independent review of the completed diff/evidence; fix findings and rerun
+affected checks as needed. Do not add nested test supervision or seek unchanged
+status. Before dependent tests, check service readiness, fixture consistency and
+test selection. Existing required progress-update/wait constraints still apply;
+do not claim completion-only wake-ups when they were not achieved. This changes
+execution ownership, not required security/accounting/offline/UI proof.
+
+For delegated live app/UI and live backend integration tests, use the user's
+chosen **Luna Max**: model `gpt-5.6-luna`, reasoning effort `max`. Set both
+explicitly at agent launch, with a bounded task and the necessary current
+context; do not inherit the coordinator's model. Do not silently fall back to
+Astra or another model. Existing agents do not change model merely because this
+document changed; apply the setting to the next test delegation and identify any
+already-running agent separately. Keep implementation/model defaults unchanged.
+Ordinary local test commands do not require a model or a separate agent. Preserve
+the existing scope, evidence and review requirements regardless of test model.
+
 These are command entry points, not a per-feature test-selection registry. Select
 tests from the changed behavior and its consumers; do not re-inventory the test
 system for each batch. Existing suites do not establish coverage of untested
@@ -455,6 +474,54 @@ was cancelled after required checks passed, record that limited proof explicitly
 do not call the whole run successful or use it to satisfy a cumulative CI gate.
 
 ## Context Continuity
+
+Keep context bounded without creating another tracker:
+
+- The authorized follow-up sample uses `node scripts/analyze-agent-usage.mjs
+  [--from ISO] [--to ISO] rollout.jsonl ...` after completion. Record unique session
+  paths and time boundaries in the existing efficiency assessment. Run the script
+  against the previous completed sample before relying on it. It makes no model
+  calls. Exact cumulative-counter deltas exclude duplicate status events; review
+  resets and last-usage mismatches. Content amounts/exposure are readable-character
+  proxies, not exact cached-token allocations; tool schemas, encrypted text,
+  images and retention differences remain unclassified. Action labels are
+  heuristics, not proof of waste. Include coordinator/setup/final-review overhead
+  and label final reporting exclusions. No per-activity counter ledger for this
+  sample; this supersedes Required Work Sequence step7's older diagnostic protocol.
+  Compare delivered behavior and failures as well as usage; different workflows
+  are not a controlled baseline and cannot establish a causal savings percentage.
+
+- For delegated tests, provide the bounded assignment, relevant paths, required
+  checks, constraints and expected evidence. Do not fork the full conversation;
+  use no inherited history or only the small relevant portion. Preserve the
+  required Luna Max setting and independent review.
+- Save verbose command output to logs and read summaries or focused excerpts;
+  expand only to investigate a concrete failure or evidence gap. Do not load
+  whole historical reports or catalogs for routine continuation.
+- User-level Codex configuration requests `tool_output_token_limit = 2000`.
+  Also set explicit per-call output budgets, normally 2,000 tokens; filter verbose
+  results into the needed fields/excerpts before returning them. Store full test
+  output in existing log locations. Expand a read for a concrete review need;
+  required skill/instruction reads still need their full content. Defaults may
+  be overridden by tool budgets; this is a backstop, not a universal hard cap.
+- Model-default compaction is restored: do not force early Astra compaction on
+  the mistaken assumption that Codex applies its API long-context surcharge.
+  Billing rules and context limits depend on model/product. A saved setting is
+  not proof the running desktop loaded it; distinguish parser/config validation
+  from observed runtime enforcement, and do not restart active work just to test it.
+- For the authorized September17 Item-photo trial, use a fresh-context worker
+  for implementation, Luna Max for delegated live verification, and independent
+  coordinator review. Batch related reads and edits; retain exact test sessions
+  and use existing completion tools. The coordinator continues useful review
+  without repeated status inquiries. Capture each agent's session baseline and
+  ending input/cache/output/request counts once; count child work once. Report
+  missing telemetry explicitly, API-equivalent costs separately from subscription
+  usage, and no causal savings percentage without a comparable baseline. This
+  trial supersedes per-activity measurement requirements; it adds no per-call log.
+  Save its result in the existing implementation-efficiency assessment and resume
+  pointer. Judge delivered behavior and quality alongside consumption.
+
+Setting semantics: [official Codex configuration reference](https://learn.chatgpt.com/docs/config-file/config-reference).
 
 After start, handoff, or compaction:
 

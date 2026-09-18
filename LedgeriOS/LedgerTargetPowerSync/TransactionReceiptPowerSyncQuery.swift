@@ -37,8 +37,9 @@ struct TransactionReceiptPowerSyncQuery: TransactionReceiptReading {
                 UNION ALL SELECT EXISTS(SELECT 1 FROM spike_item_placements WHERE account_id=?)
                 UNION ALL SELECT EXISTS(SELECT 1 FROM spike_spaces WHERE account_id=?)
                 UNION ALL SELECT EXISTS(SELECT 1 FROM item_image_sets WHERE account_id=?)
+                UNION ALL SELECT EXISTS(SELECT 1 FROM item_adjustment_orders WHERE account_id=?)
                 UNION ALL SELECT EXISTS(SELECT 1 FROM ps_stream_subscriptions WHERE stream_name='transaction_receipts')
-                """, parameters: Array(repeating: scope.accountId.rawValue, count: 10)) { try $0.getInt(index: 0) }
+                """, parameters: Array(repeating: scope.accountId.rawValue, count: 11)) { try $0.getInt(index: 0) }
             for try await _ in changes {
                 try Task.checkCancellation()
                 let update: TransactionReceiptUpdate
@@ -84,6 +85,11 @@ struct TransactionReceiptPowerSyncQuery: TransactionReceiptReading {
                 }
             guard rows.count == 1 else { throw TransactionReceiptSnapshot.Failure.scopeMismatch }
             var wire = rows[0]
+            wire["requiresLiveAdjustments"] = (wire["type"] as? String) == "purchase"
+            if let snapshot = try transaction.getOptional(sql: "SELECT snapshot FROM item_adjustment_orders WHERE account_id=? AND id=?",
+                parameters: [scope.accountId.rawValue,transactionId.rawValue], mapper: { try $0.getString(index: 0) }) {
+                wire["liveAdjustments"] = try JSONSerialization.jsonObject(with: Data(snapshot.utf8))
+            }
             let currency = wire["currency"] as? String
             wire["items"] = try transaction.getAll(sql: """
                 SELECT evidence.item_id,evidence.currency,evidence.amount_minor_units,evidence.membership_kind,

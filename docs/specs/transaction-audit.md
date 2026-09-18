@@ -1,5 +1,14 @@
 # Transaction Audit
 
+> **2026-09-17 superseding target rule:** Follow
+> [Live Item Adjustments](../plans/non-item-receipt-lines/design.md#live-item-adjustments--confirmed-2026-09-17).
+> Audit uses the sum of **unadjusted project prices** plus signed Transaction
+> adjustments against the total. Adjusted project prices already include those
+> lines: never add them again. Display Items subtotal, Adjustments, Transaction
+> total and Difference; zero difference is Balanced. Allocate live against
+> total minus adjustments, not only the Items entered so far. Calculation errors
+> do not prevent saving or editing. Older equations below are source history.
+
 > **Target authority (2026-09-13):** The calculation and Firebase implementation
 > below describe the source app, not the Supabase target. Follow D-016/D-030 in
 > the [decision log](../plans/ledger-accounting-redesign/decision-log.md) and

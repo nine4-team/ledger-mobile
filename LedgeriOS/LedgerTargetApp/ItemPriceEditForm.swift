@@ -31,10 +31,13 @@ struct ItemPriceEditForm: View {
                 ItemProjectPriceField(text: $text)
                     .disabled(attempt != nil || review == nil)
                     .accessibilityIdentifier("target-item-price-entry")
+                if let context = review?.livePricing {
+                    pricingDetails(context)
+                }
                 if review == nil && operationId == nil {
                     Text(projectId == nil
                         ? "Price editing requires downloaded Inventory and purchase-cost records."
-                        : "Price editing requires downloaded Item and billing records. Collected charges cannot be edited here.")
+                        : "Price editing requires downloaded Item and billing records.")
                         .font(Typography.caption)
                 }
             }
@@ -52,7 +55,7 @@ struct ItemPriceEditForm: View {
                     review = value
                     if !prefilled, let value {
                         originalReview = value
-                        text = value.currentPrice.map(Self.amount) ?? ""
+                        text = (value.currentPrice ?? value.livePricing?.requestedProjectPrice).map(Self.amount) ?? ""
                         prefilled = true
                     }
                 }
@@ -94,6 +97,40 @@ struct ItemPriceEditForm: View {
             return "The project price will be raised to \(Self.amount(payload.reviewedPrice)) to match the purchase cost."
         }
         return nil
+    }
+
+    @ViewBuilder private func pricingDetails(_ context: LiveItemPricingContext) -> some View {
+        let preview = (try? Money.parseNonnegativeEntry(text, currency: context.total.currency))
+            .flatMap { context.preview(requested: $0) }
+        let unadjusted = preview == nil ? context.unadjusted?.minorUnits : preview?.unadjustedMinorUnits
+        let adjustment = preview == nil ? context.itemAdjustments?.minorUnits : preview?.adjustmentsMinorUnits
+        let issue = preview == nil ? context.issue : preview?.issue
+        HStack {
+            Text("Unadjusted: \(unadjusted.map { currencyAmount($0, context.total.currency) } ?? "Unknown")")
+            Spacer()
+            Text("Adjustments: \(adjustment.map { ($0 >= 0 ? "+" : "") + currencyAmount($0, context.total.currency) } ?? "Unknown")")
+        }
+        .font(Typography.caption)
+        .accessibilityIdentifier("target-item-price-adjustments")
+        if let issue {
+            Text(issue == .nonpositiveBase
+                ? "Calculation issue: the Transaction total minus adjustments must be positive. You can still save and edit the inputs."
+                : issue == .zeroFactor
+                  ? "Calculation issue: a nonzero Project price cannot be calculated from a zero Transaction total. Your entered price can still be saved."
+                  : issue == .unknownInput
+                    ? "The unadjusted price is unknown. Enter Project price to establish its inclusive amount."
+                    : "Calculation issue: this amount exceeds the supported exact calculation range. Your inputs are retained.")
+                .font(Typography.caption)
+                .accessibilityIdentifier("target-item-price-calculation-issue")
+        } else if context.isProvisional || (try? Money.parseNonnegativeEntry(text, currency: context.total.currency)) != context.projectPrice {
+            Text("Provisional allocation — the receipt is not balanced.")
+                .font(Typography.caption)
+                .accessibilityIdentifier("target-item-price-provisional")
+        }
+    }
+
+    private func currencyAmount(_ cents: Int64, _ currency: CurrencyCode) -> String {
+        (Decimal(cents) / 100).formatted(.currency(code: currency.rawValue))
     }
 
     private func save() {

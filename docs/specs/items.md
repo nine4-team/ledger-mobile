@@ -44,6 +44,15 @@ unwired source card callback does not authorize a new card toggle.
 
 ## Target Everyday Editing
 
+**2026-09-17 pricing update:** Follow
+[Live Item Adjustments](../plans/non-item-receipt-lines/design.md#live-item-adjustments--confirmed-2026-09-17).
+Items have unadjusted project price and derived adjustments; project price includes
+the allocated adjustments. Direct Project price edits mean the final inclusive
+amount. Show Unadjusted left / Adjustments right beneath Project price, or in a
+compact info disclosure. Recompute current prices live; no new editing lock.
+Preserve historical collected amounts. This supersedes conflicting source
+normalization/price-floor prose for adjustment-derived project prices below.
+
 One shared Item-edit workflow covers rename, name/vendor/SKU, purchase/project/
 market amounts, notes, the four current editable status labels, clear-status
 where supported, detail bookmark and bulk status. Keep current-selection

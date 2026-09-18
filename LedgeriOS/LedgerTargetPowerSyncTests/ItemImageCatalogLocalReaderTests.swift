@@ -16,6 +16,14 @@ struct ItemImageCatalogLocalReaderTests {
             #expect(try await read(db).isComplete == false)
             _ = try await db.execute(sql: "INSERT INTO item_image_sets(id,account_id,item_id,revision,expected_count) VALUES('image-item','image-account','image-item','1',0)", parameters: nil)
             #expect(try await read(db).isComplete)
+            let empty = try await read(db)
+            #expect(empty.revision == 1)
+            _ = try await db.execute(sql: "UPDATE item_image_sets SET revision='2'", parameters: nil)
+            let changedEmpty = try await read(db)
+            #expect(changedEmpty.isComplete && changedEmpty.images.isEmpty)
+            #expect(changedEmpty.revision == 2)
+            #expect(changedEmpty != empty)
+            _ = try await db.execute(sql: "UPDATE item_image_sets SET revision='1'", parameters: nil)
             _ = try await db.execute(sql: "UPDATE item_image_sets SET expected_count=1", parameters: nil)
             _ = try await db.execute(sql: "INSERT INTO item_image_references(id,account_id,item_id,attachment_id,set_revision,position,is_primary) VALUES('reference','image-account','image-item','object','1',0,1)", parameters: nil)
             #expect(try await read(db).isComplete == false)
@@ -85,6 +93,49 @@ struct ItemImageCatalogLocalReaderTests {
 
     func read(_ db: any PowerSyncDatabaseProtocol) async throws -> DownloadedItemImageCatalog {
         try await ItemImageCatalogLocalReader(database: db).read(accountId: account,principalId: principal,itemId: item)
+    }
+    @Test("Item gallery observes its separate attachment database and drains both watches")
+    func separateCaptureDatabase() async throws {
+        try await withDatabase { db in
+            try await seed(db)
+            let root = FileManager.default.temporaryDirectory.appendingPathComponent("item-capture-watch-\(UUID().uuidString)")
+            try FileManager.default.createDirectory(at: root, withIntermediateDirectories: true)
+            defer { try? FileManager.default.removeItem(at: root) }
+            let attachments = try AttachmentCapturePowerSyncDatabaseFactory.open(
+                absolutePath: root.appendingPathComponent("attachments.sqlite").path,
+                encryptionKey: .init(hexadecimal: String(repeating: "4a", count: 32)))
+            do {
+                let values = AsyncThrowingStream<Bool,Error>.makeStream()
+                let task = Task {
+                    do {
+                        try await ItemImageCatalogLocalReader(database: db).run(accountId: account,
+                            principalId: principal, itemId: item, attachmentDatabase: attachments) {
+                            guard $0.isComplete else { return false }
+                            do {
+                                let present = try await attachments.get(sql:
+                                    "SELECT EXISTS(SELECT 1 FROM local_attachment_durability_queue WHERE id='pending') AS present",
+                                    parameters: nil) { try $0.getInt(name: "present") == 1 }
+                                values.continuation.yield(present)
+                                return true
+                            } catch { values.continuation.finish(throwing: error); return false }
+                        }
+                        values.continuation.finish()
+                    } catch { values.continuation.finish(throwing: error) }
+                }
+                let timeout = Task { try await Task.sleep(for: .seconds(10)); task.cancel() }
+                defer { task.cancel(); timeout.cancel() }
+                var iterator = values.stream.makeAsyncIterator()
+                #expect(try await iterator.next() == false)
+                _ = try await attachments.execute(sql: """
+                    INSERT INTO local_attachment_durability_queue(id,account_id,parent_kind,parent_id,state)
+                    VALUES('pending','image-account','item','image-item','pending')
+                    """, parameters: nil)
+                while try #require(try await iterator.next()) == false {}
+                task.cancel()
+                await task.value
+                try await attachments.close()
+            } catch { try? await attachments.close(); throw error }
+        }
     }
     @Test("Explicit derivative arrival does not change original completeness; malformed and foreign links fail closed")
     func thumbnails() async throws {

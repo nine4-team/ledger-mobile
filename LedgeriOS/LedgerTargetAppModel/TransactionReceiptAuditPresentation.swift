@@ -23,6 +23,39 @@ public struct TransactionReceiptAuditPresentation: Equatable, Sendable {
         isApplicable = receipt.categoryKind == .itemized
         isComplete = receipt.auditStatus == .balanced
         itemCount = receipt.items.count
+        if receipt.requiresLiveAdjustments {
+            let allocation = receipt.liveAdjustments
+            let unknownIds = Set(allocation?.items.filter { $0.numerator == nil }.map(\.itemId)
+                ?? receipt.items.map { $0.id.rawValue })
+            missingItems = receipt.items.filter { unknownIds.contains($0.id.rawValue) }.map {
+                MissingItem(id: $0.id, name: $0.name.flatMap { $0.isEmpty ? nil : $0 }
+                    ?? "Item \($0.id.rawValue)", sku: $0.sku)
+            }
+            missingItemIds = missingItems.map(\.id)
+            let currency = receipt.finalAmount.currency
+            func format(_ value: Decimal?) -> String {
+                value.map { ($0 / 100).formatted(.currency(code: currency.rawValue).locale(locale)) } ?? "Unknown"
+            }
+            let adjustment = allocation.flatMap { Decimal(string: $0.adjustmentsMinorUnits) }
+            let differenceText: String
+            if let n = allocation?.differenceNumerator, let d = allocation?.differenceDenominator, d != "1" {
+                differenceText = "\(format(allocation?.difference)) (exactly \(n)/\(d) cents)"
+            } else { differenceText = format(allocation?.difference) }
+            var lines = ["Items subtotal: \(format(allocation?.unadjustedSubtotal))",
+                "Adjustments: \(format(adjustment))", "Transaction total: \(format(Decimal(receipt.finalAmount.minorUnits)))",
+                "Difference: \(differenceText)"]
+            if allocation?.items.contains(where: { $0.issue == .nonpositiveBase }) == true {
+                lines.append("Calculation issue: the Transaction total minus adjustments must be positive. Inputs remain editable.")
+            } else if allocation?.isProvisional == true {
+                lines.append("Allocations are provisional while the receipt is unbalanced.")
+            }
+            details = lines
+            progressPercentage = allocation?.isBalanced == true ? 100 : nil
+            statusLabel = !isApplicable ? "Audit not applicable"
+                : allocation?.difference == nil ? "Receipt details incomplete"
+                : allocation?.isBalanced == true ? "Balanced" : "Difference: \(differenceText)"
+            return
+        }
         missingItems = receipt.items.filter { $0.amount == nil }.map {
             MissingItem(id: $0.id, name: $0.name.flatMap { $0.isEmpty ? nil : $0 }
                 ?? "Item \($0.id.rawValue)", sku: $0.sku)

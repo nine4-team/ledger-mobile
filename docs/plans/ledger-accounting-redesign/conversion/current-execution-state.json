@@ -1,11 +1,11 @@
 {
   "schemaVersion": 2,
-  "stateVersion": 1519,
+  "stateVersion": 1539,
   "userRequestedPause": {
     "date": "2026-09-15",
     "status": "resumed",
     "instruction": "User explicitly said proceed after the checkpoint pause. Resume authorized implementation; preserve the estimate as a dated judgment, not measured acceptance.",
-    "completionEstimate": "Judgment estimate, not measured acceptance: approximately 50% overall (40–60% uncertainty), including remaining hosted integration and cutover readiness. Relative weights sum to 100; category completion estimates: auth/offline infrastructure 10@65%; Clients/Projects/Spaces/checklists 10@60%; categories/settings 8@80%; Items/inventory/movement/history 15@45%; Transactions/audit 12@55%; Expenses/Invoicing/collection/refunds 15@35%; media/pinning 8@65%; reports/export 7@60%; MCP 5@40%; migration/hosted/release readiness 10@20%. Weighted result50.4%. These are not hours, token forecasts, accepted-workflow counts or a comparable historical velocity series. Invoice importers excluded as retired."
+    "completionEstimate": "2026-09-17 judgment: approximately55% overall (45–65% range), including cutover readiness. Same weights as Sept15: auth/offline10@70%; Clients/Projects/Spaces/checklists10@65%; categories/settings8@80%; Items/inventory/movement/history15@50%; Transactions/audit12@55%; Expenses/Invoicing/collection/refunds15@45%; media/pinning8@75%; reports/export7@65%; MCP5@45%; migration/hosted/release10@30%. Weighted56.55/100;43.45remain. Based on saved evidence/current diff, no new tests. New Item adjustments unimplemented; photo UI/readback unfinished. Planned checks include partial passes; counts are not completion. Relative effort judgments, not hours or subscription tokens. Importers excluded."
   },
   "resumeAfterWorkflowId": "local-vendor-pdf-review",
   "updatedAt": "2026-09-17",
@@ -21,16 +21,17 @@
     "meaning": "Historical attempt1 passed all five jobs including1086native tests/156suites and25Mac/30iPhoneUI tests. Attempt2 failed iOS UI. Not a currently clean full-UI baseline or broad Item/Purchase/hosted/migration/cutover proof."
   },
   "activeWorkflow": {
-    "id": "transaction-browser-and-detail",
+    "id": "live-item-adjustments",
+    "integrationWorkflowIds": ["live-item-adjustments", "existing-item-photo-capture"],
     "kind": "product_ui",
     "status": "implementation",
     "recordPath": "docs/plans/ledger-accounting-redesign/conversion/product-behavior-checklist.json",
-    "outcome": "Preserve shared Project/Inventory search/sort/filter, cards/detail, selection/copy and honest readiness/financial visibility. Keep Project-only Add/select-all/export and Inventory-only planning distinct. Compose Item, receipt, media/history and owning mutation routes; a visible tab alone is not completion.",
-    "baseCommit": "d57aae9c6fb8d22d6a88d4731203346bb28694da",
-    "integrationWorkflowIds": ["downloaded-item-browsing-and-detail", "account-profile-readback", "inventory-return-to-source-project", "item-history-source-reconciliation", "item-space-assignment", "project-invoicing-workspace", "learned-account-removal-enforcement", "transaction-browser-and-detail"],
+    "outcome": "Implement confirmed2026-09-17 live Item adjustment allocation, inclusive Project price edits and exact unadjusted-price audit. Preserve editability, clear errors, deterministic pennies and collected history; verify native/offline/Postgres/MCP/migration parity under the linked contract.",
+    "baseCommit": "c5226c11992a46357a9d4a51b81c53f68e814d24",
     "nextActions": [
-      "CI35259056786 attempt1 at d57aae9c FAILED: provider expected-column assertion omitted details_revision; local fix passed165captures. Conversion passed; native jobs skipped. Include fix in current coherent checkpoint; no duplicate CI or Firebase merge.",
-      "Prior CI failed; preserve integrationCI evidence. Do not repeat passed iPhone/native/SQL checks for context recovery or rerun the passing Mac scenarios."
+      "Live Item adjustments implemented and independently reviewed locally:29native/23MCP/2449SQL assertions/focused iPhone PASS. Review fixes verified. No active worker; no commit/push/hosted deployment or exact-commit CI. Preserve local evidence; do not rerun broad tests for context recovery.",
+      "Prior Item-photo local checks/review finished; evidence and limits remain in its checklist record, measurement/old goal in efficiency assessment. Integration list preserves its dirty-file ownership, not acceptance of new accounting work.",
+      "Item-photo migrations appliedLOCAL without history; do not replay."
     ]
   },
   "blockers": [
@@ -43,6 +44,7 @@
     "Hosted Ledger auth/rules deployed; full hosted app/sync and migration rehearsal incomplete. No extra charges or cutover authority."
   ],
   "guardrails": [
+    "Live-test agents: Luna Max (gpt-5.6-luna, reasoning effort max), explicitly set at delegation per AGENTS.md and workflow method. Do not silently substitute or change main implementation model. Ordinary shell tests need no agent.",
     "User permits cursor/keyboard control when needed, superseding earlier session restriction. Prefer non-disruptive verification when sufficient; permission is not test evidence.",
     "Do not touch /Users/benjaminmackenzie/Dev/ledger_mobile or implement redesigned Firebase behavior.",
     "Source access is limited to the authorized read-only project QA copy; never mutate production Firebase.",
@@ -54,14 +56,14 @@
     "instruction": "Follow the active checklist record and nextActions. Preserve failures; no full-suite context recovery."
   },
   "currentTask": {
-    "id": "transaction-browser-and-detail",
+    "id": "live-item-adjustments",
     "status": "implementation",
-    "acceptanceCheckIds": ["TX-RECEIPT-EDIT"],
-    "meaning": "Start receipt-line editing under Transaction accounting, separate from descriptive edits. Reuse existing Expense line input/parser and controls; preserve saved draft bytes, source IDs and exact amounts. No billing allocation or frozen-parent permission is inferred.",
-    "verificationCommands": ["npm run conversion:check","swift test --package-path LedgeriOS --no-parallel --filter TransactionDetailsEditQueueTests"],
-    "lastResult": "Receipt8794646e and report parity repairbad7e514 pushed. Local SQL/native/MCP/live sync/iPhone proofs are in checklist TX-RECEIPT-EDIT; no full-CI acceptance. Three receipt migrations applied LOCAL once; hosted unchanged. Mac local UI initialization unavailable.",
-    "activeProcesses": {"receiptIntegrationCI":{"run":35269076888,"attempt":1,"commit":"bad7e514607f6970ae8e7f947b551b275937c1b4","state":"queued","watchSessionId":43594,"log":"/tmp/ledger-ci-35269076888-watch.log","next":"Conversion and provider jobs PASS; Mac/iOS jobs queued. Reuse watcher; queue time is not execution/stall proof. Collection O033 reply pending."}},
+    "acceptanceCheckIds": ["ADJUSTMENT-EXPORT","ADJUSTMENT-INPUTS","ADJUSTMENT-EXACT","ADJUSTMENT-ATOMIC","ADJUSTMENT-REPLAY","ADJUSTMENT-AUTH","ADJUSTMENT-IDENTITY","ADJUSTMENT-SYNC","ADJUSTMENT-OFFLINE","ADJUSTMENT-MCP","ADJUSTMENT-MIGRATION","ADJUSTMENT-UI"],
+    "meaning": "Live proportional Item adjustments and inclusive price edits; exact audit, no save locks, frozen history unchanged. Reuse receipt/price UI.",
+    "verificationCommands": ["npm run conversion:check","node --test scripts/tests/analyze-agent-usage.test.mjs"],
+    "lastResult": "Live adjustments locally implemented/reviewed. Final29native/23MCP/2449SQL/iPhone PASS; logs /tmp/ledger-adjustments-review-*.log. Migration20260918001914 appliedLOCAL without history; do not replay blindly. Hosted unchanged; exact-commit CI/newMacUI not proven. Older receipt CI35269076888 status is historical/unverified, not an active process for this slice.",
+    "activeProcesses": {},
     "integrationCI": {"run":35218414703,"attempt":1,"commit":"7ed45e59b406ca9e599eeefa75704abbaee9e559","status":"failed","meaning":"Completed13:01:47UTC. Provider/conversion PASS; Mac boundary failed (local fix). iOS1hour timeout:73passed,3failed of76finished, remaining unexecuted. Full log /tmp/ledger-ci-35218414703-ios-latest.log: capture first Photos picker still Loading; category reorder order assertion; Invoice cancel picker appears in final AX dump after15s wait failed. Diagnose targeted readiness/drag, no UI rebuild or blanket retry. Live log was incomplete; tests began12:13, not compile hang."},
-    "nextWorkflowDecision": "CI35269076888 conversion/providerPASS; Mac FAILED static environment guard before build: checker expected fixed family, writer now uses e.kind.family. Guard still precedes writes; native28 identity tests previouslyPASS. Updated checker to require both typed submit paths and exact helper family mapping; full environment2593PASS /tmp/ledger-receipt-shared-guard-environment.log. iOS run remains active; no duplicate CI. Checkpoint repair after terminal results. O033 payment equality reply pending. Three receipt migrations alreadyLOCAL; no replay/hosted."
+    "nextWorkflowDecision": "Coherent photo/pricing/export batch ready for commit/normal PR CI. CSV28native/9CSV/1iPhone PASS;186MCP/types PASS;16sync parser/boundary PASS. Actual receipt read/reopen/price replay PASS22.152s after alias/Account lookup fixes and local service reload; observed max94parameters. Scoped reviews passed. Checklist owns failures/evidence. Save exact CI run after push; do not rerun local passing suites or wait-poll unchanged CI."
   }
 }

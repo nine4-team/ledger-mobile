@@ -36,8 +36,9 @@ struct TransactionDetailPowerSyncQuery: TransactionDetailReading, TransactionExp
                 UNION ALL SELECT EXISTS(SELECT 1 FROM item_image_sets WHERE account_id=?)
                 UNION ALL SELECT EXISTS(SELECT 1 FROM collected_invoices WHERE account_id=?)
                 UNION ALL SELECT EXISTS(SELECT 1 FROM collected_invoice_lines WHERE account_id=?)
+                UNION ALL SELECT EXISTS(SELECT 1 FROM item_adjustment_orders WHERE account_id=?)
                 UNION ALL SELECT EXISTS(SELECT 1 FROM ps_stream_subscriptions WHERE stream_name='transaction_receipts')
-                """, parameters: Array(repeating: scope.accountId.rawValue, count: 14)) { try $0.getInt(index: 0) }
+                """, parameters: Array(repeating: scope.accountId.rawValue, count: 15)) { try $0.getInt(index: 0) }
             for try await _ in changes {
                 try Task.checkCancellation()
                 let update: TransactionBrowserUpdate
@@ -64,6 +65,9 @@ struct TransactionDetailPowerSyncQuery: TransactionDetailReading, TransactionExp
                 identity: TransactionReceiptStreamIdentity(scope: scope))
             let categories = try CategoryManagementLocalProjection.read(transaction, account: scope.accountId,
                 principal: principalId, fullFinancialAccess: full)
+            let allocations = Dictionary(uniqueKeysWithValues: try transaction.getAll(
+                sql: "SELECT id,snapshot FROM item_adjustment_orders WHERE account_id=?",
+                parameters: [scope.accountId.rawValue]) { (try $0.getString(index: 0), try $0.getString(index: 1)) })
             // One scope-wide read, not a query/subscription per card. Both reads
             // are inside this same SQLite snapshot and completed working set.
             let evidence = try transaction.getAll(sql: """
@@ -203,6 +207,10 @@ struct TransactionDetailPowerSyncQuery: TransactionDetailReading, TransactionExp
                         receipt["items"] = items
                         receipt["nonItemReceiptLines"] = try JSONSerialization.jsonObject(with:
                             Data(cursor.getString(name: "non_item_receipt_lines").utf8))
+                        receipt["requiresLiveAdjustments"] = (wire["type"] as? String) == "purchase"
+                        if let allocation = allocations[try cursor.getString(name: "id")] {
+                            receipt["liveAdjustments"] = try JSONSerialization.jsonObject(with: Data(allocation.utf8))
+                        }
                         wire["receipt"] = receipt
                     }
                     return try JSONDecoder().decode(TransactionDetailSnapshot.self,

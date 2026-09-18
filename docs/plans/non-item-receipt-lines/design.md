@@ -12,7 +12,105 @@ Program tracker: [Ledger Accounting Redesign](../ledger-accounting-redesign/READ
 > equations belong in source import/reconciliation tooling, not a second runtime
 > accounting path. Production access, migration and cutover require approval.
 > Canonical Item/Invoice specs supersede the old generated movement-Transaction
-> model; O-008/O-030/O-031 still gate billability, rounding and Item tax basis.
+> model. The confirmed2026-09-17 section below settles live project-price
+> allocation and audit; older O-008/O-030/O-031 proposals cannot block that work.
+
+## Live Item Adjustments — Confirmed 2026-09-17
+
+This section supersedes conflicting price-basis, audit-equation and allocation
+proposals below and in O-008/O-030/O-031 for vendor-order Item project pricing.
+It does not turn client payments, Transfers or Invoice adjustments into vendor
+order adjustments, or rewrite acquisition provenance and collected Invoice facts.
+
+### Inputs and derived values
+
+- Transaction **Total** is the entered final order amount.
+- NonItemReceiptLine entries represent nonphysical amounts such as shipping,
+  tax, discounts and credits. Charges are positive; deductions are negative.
+- Transaction **Adjustments** is the signed sum of those lines, not a second
+  independently editable total. Do not count physical merchandise twice.
+- Item **Unadjusted project price** is its price before order-wide adjustments.
+- Item **Adjustments** is its calculated share of its owning vendor Transaction's
+  adjustments. Item **Project price** includes that share.
+
+For total T, adjustments A and Item unadjusted price U:
+
+```
+B = T - A
+Item adjustments = U / B * A
+Project price = U + Item adjustments
+```
+
+B is an internal allocation base, not another user-maintained subtotal. Use the
+whole order's base, never the sum of only the Items entered so far. For T=120,
+A=20 and Items U=10 and U=90, allocate 2 and18 respectively. The first Item
+receives2 even before the second Item is entered. Missing adjustment lines can
+change these estimates; label allocations provisional while unbalanced.
+
+Recalculate from original inputs whenever totals, lines, Item prices or relevant
+membership change; never apply adjustments repeatedly to an already adjusted
+price. No completion button or count gate is needed. Adding another Item does
+not change the existing Items' mathematical shares; final penny reconciliation
+can change a rounded share by a cent.
+
+### Direct Project price edits
+
+Editing Project price to120 means120 **including** shipping, tax and other
+adjustments. Preserve this existing control. For a valid nonzero factor T/B,
+derive U = requested Project price * B / T; do not reinterpret120 as pre-adjustment
+price or add a second independent override. Keep sufficient exact intermediate
+precision so reverse calculation does not silently change the entered final
+price. Display currency amounts to cents; perform no binary-floating-point money
+calculation. Deterministic rounding and direct-edit round trips require tests.
+
+### Audit and presentation
+
+- **Items subtotal:** sum of the Items' unadjusted project prices.
+- **Adjustments:** Transaction adjustment-line sum.
+- **Transaction total:** final order amount.
+- **Difference:** Transaction total minus Items subtotal minus Adjustments.
+
+Zero Difference is **Balanced**, not proof that every physical Item/line was
+entered correctly. A difference does not identify its cause: missing Items,
+missing adjustments and wrong amounts are all possible. Missing downloaded
+evidence is unknown, not zero. No tolerance or automatic balancing line is allowed.
+At balance, deterministic penny allocation must make Item adjustments sum to A
+and Item project prices sum to T. Never add A again to adjusted Item prices.
+Use stable Item identity for rounding ties, not arrival or query order.
+
+Under Project price show one line: **Unadjusted: $100 · Adjustments: +$5**, with
+Unadjusted on the left and Adjustments on the right. In constrained layouts use
+an info disclosure showing both clearly. Reuse existing price controls and views.
+
+### Calculation errors and history
+
+If B is zero or negative, do not divide or invent an allocation. Show a clear
+calculation issue explaining that the Transaction total minus adjustments must
+be positive. If T/B is zero, a requested nonzero final price cannot be reversed;
+retain the entered intent and explain the calculation issue. Saving inputs and
+editing remain available; these are calculation errors, not locks or new drafts.
+Do not present old calculated amounts as current valid results. Recalculate when
+the inputs support it. This handling is approved, not an unresolved product gate.
+
+Current Item prices remain editable and recalculate. Collected Invoice amounts
+and historical payment/accounting snapshots remain unchanged. Do not infer that
+an Item itself becomes uneditable. Older purchase-price-floor rules must not
+silently erase a signed discount allocation; this target contract governs the
+adjusted project-price calculation, without changing stored acquisition facts.
+
+### Implementation and verification obligations
+
+Use one shared calculation contract across native UI, offline projections,
+Postgres commands and MCP; persist input revisions and derived provenance so
+partial sync cannot mix new adjustments with old Item prices. Preserve accepted
+offline edits/restart/replay and recompute dependent current values consistently.
+Migration preserves original prices/lines and unknown evidence; do not guess
+whether a legacy price already includes adjustments or allocate twice.
+Required checks include partial Item entry, missing/edited adjustments, signed
+discounts, exact pennies, direct inclusive-price edits, zero/negative base,
+zero-factor inverse edits, reassociation, offline restart/replay, stale revisions,
+current authorization, and unchanged collected accounting. Existing receipt-line
+editing tests do not prove this new calculation has been implemented.
 
 ## Problem
 

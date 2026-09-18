@@ -235,6 +235,7 @@ streams:
         FROM spike_item_project_categories
         JOIN spike_budget_categories AS category ON category.account_id = spike_item_project_categories.account_id
           AND category.id = spike_item_project_categories.category_id
+          AND category.account_id = subscription.parameter('account_id')
         JOIN spike_account_memberships AS membership ON membership.account_id = spike_item_project_categories.account_id
         JOIN spike_principals AS principal ON principal.id = membership.principal_id
         WHERE spike_item_project_categories.account_id = subscription.parameter('account_id')
@@ -645,6 +646,21 @@ streams:
           AND principal.auth_user_id=auth.user_id() AND membership.state='active'
           AND category.visibility_class='ordinary' AND membership.financial_access<>'full'
       - |
+        SELECT item_adjustment_orders.id,item_adjustment_orders.account_id,item_adjustment_orders.revision::text AS revision,item_adjustment_orders.snapshot
+        FROM ledger_private.item_adjustment_orders
+        JOIN spike_transactions AS txn ON txn.account_id=item_adjustment_orders.account_id AND txn.id=item_adjustment_orders.id
+          AND txn.account_id=subscription.parameter('account_id')
+        JOIN spike_budget_categories AS category ON category.account_id=txn.account_id AND category.id=txn.category_id
+          AND category.account_id=subscription.parameter('account_id')
+        JOIN spike_account_memberships AS membership ON membership.account_id=item_adjustment_orders.account_id
+          AND membership.account_id=subscription.parameter('account_id')
+        JOIN spike_principals AS principal ON principal.id=membership.principal_id
+        WHERE item_adjustment_orders.account_id=subscription.parameter('account_id')
+          AND txn.scope_kind=subscription.parameter('scope_kind')
+          AND ifnull(txn.project_id,'')=ifnull(subscription.parameter('project_id'),'')
+          AND principal.auth_user_id=auth.user_id() AND membership.state='active'
+          AND (category.visibility_class='ordinary' OR membership.financial_access='full')
+      - |
         SELECT transaction_receipt_items.id, transaction_receipt_items.account_id,
           transaction_receipt_items.transaction_id, transaction_receipt_items.item_id,
           transaction_receipt_items.currency, transaction_receipt_items.amount_minor_units::text AS amount_minor_units,
@@ -925,7 +941,7 @@ streams:
       - |
         SELECT item_acquisition_reviews.id,item_acquisition_reviews.account_id,
           item_acquisition_reviews.state,item_acquisition_reviews.amount_minor_units::text AS amount_minor_units,
-          item_acquisition_reviews.currency
+          item_acquisition_reviews.currency, item_acquisition_reviews.live_pricing
         FROM ledger_private.item_acquisition_reviews
         JOIN spike_account_memberships AS membership ON membership.account_id=item_acquisition_reviews.account_id
         JOIN spike_principals AS principal ON principal.id=membership.principal_id

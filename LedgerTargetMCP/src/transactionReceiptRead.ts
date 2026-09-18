@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { calculateItemAdjustments } from "./liveItemAdjustments.js";
 import { TargetMCPFailure, validateIdentifier, type TargetMCPRequestContext } from "./contractSupport.js";
 import { credential, validateReportConfiguration } from "./propertyManagementReportRead.js";
 
@@ -13,9 +14,18 @@ const line = z.object({ id: identifier, description: z.string().refine(v => v.tr
     .refine(v => BigInt(v) >= -9223372036854775808n && BigInt(v) <= 9223372036854775807n).nullable().optional(),
 }).strict();
 export const receiptSchema = z.object({
+  requiresLiveAdjustments: z.boolean().optional(),
+  liveAdjustments: z.object({ totalMinorUnits: z.string(), adjustmentsMinorUnits: z.string(),
+    differenceNumerator: z.string().nullable(), differenceDenominator: z.string().nullable(),
+    isBalanced: z.boolean(), isProvisional: z.boolean(),
+    items: z.array(z.object({ itemId: identifier, numerator: z.string().nullable(), denominator: z.string().nullable(),
+      requestedProjectPriceMinorUnits: z.string().nullable().optional(), unadjustedMinorUnits: z.string().nullable(),
+      adjustmentsMinorUnits: z.string().nullable(), projectPriceMinorUnits: z.string().nullable(),
+      issue: z.enum(["unknownInput", "nonpositiveBase", "zeroFactor", "arithmeticRange"]).nullable() }).strict()),
+  }).strict().nullable().optional(),
   accountId: identifier, principalId: identifier, transactionId: identifier,
   scopeKind: z.enum(["project", "business_inventory"]), projectId: identifier.nullable(), clientId: identifier.nullable(),
-  type: z.enum(["purchase", "return"]), amountMinorUnits: positive, currency: z.string().regex(/^[A-Z]{3}$/),
+  type: z.enum(["purchase", "return"]), amountMinorUnits: integer, currency: z.string().regex(/^[A-Z]{3}$/),
   category: z.object({ id: identifier, name: z.string().min(1), kind: z.enum(["general", "itemized", "fee"]), revision: positive }).strict(),
   nonItemReceiptLines: z.array(line),
   items: z.array(z.object({ itemId: identifier, amountMinorUnits: integer.nullable(),
@@ -37,6 +47,7 @@ export function transactionReceiptAudit(value: unknown, transactionId: string, c
     const receipt = receiptSchema.parse(value);
     if (receipt.accountId !== context.accountId || receipt.principalId !== context.principalId
       || receipt.transactionId !== transactionId
+      || (receipt.amountMinorUnits === "0" && (receipt.type !== "purchase" || !receipt.requiresLiveAdjustments))
       || (receipt.scopeKind === "project" ? receipt.projectId === null || receipt.clientId === null
         : receipt.projectId !== null || receipt.clientId !== null)) throw new Error("scope mismatch");
     if (new Set(receipt.items.map(i => i.itemId)).size !== receipt.items.length
@@ -47,6 +58,32 @@ export function transactionReceiptAudit(value: unknown, transactionId: string, c
       else decrease = exact(decrease + BigInt(line.amountMinorUnits));
     }
     const net = exact(increase - decrease);
+    if (receipt.requiresLiveAdjustments) {
+      const allocation = receipt.liveAdjustments;
+      const coherent = allocation && allocation.totalMinorUnits === receipt.amountMinorUnits
+        && allocation.adjustmentsMinorUnits === net.toString()
+        && allocation.items.length === receipt.items.length
+        && allocation.items.every(item => receipt.items.some(source => source.itemId === item.itemId));
+      const result = coherent ? calculateItemAdjustments(BigInt(receipt.amountMinorUnits), net, allocation.items) : null;
+      if (result && allocation && (result.differenceNumerator !== allocation.differenceNumerator
+        || result.differenceDenominator !== allocation.differenceDenominator || result.isBalanced !== allocation.isBalanced
+        || result.items.some(item => {
+          const reported = allocation.items.find(row => row.itemId === item.itemId)!;
+          return item.projectPriceMinorUnits !== reported.projectPriceMinorUnits
+            || item.unadjustedMinorUnits !== reported.unadjustedMinorUnits || item.issue !== reported.issue
+            || item.adjustmentsMinorUnits !== reported.adjustmentsMinorUnits;
+        }))) throw new Error("calculation mismatch");
+      const known = result?.differenceNumerator !== null && result?.differenceNumerator !== undefined;
+      const difference = known && result?.differenceDenominator === "1" ? result.differenceNumerator : null;
+      const subtotal = difference === null ? null : (BigInt(receipt.amountMinorUnits) - net - BigInt(difference)).toString();
+      return { ...receipt, audit: { status: receipt.category.kind !== "itemized" ? "notApplicable"
+        : !known ? "incompleteEvidence" : result!.isBalanced ? "balanced" : "mismatch",
+        physicalItemTotalMinorUnits: subtotal, lineIncreaseMinorUnits: increase.toString(),
+        lineDecreaseMinorUnits: decrease.toString(), lineNetMinorUnits: net.toString(),
+        reconstructedTotalMinorUnits: difference === null ? null : (BigInt(receipt.amountMinorUnits) - BigInt(difference)).toString(),
+        varianceMinorUnits: difference, differenceNumerator: result?.differenceNumerator ?? null,
+        differenceDenominator: result?.differenceDenominator ?? null } } as const;
+    }
     let items = 0n;
     for (const item of receipt.items) if (item.amountMinorUnits !== null) items = exact(items + BigInt(item.amountMinorUnits));
     const known = receipt.items.every(i => i.amountMinorUnits !== null);

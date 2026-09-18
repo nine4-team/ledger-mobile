@@ -39,13 +39,22 @@ test('every checked-in stream output resolves to the native schema', () => {
   const nativeSchema = readFileSync(new URL('../../LedgeriOS/LedgerTargetPowerSync/LedgerPowerSyncSchema.swift', import.meta.url), 'utf8');
   const count = validateSyncOutputTables(yaml, nativeSchema);
   // Project and Inventory reads include coherent placement-revision evidence.
-  assert.equal(count, 91);
+  assert.equal(count, 92);
   const compiled = SqlSyncRules.fromYaml(yaml, { defaultSchema: 'public', throwOnError: false });
   assert.deepEqual(compiled.errors.map(error => error.message), []);
   const nativeNames = new Set([...nativeSchema.matchAll(/public static let \w+ = "([a-z_]+)"/g)].map(m => m[1]));
   const outputs = Object.keys(compiled.config.debugGetOutputTables());
-  assert.equal(outputs.length, 43);
+  assert.equal(outputs.length, 44);
   for (const output of outputs) assert.ok(nativeNames.has(output), `Service outputs unknown client table ${output}`);
+});
+test('adjustment and Project category lookups constrain the subscribed Account before expansion', () => {
+  const yaml = readFileSync(new URL('../../powersync/sync-streams.yaml', import.meta.url), 'utf8');
+  const adjustment = yaml.split('FROM ledger_private.item_adjustment_orders')[1].split('      - |')[0];
+  for (const alias of ['txn', 'category', 'membership']) {
+    assert.match(adjustment, new RegExp(`${alias}\\.account_id\\s*=\\s*subscription\\.parameter\\('account_id'\\)`));
+  }
+  const projectCategory = yaml.split('FROM spike_item_project_categories')[1].split('      - |')[0];
+  assert.match(projectCategory, /category\.account_id\s*=\s*subscription\.parameter\('account_id'\)/);
 });
 test('return review outputs exclude money and Invoice identities while retaining category authorization', () => {
   const yaml = readFileSync(new URL('../../powersync/sync-streams.yaml', import.meta.url), 'utf8');

@@ -95,6 +95,10 @@ struct EditUncollectedItemPriceUploadRequest: Sendable {
         } else if let clear = p.clearPrice {
             fields["clearPrice"] = clear ? "true" : "false"
         }
+        if let transaction = p.adjustmentTransactionId, let revision = p.expectedAdjustmentRevision {
+            fields["transactionId"] = transaction.rawValue
+            fields["expectedAdjustmentRevision"] = String(revision)
+        }
         let bytes = try OperationContractCodec.encode(fields)
         commandJSON = String(decoding: bytes, as: UTF8.self)
         fingerprint = SHA256.hash(data: bytes).map { String(format: "%02x", $0) }.joined()
