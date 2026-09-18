@@ -5475,6 +5475,13 @@ final class WorkspaceChecklistUITests: XCTestCase {
         let unpin = app.buttons["target-space-pinned-image-unpin"]
         XCTAssertTrue(unpin.waitForExistence(timeout: 5))
         XCTAssertTrue(app.staticTexts["target-space-pinned-images-counter"].exists)
+        let next = app.buttons["target-space-pinned-images-next"]
+        let previous = app.buttons["target-space-pinned-images-previous"]
+        XCTAssertTrue(next.exists)
+        next.tap(); next.tap()
+        XCTAssertTrue(app.descendants(matching: .any)["target-space-pinned-pdf"].firstMatch.waitForExistence(timeout: 5))
+        previous.tap()
+        XCTAssertFalse(app.descendants(matching: .any)["target-space-pinned-pdf"].firstMatch.exists)
         unpin.tap()
         let pdf = app.descendants(matching: .any)["target-space-media-space-media-2"].firstMatch
         reveal(pdf,in: app); pdf.tap()

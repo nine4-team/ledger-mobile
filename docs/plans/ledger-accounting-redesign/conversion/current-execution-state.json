@@ -1,6 +1,6 @@
 {
   "schemaVersion": 2,
-  "stateVersion": 1550,
+  "stateVersion": 1551,
   "userRequestedPause": {
     "date": "2026-09-15",
     "status": "resumed",
@@ -63,6 +63,6 @@
     "lastResult": "Current iPhone pin/missing-byte print2tests PASS30.817s /tmp/ledger-space-media-current-iphone.log. Protected Space bytes survive offline runtime reopen PASS0.280s /tmp/ledger-space-media-byte-restart-fixed.log. Print refuses incomplete or changed image sets. Prior runtime close/removal and live sync evidence preserved. State/diff checks PASS. macOS UI authentication failure remains; no CI/hosted changes.",
     "activeProcesses": {},
     "integrationCI": {"run":35359599965,"attempt":1,"commit":"cd8be156fa695f92e2b461cfccd961717c2e95ac","status":"failure","meaning":"Strict lint and SQL/races passed; physical stream test rejected approved live_pricing projection. Native jobs skipped. Repaired exact-column expectation and added absent-acquisition null assertion. All four downstream stream/MCP scripts passed locally. No hosted changes; new-commit integration still required."},
-    "nextWorkflowDecision": "Finish pinned control fidelity: checklist now explicitly owns original Pin and navigation/zoom controls. Current SpacePinnedMediaView limits paging to images or a single PDF; verify against canonical mixed attachment navigation and connect existing PDF zoom controls (no new viewer). Then export/platform checks; macOS runner auth failure remains. Local byte restart and missing-byte UI now verified. Actual sync synthetic metadata only, not hosted Storage proof. No active tests; O023/O053 mutations excluded."
+    "nextWorkflowDecision": "Mixed pinned attachment paging fixed and current iPhone test PASS /tmp/ledger-space-media-mixed-pinning.log. PDF uses original native PDFKit zoom; original separate zoom-button overlay was conditional on image marker editing, so do not invent PDF controls. Remaining: export binding checks and macOS UI environment failure, then coherent integration checkpoint (prior batch failure still open). Local byte restart/missing-byte UI verified; no hosted Storage claim. No active tests; O023/O053 mutations excluded."
   }
 }

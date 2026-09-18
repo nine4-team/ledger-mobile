@@ -214,7 +214,7 @@ struct SpacePinnedMediaView: View {
     var body: some View {
         Group {
             if let catalog {
-                let entries = pin.attachment.isImage ? catalog.printableImages : [pin.attachment]
+                let entries = catalog.attachments
                 if let index = entries.firstIndex(where: { $0.id == (selected ?? pin.attachment.id) }) {
                     let attachment = entries[index]
                     PinnedImagePresentation(imageCount: entries.count,
