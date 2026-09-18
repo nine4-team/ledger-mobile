@@ -244,6 +244,7 @@ struct ItemsTabView: View {
         }
         .navigationDestination(item: $selectedProtoItem) { protoItem in
             ItemQuickDraftDetailView(protoItem: protoItem)
+                .environment(projectContext)
         }
         .navigationDestination(isPresented: $showItemDetail) {
             if let selectedItemId,
