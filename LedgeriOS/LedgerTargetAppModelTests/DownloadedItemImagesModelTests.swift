@@ -5,6 +5,13 @@ import Testing
 
 @Suite("Downloaded Item image presentation") @MainActor
 struct DownloadedItemImagesModelTests {
+    @Test("Shared media export failures explain how to recover")
+    func exportFailureMessages() {
+        #expect(AuthorizedMediaExport.Failure.missingBytes.localizedDescription == "This media has not been downloaded. Reconnect and try again.")
+        #expect(AuthorizedMediaExport.Failure.unavailable.localizedDescription == "This media is no longer available. Reopen it and try again.")
+        #expect(AuthorizedMediaExport.Failure.alreadyExporting.localizedDescription == "Another media export is still in progress.")
+    }
+
     @Test("Export loads only the exact selected image after destination preparation")
     func exportSelectedImage() async throws {
         try await withGallery { model,feed,value,probe in

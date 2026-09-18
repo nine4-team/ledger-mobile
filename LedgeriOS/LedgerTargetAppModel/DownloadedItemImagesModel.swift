@@ -5,8 +5,16 @@ import Observation
 /// Shared ordering for Item and Transaction media export. Destination completion
 /// owns the bytes after handoff; cancellation must not release them prematurely.
 public enum AuthorizedMediaExport {
-    public enum Failure: Error, Equatable, Sendable {
+    public enum Failure: LocalizedError, Equatable, Sendable {
         case alreadyExporting, unavailable, missingBytes
+
+        public var errorDescription: String? {
+            switch self {
+            case .alreadyExporting: return "Another media export is still in progress."
+            case .unavailable: return "This media is no longer available. Reopen it and try again."
+            case .missingBytes: return "This media has not been downloaded. Reconnect and try again."
+            }
+        }
     }
     @MainActor public static func perform(validate: () throws -> Void,
         prepareDestination: () async throws -> Void, load: () async throws -> Data?,
