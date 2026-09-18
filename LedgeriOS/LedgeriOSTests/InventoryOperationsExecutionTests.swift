@@ -368,6 +368,37 @@ struct SellToProjectExecutionTests {
         }
     }
 
+    @Test("a Return source is inventory provenance, not a sale source")
+    func returnSourceDoesNotBecomeSaleLineageEndpoint() async throws {
+        let batch = RecordingBatch()
+        let service = makeService(batch: batch)
+        let item = makeItem(
+            id: "returned-item",
+            projectId: nil,
+            purchasePriceCents: 1_000,
+            transactionId: "return-tx",
+            projectPriceCents: 1_200
+        )
+        var returnTransaction = Transaction()
+        returnTransaction.id = "return-tx"
+        returnTransaction.transactionType = .return
+        returnTransaction.itemIds = ["returned-item"]
+
+        try await service.sellToProject(
+            items: [item],
+            destinationProjectId: dstProj,
+            budgetCategoryId: catId,
+            accountId: acct,
+            returnTransactionIds: Set([returnTransaction.id!])
+        )
+
+        let edge = try #require(batch.lineageEdges(accountId: acct).first)
+        #expect(edge.fields["movementKind"] as? String == "sold")
+        #expect(edge.fields["toProjectId"] as? String == dstProj)
+        #expect(edge.fields["fromTransactionId"] == nil)
+        #expect(edge.fields["fromProjectId"] == nil)
+    }
+
     // I2: sellToProject twice — two independent transactions
     @Test("two separate sells create two independent transactions")
     func twoSellsIndependent() async throws {
@@ -706,6 +737,13 @@ struct ReturnToInventoryExecutionTests {
 
         let itemIds = ret["itemIds"] as? [String] ?? []
         #expect(Set(itemIds) == Set(["i1", "i2", "i3"]))
+        let returnedItemIds = ret["returnedItemIds"] as? [String] ?? []
+        #expect(Set(returnedItemIds) == Set(["i1", "i2", "i3"]))
+        let returnSnapshot = ret["returnSnapshot"] as? [String: Any]
+        #expect(returnSnapshot?["version"] as? Int == 1)
+        #expect(returnSnapshot?["subtotalCents"] as? Int == 9000)
+        #expect(returnSnapshot?["amountCents"] as? Int == 9000)
+        #expect((returnSnapshot?["lines"] as? [[String: Any]])?.count == 3)
 
         // 3 item updates — projectId and budgetCategoryId wiped
         for i in 1...3 {

@@ -57,7 +57,7 @@ export const enforceItemProjectPriceFloor = onDocumentWritten(
  *    - Append an additional edge ONLY when we know the intent deterministically:
  *      - `sold`: written inside canonical inventory request-doc handlers
  *        (project→business, business→project, project→project).
- *      - `returned`: written when an item is linked to a Return transaction.
+ *      - `returned`: written by the explicit inventory-return writer.
  *      - `correction`: written only by explicit "fix mistake" actions (when implemented).
  *
  * Important: association edges are not mutually exclusive with intent edges.
@@ -186,44 +186,6 @@ export const onItemTransactionIdChanged = onDocumentUpdated(
       );
     });
 
-    // Optional but deterministic: if the destination transaction is a Return transaction,
-    // also append a `returned` intent edge (in addition to the association audit edge).
-    if (afterTxId != null) {
-      const toTxRef = db.doc(`accounts/${accountId}/transactions/${afterTxId}`);
-      const toTxSnap = await toTxRef.get();
-      const toTx = toTxSnap.exists ? (toTxSnap.data() as any) : null;
-      const rawType =
-        (toTx?.transactionType ?? toTx?.type ?? toTx?.transaction_type ?? null) as string | null;
-      const isReturn = typeof rawType === 'string' && rawType.trim().toLowerCase() === 'return';
-      if (isReturn) {
-        const returnedEdgeId = `returned_${event.id}_${itemId}`;
-        const returnedRef = db.doc(`accounts/${accountId}/lineageEdges/${returnedEdgeId}`);
-        await db.runTransaction(async (tx) => {
-          const existing = await tx.get(returnedRef);
-          if (existing.exists) return;
-          const now = FieldValue.serverTimestamp();
-          tx.set(
-            returnedRef,
-            {
-              accountId,
-              itemId,
-              fromTransactionId: beforeTxId,
-              toTransactionId: afterTxId,
-              createdAt: now,
-              updatedAt: now,
-              deletedAt: null,
-              createdBy: (after as any).updatedBy ?? null,
-              movementKind: 'returned',
-              source: 'server',
-              note: null,
-              fromProjectId: (before as any).projectId ?? null,
-              toProjectId: (after as any).projectId ?? null,
-            },
-            { merge: false }
-          );
-        });
-      }
-    }
   }
 );
 
@@ -1541,9 +1503,26 @@ async function computeIsComplete(
     return { isComplete: false, audit: null };
   }
 
+  const isReturnTransaction = txType === 'return';
+
   // 4. Check items (linked + lineage)
   const itemIds = Array.isArray(txData.itemIds) ? txData.itemIds as string[] : [];
   const itemIdSet = new Set(itemIds);
+  const returnedItemIds = isReturnTransaction && Array.isArray(txData.returnedItemIds)
+    ? txData.returnedItemIds as string[]
+    : [];
+  const returnSnapshot = isReturnTransaction && txData.returnSnapshot && typeof txData.returnSnapshot === 'object'
+    ? txData.returnSnapshot as Record<string, unknown>
+    : null;
+  const returnSnapshotLines = new Map<string, number>();
+  if (returnSnapshot && Array.isArray(returnSnapshot.lines)) {
+    for (const rawLine of returnSnapshot.lines) {
+      if (!rawLine || typeof rawLine !== 'object') continue;
+      const line = rawLine as Record<string, unknown>;
+      if (typeof line.itemId !== 'string' || typeof line.subtotalCents !== 'number') continue;
+      returnSnapshotLines.set(line.itemId, Math.round(line.subtotalCents));
+    }
+  }
 
   // 4b. Query lineage edges from this transaction (returned + sold items)
   const edgesSnapshot = await db
@@ -1551,12 +1530,14 @@ async function computeIsComplete(
     .where('fromTransactionId', '==', transactionId)
     .get();
 
-  // Filter to returned/sold, deduplicate by itemId (keep latest by createdAt)
+  // Filter to movement intent, deduplicate by itemId (keep latest by createdAt).
+  // Return transactions never interpret sold edges as part of the Return.
   const lineageItemMap = new Map<string, { movementKind: string; createdAt: unknown }>();
   for (const edgeDoc of edgesSnapshot.docs) {
     const edge = edgeDoc.data() ?? {};
     const kind = edge.movementKind as string | undefined;
     if (kind !== 'returned' && kind !== 'sold' && kind !== 'soldToInventory') continue;
+    if (isReturnTransaction && kind !== 'returned') continue;
     const edgeItemId = edge.itemId as string | undefined;
     if (!edgeItemId) continue;
     // Skip items still in itemIds (prevent double-counting)
@@ -1567,10 +1548,21 @@ async function computeIsComplete(
       lineageItemMap.set(edgeItemId, { movementKind: kind, createdAt: edge.createdAt });
     } else {
       // Keep latest by createdAt
-      const existingTime = existing.createdAt instanceof Date ? existing.createdAt.getTime() : 0;
-      const newTime = edge.createdAt instanceof Date ? edge.createdAt.getTime() : 0;
+      const existingTime = timestampMillis(existing.createdAt) ?? 0;
+      const newTime = timestampMillis(edge.createdAt) ?? 0;
       if (newTime > existingTime) {
         lineageItemMap.set(edgeItemId, { movementKind: kind, createdAt: edge.createdAt });
+      }
+    }
+  }
+
+  // `returnedItemIds` is historical membership, not active membership. It is
+  // needed after an item leaves the Return, even if an old client did not emit
+  // a corresponding returned edge. Snapshot-backed lines are authoritative.
+  if (isReturnTransaction) {
+    for (const returnedItemId of returnedItemIds) {
+      if (!itemIdSet.has(returnedItemId) && !lineageItemMap.has(returnedItemId)) {
+        lineageItemMap.set(returnedItemId, { movementKind: 'returned', createdAt: 0 });
       }
     }
   }
@@ -1623,6 +1615,7 @@ async function computeIsComplete(
   let returnedItemsCount = 0;
   let soldItemsSumCents = 0;
   let soldItemsCount = 0;
+  let returnSnapshotMissingCount = 0;
 
   const lineageItemIds = Array.from(lineageItemMap.keys());
   if (lineageItemIds.length > 0) {
@@ -1637,7 +1630,9 @@ async function computeIsComplete(
         const priceCents = auditItemPriceCents(priceBasis, data);
         const edgeInfo = lineageItemMap.get(doc.id);
         if (edgeInfo?.movementKind === 'returned') {
-          returnedItemsSumCents += priceCents;
+          const snapshotPrice = isReturnTransaction ? returnSnapshotLines.get(doc.id) : undefined;
+          if (isReturnTransaction && snapshotPrice == null) returnSnapshotMissingCount++;
+          returnedItemsSumCents += snapshotPrice ?? auditItemPriceCents(priceBasis, data);
           returnedItemsCount++;
         } else if (edgeInfo?.movementKind === 'sold' || edgeInfo?.movementKind === 'soldToInventory') {
           soldItemsSumCents += priceCents;
@@ -1645,6 +1640,13 @@ async function computeIsComplete(
         }
       }
     }
+  }
+
+  // A historical Return without a per-item snapshot cannot be proven from
+  // mutable item fields alone. Keep the audit visible, but do not call it
+  // complete until the original line values are verifiable.
+  if (isReturnTransaction && lineageItemMap.size > 0 && returnSnapshotLines.size === 0) {
+    returnSnapshotMissingCount = Math.max(returnSnapshotMissingCount, lineageItemMap.size);
   }
 
   // 7. Compute totals and variance. Discounts live at the transaction level
@@ -1657,7 +1659,8 @@ async function computeIsComplete(
   const discountedItemsSumCents = Math.max(0, itemsSumCents - discountCents);
   const varianceCents = discountedItemsSumCents - resolvedSubtotalCents;
   const variancePercent = (varianceCents / resolvedSubtotalCents) * 100;
-  const isComplete = Math.abs(variancePercent) <= 1;
+  const isComplete = Math.abs(variancePercent) <= 1
+    && returnSnapshotMissingCount === 0;
 
   return {
     isComplete,
@@ -1672,6 +1675,7 @@ async function computeIsComplete(
       returnedItemsCount,
       soldItemsSumCents,
       soldItemsCount,
+      ...(isReturnTransaction ? { returnSnapshotMissingCount } : {}),
     },
   };
 }

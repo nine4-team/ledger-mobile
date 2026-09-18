@@ -432,6 +432,7 @@ struct AddExistingItemsPicker: View {
         if !routing.crossScope.isEmpty, let destProjectId = projectId {
             let ops = InventoryOperationsService()
             let inventoryLabel = InventoryOperationsService.inventoryLabel(for: accountContext.account?.name)
+            let returnTransactionIds = Set(accountContext.allTransactions.filter(\.isReturnTransaction).compactMap(\.id))
             Task {
                 do {
                     guard let categoryId = resolvedSpaceCategoryId else { return }
@@ -440,7 +441,8 @@ struct AddExistingItemsPicker: View {
                         destinationProjectId: destProjectId,
                         budgetCategoryId: categoryId,
                         accountId: accountId,
-                        inventoryLabel: inventoryLabel
+                        inventoryLabel: inventoryLabel,
+                        returnTransactionIds: returnTransactionIds
                     )
                     // After the sale completes, route the placement through the
                     // canonical service to clean the item's old-space photo mark.

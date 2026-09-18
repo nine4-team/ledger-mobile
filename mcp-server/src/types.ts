@@ -30,6 +30,20 @@ export interface BudgetSummaryCategory {
   excludeFromOverallBudget?: boolean;
 }
 
+export interface ReturnSnapshotLine {
+  itemId: string;
+  subtotalCents: number;
+  amountCents: number;
+}
+
+export interface ReturnSnapshot {
+  version: number;
+  subtotalCents: number;
+  amountCents: number;
+  lines: ReturnSnapshotLine[];
+  lineAmountsVerified: boolean;
+}
+
 export interface Transaction {
   id: string;
   projectId?: string | null;
@@ -43,6 +57,9 @@ export interface Transaction {
   source?: string;
   transactionDate?: string;
   itemIds?: string[];
+  /** Historical membership of an inventory Return; unlike itemIds, this does not shrink when items leave inventory. */
+  returnedItemIds?: string[];
+  returnSnapshot?: ReturnSnapshot;
   notes?: string;
   /**
    * @deprecated Legacy canonical-sale aggregator marker. New per-batch

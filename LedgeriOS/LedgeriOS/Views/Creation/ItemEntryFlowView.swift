@@ -368,6 +368,7 @@ struct ItemEntryFlowView: View {
 
         let service = InventoryOperationsService()
         let inventoryLabel = InventoryOperationsService.inventoryLabel(for: accountContext.account?.name)
+        let returnTransactionIds = Set(accountContext.allTransactions.filter(\.isReturnTransaction).compactMap(\.id))
 
         Task {
             do {
@@ -380,7 +381,8 @@ struct ItemEntryFlowView: View {
                     userId: authManager.currentUser?.uid,
                     resolveInventoryIntentTransactionId: itemsToSell.count == transactionItems.count
                         ? transactionId
-                        : nil
+                        : nil,
+                    returnTransactionIds: returnTransactionIds
                 )
                 await MainActor.run {
                     dismiss()

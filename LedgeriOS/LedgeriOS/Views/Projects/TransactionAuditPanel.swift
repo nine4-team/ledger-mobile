@@ -8,6 +8,7 @@ struct TransactionAuditPanel: View {
     let audit: TransactionAudit
     let hasExplicitSubtotal: Bool
     let usesProjectPrice: Bool
+    let showsSoldItems: Bool
     let itemsMissingPrice: [Item]
     let itemsCount: Int
 
@@ -63,7 +64,8 @@ struct TransactionAuditPanel: View {
     // MARK: - Detail Breakdown
 
     private var hasLineageBreakdown: Bool {
-        (audit.returnedItemsCount ?? 0) > 0 || (audit.soldItemsCount ?? 0) > 0
+        (audit.returnedItemsCount ?? 0) > 0
+            || (showsSoldItems && (audit.soldItemsCount ?? 0) > 0)
     }
 
     private var detailBreakdown: some View {
@@ -86,7 +88,7 @@ struct TransactionAuditPanel: View {
                     )
                 }
 
-                if let soldCount = audit.soldItemsCount, soldCount > 0 {
+                if showsSoldItems, let soldCount = audit.soldItemsCount, soldCount > 0 {
                     detailLine(
                         label: "Sold items (\(soldCount))",
                         value: CurrencyFormatting.formatCentsWithDecimals(audit.soldItemsSumCents ?? 0)

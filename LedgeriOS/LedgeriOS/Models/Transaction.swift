@@ -26,6 +26,24 @@ struct TransactionAudit: Codable, Hashable {
     var totalItemCount: Int?
 }
 
+/// Immutable accounting evidence captured when an inventory Return is created.
+/// The active `itemIds` list is intentionally allowed to change as returned
+/// items are sold back into a project; this snapshot preserves the original
+/// Return membership and valuation for audit purposes.
+struct ReturnSnapshotLine: Codable, Hashable {
+    var itemId: String
+    var subtotalCents: Int
+    var amountCents: Int
+}
+
+struct ReturnSnapshot: Codable, Hashable {
+    var version: Int
+    var subtotalCents: Int
+    var amountCents: Int
+    var lines: [ReturnSnapshotLine]
+    var lineAmountsVerified: Bool
+}
+
 struct Discount: Codable, Hashable {
     var amountCents: Int
 }
@@ -41,6 +59,8 @@ struct Transaction: Codable, Identifiable, Hashable {
     var isCanonicalInventorySale: Bool?
     var inventorySaleDirection: InventorySaleDirection?
     var itemIds: [String]?
+    var returnedItemIds: [String]?
+    var returnSnapshot: ReturnSnapshot?
     var status: TransactionStatus?
     var purchasedBy: String?
     var purchaseHandling: PurchaseHandling?
@@ -73,7 +93,7 @@ struct Transaction: Codable, Identifiable, Hashable {
     enum CodingKeys: String, CodingKey {
         case id, projectId, transactionDate, amountCents, source,
              isCanonicalInventory, canonicalKind, isCanonicalInventorySale, inventorySaleDirection,
-             itemIds, status, purchasedBy, purchaseHandling, reimbursementType, notes,
+             itemIds, returnedItemIds, returnSnapshot, status, purchasedBy, purchaseHandling, reimbursementType, notes,
              budgetCategoryId, intendedProjectId, intendedBudgetCategoryId, inventoryIntentResolvedAt,
              paymentMethod, receiptImages, otherImages, transactionImages,
              isComplete, audit, taxRatePct, subtotalCents, discount,

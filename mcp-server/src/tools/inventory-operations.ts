@@ -93,6 +93,26 @@ function computeProjectPriceTotals(items: (Item & { id: string })[]): {
   return { subtotalCents, amountCents, missingTax };
 }
 
+function returnSnapshotFields(
+  items: (Item & { id: string })[],
+  totals: { subtotalCents: number; amountCents: number }
+) {
+  return {
+    version: 1,
+    subtotalCents: totals.subtotalCents,
+    amountCents: totals.amountCents,
+    lines: items.map((item) => {
+      const line = computeProjectToInventoryTotals([item]);
+      return {
+        itemId: item.id,
+        subtotalCents: line.subtotalCents,
+        amountCents: line.amountCents,
+      };
+    }),
+    lineAmountsVerified: true,
+  };
+}
+
 /**
  * Reverse an inventory→project sale at the value the project originally paid.
  *
@@ -1046,13 +1066,14 @@ export function registerInventoryOperationTools(server: McpServer, db: Firestore
                 : null,
           });
         }
+        const sourceTransactions = await loadCurrentTransactions(db, items);
         return await commitSellToProject(db, items, destinationProjectId, budgetCategoryId, resolvedSpaces.byItemId, {
           subtotalCents,
           amountCents,
           missingTax,
           notes,
           inventoryLabel,
-        });
+        }, sourceTransactions);
       }
     )
   );
@@ -1805,7 +1826,8 @@ async function commitSellToProject(
   destinationProjectId: string,
   budgetCategoryId: string,
   destinationSpaceIdsByItem: Map<string, string>,
-  totals: { subtotalCents: number; amountCents: number; missingTax: string[]; notes?: string; inventoryLabel: string }
+  totals: { subtotalCents: number; amountCents: number; missingTax: string[]; notes?: string; inventoryLabel: string },
+  sourceTransactions: ReadonlyMap<string, Transaction & { id: string }>
 ) {
   const frozen = await frozenSourceTxIds(db, items);
 
@@ -1854,11 +1876,14 @@ async function commitSellToProject(
 
   // 4. Lineage edges.
   for (const item of items) {
+    const sourceIsReturn = item.transactionId
+      ? sourceTransactions.get(item.transactionId)?.type?.trim().toLowerCase() === "return"
+      : false;
     batch.set(edgesCol.doc(), {
       itemId: item.id,
-      fromTransactionId: item.transactionId ?? null,
+      ...(sourceIsReturn ? {} : { fromTransactionId: item.transactionId ?? null }),
       toTransactionId: purchaseRef.id,
-      fromProjectId: item.projectId ?? null,
+      ...(sourceIsReturn ? {} : { fromProjectId: item.projectId ?? null }),
       toProjectId: destinationProjectId,
       movementKind: "sold",
       source: "mcp",
@@ -1920,6 +1945,8 @@ async function commitSellToInventory(
       amountCents: groupTotals.amountCents,
       subtotalCents: groupTotals.subtotalCents,
       itemIds: group.items.map((i) => i.id),
+      returnedItemIds: group.items.map((i) => i.id),
+      returnSnapshot: returnSnapshotFields(group.items, groupTotals),
       status: "completed",
       isComplete: true,
       ...(totals.notes ? { notes: tagNotesAsAi(totals.notes) } : {}),
@@ -2197,6 +2224,8 @@ async function commitSellItemsFromProjectToProject(
       amountCents: returnTotals.amountCents,
       subtotalCents: returnTotals.subtotalCents,
       itemIds: group.items.map((i) => i.id),
+      returnedItemIds: group.items.map((i) => i.id),
+      returnSnapshot: returnSnapshotFields(group.items, returnTotals),
       status: "completed",
       ...(totals.notes ? { notes: tagNotesAsAi(totals.notes) } : {}),
       createdAt: now,
@@ -2286,9 +2315,7 @@ async function commitSellItemsFromProjectToProject(
     }
     batch.set(edgesCol.doc(), {
       itemId: item.id,
-      fromTransactionId: firstHopTxId ?? item.transactionId ?? null,
       toTransactionId: destPurchaseRef.id,
-      fromProjectId: null,
       toProjectId: destinationProjectId,
       movementKind: "sold",
       source: "mcp",

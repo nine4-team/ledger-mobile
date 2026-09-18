@@ -471,6 +471,7 @@ struct SellToProjectModal: View {
         let itemsToSell = pricedItems
         let acctId = accountId
         let inventoryLabel = InventoryOperationsService.inventoryLabel(for: accountContext.account?.name)
+        let returnTransactionIds = Set(accountContext.allTransactions.filter(\.isReturnTransaction).compactMap(\.id))
         let originsByItemId = InventoryOperationsService.originsByItemId(
             itemsToSell,
             transactions: accountContext.allTransactions
@@ -484,7 +485,8 @@ struct SellToProjectModal: View {
                         budgetCategoryId: categoryId,
                         accountId: acctId,
                         inventoryLabel: inventoryLabel,
-                        userId: authManager.currentUser?.uid
+                        userId: authManager.currentUser?.uid,
+                        returnTransactionIds: returnTransactionIds
                     )
                 } else {
                     try await service.sellItemsFromProjectToProject(

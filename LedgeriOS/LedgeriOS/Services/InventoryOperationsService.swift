@@ -44,6 +44,10 @@ enum InventoryOperationError: Error {
 
     /// A requested destination space belongs to another project or inventory.
     case destinationSpaceScopeMismatch
+
+    /// Items whose current transaction is a Return must use the Return writer,
+    /// not the project-originated Sale-to-Inventory writer.
+    case returnItemsMustUseReturn
 }
 
 struct InventorySpaceScope: Sendable, Equatable {
@@ -465,7 +469,8 @@ struct InventoryOperationsService {
         userId: String? = nil,
         notes: String? = nil,
         resolveInventoryIntentTransactionId: String? = nil,
-        destinationSpaceIdsByItem: [String: String] = [:]
+        destinationSpaceIdsByItem: [String: String] = [:],
+        returnTransactionIds: Set<String> = []
     ) async throws {
         guard !items.isEmpty else { return }
         let normalizedCategoryId = try Self.realCategoryId(budgetCategoryId)
@@ -552,8 +557,12 @@ struct InventoryOperationsService {
                 "source": "app",
                 "createdAt": FieldValue.serverTimestamp(),
             ]
-            if let fromProjectId = item.projectId { edge["fromProjectId"] = fromProjectId }
-            if let fromTxId = item.transactionId { edge["fromTransactionId"] = fromTxId }
+            let sourceIsReturn = item.transactionId
+                .map { returnTransactionIds.contains($0) } == true
+            if !sourceIsReturn {
+                if let fromProjectId = item.projectId { edge["fromProjectId"] = fromProjectId }
+                if let fromTxId = item.transactionId { edge["fromTransactionId"] = fromTxId }
+            }
             if let userId { edge["createdBy"] = userId }
             batch.setDataAutoId(edge, inCollection: edgesPath)
         }
@@ -627,6 +636,8 @@ struct InventoryOperationsService {
                 "amountCents": returnTotals.amountCents,
                 "subtotalCents": returnTotals.subtotalCents,
                 "itemIds": groupItemIds,
+                "returnedItemIds": groupItemIds,
+                "returnSnapshot": Self.returnSnapshotFields(items: group.items, totals: returnTotals),
                 "status": "completed",
                 "transactionDate": today,
                 "createdAt": FieldValue.serverTimestamp(),
@@ -720,13 +731,19 @@ struct InventoryOperationsService {
         accountId: String,
         inventoryLabel: String = Self.defaultInventoryLabel,
         userId: String? = nil,
-        notes: String? = nil
+        notes: String? = nil,
+        returnTransactionIds: Set<String> = []
     ) async throws {
         guard !items.isEmpty else { return }
         guard items.count <= Self.maxBatchItems else {
             throw InventoryOperationError.batchSizeExceeded
         }
         _ = try Self.requireItemIds(items)
+        let returnItems = items.filter { item in
+            item.transactionId
+                .map { returnTransactionIds.contains($0) } == true
+        }
+        guard returnItems.isEmpty else { throw InventoryOperationError.returnItemsMustUseReturn }
 
         let batch = makeBatch()
         let itemsPath = "accounts/\(accountId)/items"
@@ -830,7 +847,8 @@ struct InventoryOperationsService {
         userId: String? = nil,
         notes: String? = nil,
         returnedPaidItemCredits: [InvoiceLineCalculations.ReturnedPaidItemCreditContext] = [],
-        originsByItemId: [String: InventoryItemOrigin] = [:]
+        originsByItemId: [String: InventoryItemOrigin] = [:],
+        returnTransactionIds: Set<String> = []
     ) async throws {
         guard !items.isEmpty else { return }
         guard items.count <= Self.maxBatchItems else {
@@ -847,7 +865,8 @@ struct InventoryOperationsService {
                 accountId: accountId,
                 inventoryLabel: inventoryLabel,
                 userId: userId,
-                notes: notes
+                notes: notes,
+                returnTransactionIds: returnTransactionIds
             )
             return
         }
@@ -891,6 +910,8 @@ struct InventoryOperationsService {
                 "amountCents": returnTotals.amountCents,
                 "subtotalCents": returnTotals.subtotalCents,
                 "itemIds": group.items.compactMap(\.id),
+                "returnedItemIds": group.items.compactMap(\.id),
+                "returnSnapshot": Self.returnSnapshotFields(items: group.items, totals: returnTotals),
                 "status": "completed",
                 "transactionDate": today,
                 "createdAt": FieldValue.serverTimestamp(),
@@ -1160,6 +1181,8 @@ struct InventoryOperationsService {
                 "amountCents": returnTotals.amountCents,
                 "subtotalCents": returnTotals.subtotalCents,
                 "itemIds": group.items.compactMap(\.id),
+                "returnedItemIds": group.items.compactMap(\.id),
+                "returnSnapshot": Self.returnSnapshotFields(items: group.items, totals: returnTotals),
                 "status": "completed",
                 "transactionDate": today,
                 "createdAt": FieldValue.serverTimestamp(),
@@ -1273,14 +1296,12 @@ struct InventoryOperationsService {
             var soldEdge: [String: Any] = [
                 "accountId": accountId,
                 "itemId": itemId,
-                "fromProjectId": sourceProjectId,
                 "toProjectId": destinationProjectId,
                 "toTransactionId": destPurchaseId,
                 "movementKind": "sold",
                 "source": "app",
                 "createdAt": FieldValue.serverTimestamp(),
             ]
-            if let fromTxId = item.transactionId { soldEdge["fromTransactionId"] = fromTxId }
             if let userId { soldEdge["createdBy"] = userId }
             batch.setDataAutoId(soldEdge, inCollection: edgesPath)
         }
@@ -1459,6 +1480,32 @@ struct InventoryOperationsService {
             }
         }
         return (subtotalCents, amountCents)
+    }
+
+    /// Stores the immutable per-item valuation used to create an inventory
+    /// Return. `itemIds` remains the active membership list; this snapshot and
+    /// `returnedItemIds` preserve the historical Return even after an item is
+    /// sold back into a project.
+    private static func returnSnapshotFields(
+        items: [Item],
+        totals: (subtotalCents: Int, amountCents: Int)
+    ) -> [String: Any] {
+        let lines = items.compactMap { item -> [String: Any]? in
+            guard let itemId = item.id else { return nil }
+            let line = projectPriceLine(item)
+            return [
+                "itemId": itemId,
+                "subtotalCents": line.priceCents,
+                "amountCents": line.amountCents,
+            ]
+        }
+        return [
+            "version": 1,
+            "subtotalCents": totals.subtotalCents,
+            "amountCents": totals.amountCents,
+            "lines": lines,
+            "lineAmountsVerified": true,
+        ]
     }
 
     static func projectPriceForMovement(_ item: Item) -> Int {

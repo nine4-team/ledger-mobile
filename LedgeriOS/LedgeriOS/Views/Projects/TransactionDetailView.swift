@@ -511,7 +511,9 @@ struct TransactionDetailView: View {
                             itemDraftsSection
                             itemsSection
                             returnedItemsSection
-                            soldItemsSection
+                            if !currentTransaction.isReturnTransaction {
+                                soldItemsSection
+                            }
                             transactionAuditSection
                             nextStepsCard
                         }
@@ -1435,13 +1437,16 @@ struct TransactionDetailView: View {
                     audit: audit,
                     hasExplicitSubtotal: (currentTransaction.subtotalCents ?? 0) > 0,
                     usesProjectPrice: auditUsesProjectPrice,
+                    showsSoldItems: !currentTransaction.isReturnTransaction,
                     itemsMissingPrice: transactionItems.filter { item in
                         if auditUsesProjectPrice {
                             return (item.normalizedProjectPriceCents ?? 0) <= 0
                         }
                         return (item.purchasePriceCents ?? 0) <= 0
                     },
-                    itemsCount: transactionItems.count + returnedItems.count + soldItems.count
+                    itemsCount: transactionItems.count
+                        + returnedItems.count
+                        + (currentTransaction.isReturnTransaction ? 0 : soldItems.count)
                 )
                 .padding(.top, Spacing.xs)
             }
@@ -1516,6 +1521,7 @@ struct TransactionDetailView: View {
                       edge.fromTransactionId == transactionId,
                       let kind = edge.movementKind,
                       (kind == "returned" || kind == "sold" || kind == "soldToInventory"),
+                      (!currentTransaction.isReturnTransaction || kind == "returned"),
                       !currentItemIds.contains(itemId) else { continue }
 
                 if let existing = latestByItem[itemId] {

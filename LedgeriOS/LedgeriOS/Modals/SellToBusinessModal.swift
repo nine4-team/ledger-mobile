@@ -58,13 +58,15 @@ struct SellToInventoryModal: View {
         let itemsToSell = items
         let acctId = accountId
         let inventoryLabel = InventoryOperationsService.inventoryLabel(for: accountContext.account?.name)
+        let returnTransactionIds = Set(accountContext.allTransactions.filter(\.isReturnTransaction).compactMap(\.id))
         Task {
             do {
                 try await service.sellToInventory(
                     items: itemsToSell,
                     accountId: acctId,
                     inventoryLabel: inventoryLabel,
-                    userId: authManager.currentUser?.uid
+                    userId: authManager.currentUser?.uid,
+                    returnTransactionIds: returnTransactionIds
                 )
                 await MainActor.run {
                     onComplete()
@@ -187,6 +189,7 @@ struct MoveToInventoryModal: View {
         let acctId = accountId
         let inventoryLabel = InventoryOperationsService.inventoryLabel(for: accountContext.account?.name)
         let credits = returnedPaidItemCredits
+        let returnTransactionIds = Set(accountContext.allTransactions.filter(\.isReturnTransaction).compactMap(\.id))
         let originsByItemId = InventoryOperationsService.originsByItemId(
             itemsToMove,
             transactions: accountContext.allTransactions
@@ -199,7 +202,8 @@ struct MoveToInventoryModal: View {
                     inventoryLabel: inventoryLabel,
                     userId: authManager.currentUser?.uid,
                     returnedPaidItemCredits: credits,
-                    originsByItemId: originsByItemId
+                    originsByItemId: originsByItemId,
+                    returnTransactionIds: returnTransactionIds
                 )
                 await MainActor.run {
                     onComplete()
