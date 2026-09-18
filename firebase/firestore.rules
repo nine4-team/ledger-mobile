@@ -214,14 +214,18 @@ service cloud.firestore {
     // Inventory movement transaction immutability.
     // New per-batch inventory movement transactions keep their accounting
     // shape frozen against direct client edits after creation: `amountCents`,
-    // `subtotalCents`, `budgetCategoryId`, `type`, `source`, `projectId` must
-    // never change. The trusted item-price trigger may maintain amount/subtotal
+    // `subtotalCents`, `type`, `source`, and `projectId` must never change.
+    // `budgetCategoryId` may change only for an eligible project-side Purchase
+    // from Inventory. The trusted item-price trigger may maintain amount/subtotal
     // on a project-side Purchase-from-Inventory. `itemIds` remains mutable so
     // returns/sales can remove items from the source transaction while lineage
     // preserves the historical membership.
     // Inventory→project is an inventory-labeled Purchase. Project→inventory
     // acquisition is a Sale with the source project category. Legacy canonical sales are
     // exempt so existing flows (cancel_transaction, etc.) continue to work.
+    // Eligible project-side Purchases from Inventory may change only their
+    // budget category; the app batches the same category onto all listed items
+    // and records a transactionCategoryEvents audit document.
     // Other transactions remain unrestricted.
     match /accounts/{accountId}/transactions/{transactionId} {
       allow read, create: if isAccountMember(accountId);
@@ -236,12 +240,28 @@ service cloud.firestore {
                     && resource.data.get('source', '').matches('.* Inventory$')))
               && resource.data.get('isCanonicalInventorySale', false) != true)
             || resource.data.get('isCanonicalInventorySale', false) == true
-            || (request.resource.data.get('amountCents', null) == resource.data.get('amountCents', null)
+            || ((resource.data.get('type', '') == 'Purchase'
+                 && resource.data.get('source', '').matches('.* Inventory$')
+                 && resource.data.get('projectId', null) != null
+                 && resource.data.get('isCanonicalInventorySale', false) != true
+                 && resource.data.get('status', '') != 'canceled'
+                 && resource.data.get('status', '') != 'cancelled'
+                 && request.resource.data.get('amountCents', null) == resource.data.get('amountCents', null)
+                 && request.resource.data.get('subtotalCents', null) == resource.data.get('subtotalCents', null)
+                 && request.resource.data.get('type', null) == resource.data.get('type', null)
+                 && request.resource.data.get('source', null) == resource.data.get('source', null)
+                 && request.resource.data.get('projectId', null) == resource.data.get('projectId', null))
+                || (request.resource.data.get('amountCents', null) == resource.data.get('amountCents', null)
                 && request.resource.data.get('subtotalCents', null) == resource.data.get('subtotalCents', null)
                 && request.resource.data.get('budgetCategoryId', null) == resource.data.get('budgetCategoryId', null)
                 && request.resource.data.get('type', null) == resource.data.get('type', null)
                 && request.resource.data.get('source', null) == resource.data.get('source', null)
-                && request.resource.data.get('projectId', null) == resource.data.get('projectId', null)));
+                && request.resource.data.get('projectId', null) == resource.data.get('projectId', null))));
+    }
+
+    match /accounts/{accountId}/transactionCategoryEvents/{eventId} {
+      allow read, create: if isAccountMember(accountId);
+      allow update, delete: if false;
     }
 
     match /accounts/{accountId}/invoices/{invoiceId} {

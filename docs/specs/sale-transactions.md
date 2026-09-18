@@ -1,6 +1,6 @@
 # Inventory Movement Transactions
 
-> **Status:** Active. Replaces the legacy "canonical sale" model documented in [canonical-sales.md](canonical-sales.md). The Purchase-from-Inventory category-reclassification behavior below was approved on 2026-08-25 and is implementation-pending.
+> **Status:** Active. Replaces the legacy "canonical sale" model documented in [canonical-sales.md](canonical-sales.md). The Purchase-from-Inventory category-reclassification behavior below is implemented locally; production rollout is pending.
 
 ## Overview
 
@@ -8,7 +8,7 @@ When items move between business inventory and a project, the system creates a p
 
 ## The Per-Batch Model
 
-An ordinary Sell from inventory into a project creates **one new purchase transaction**. Return to Project instead restores the original category per item, so a bulk return creates one Purchase per represented original category in the same atomic batch. Each transaction has an initial active item list. Configurable Sell amounts derive from sold items' project prices; Return-to-Project amounts come from immutable inventory-entry accounting snapshots. If an active ordinarily sold item's project price later changes before the existing paid-invoice freeze boundary, Ledger adjusts this project-side Purchase total by that item's price delta. Before collection, a user may also reclassify the entire Purchase to another project-enabled itemized category; Ledger updates the Purchase and all currently attached items atomically. If items later leave through return or sale, they are removed from `itemIds` and preserved through lineage.
+An ordinary Sell from inventory into a project creates **one new purchase transaction**. Return to Project instead restores the original category per item, so a bulk return creates one Purchase per represented original category in the same atomic batch. Each transaction has an initial active item list. Configurable Sell amounts derive from sold items' project prices; Return-to-Project amounts come from immutable inventory-entry accounting snapshots. If an active ordinarily sold item's project price later changes before the existing paid-invoice freeze boundary, Ledger adjusts this project-side Purchase total by that item's price delta. A user may also reclassify the entire Purchase to another project-enabled itemized category; Ledger updates the Purchase and all currently attached items atomically. If items later leave through return or sale, they are removed from `itemIds` and preserved through lineage.
 
 This is different from the legacy canonical-sale model, where one long-lived transaction per `(project, direction, category)` triple aggregated every inventory movement over time. The legacy model is preserved for historical data — see "Legacy Canonical Sales" below.
 
@@ -64,7 +64,7 @@ interface InventoryPurchaseTransaction {
 
 The following invariants are enforced by Firestore security rules and by tests in both iOS and the MCP server:
 
-1. **Controlled accounting mutation after creation.** `type`, `source`, and `projectId` cannot be updated on an inventory movement transaction after it is created. Clients cannot directly edit movement `amountCents`, `subtotalCents`, or `budgetCategoryId`. Trusted workflows have two narrow exceptions: the item-price trigger may adjust amount/subtotal for an attached item under its existing paid-invoice freeze rule; and the dedicated category-reclassification operation may change `budgetCategoryId` for an eligible uncollected project-side Purchase-from-Inventory while atomically updating its currently attached items. Mutable client fields include `itemIds`, `notes`, `status`, and `updatedAt`. `itemIds` is current active membership; lineage carries returned/sold historical membership.
+1. **Controlled accounting mutation after creation.** `type`, `source`, and `projectId` cannot be updated on an inventory movement transaction after it is created. Clients cannot directly edit movement `amountCents`, `subtotalCents`, or `budgetCategoryId`. Trusted workflows have two narrow exceptions: the item-price trigger may adjust amount/subtotal for an attached item under its existing paid-invoice freeze rule; and the dedicated category-reclassification operation may change `budgetCategoryId` for an eligible project-side Purchase-from-Inventory while atomically updating its currently attached items. Mutable client fields include `itemIds`, `notes`, `status`, and `updatedAt`. `itemIds` is current active membership; lineage carries returned/sold historical membership.
 2. **Batch size cap.** Initial `itemIds.length >= 1 && itemIds.length <= 100`. Later returns/sales can reduce `itemIds` to zero on the source transaction. Both clients enforce the initial cap locally; the cap exists because Firestore batch writes have a 500-doc limit and a 100-item movement touches ~305 docs.
 3. **Non-negative amount.** `amountCents >= 0`.
 4. **Direction is type/source-derived.** `type == "Purchase"` with an inventory source is inventory → project. `type == "Sale"` with an inventory source is project → inventory acquisition. No dedicated direction field is written for new per-batch movements.
@@ -143,22 +143,26 @@ Category reclassification is an accounting correction for the **entire** per-bat
 
 The operation is available only when all of the following are true:
 
-- The transaction is a non-legacy, project-scoped `Purchase` whose source exactly matches the account's derived inventory label; a suffix-only match is not sufficient authorization.
+- The transaction is a non-legacy, project-scoped `Purchase` identified by persisted movement state within the authenticated account. Transaction/category IDs define identity; matching the current account display name is never required.
 - The transaction is not canceled.
 - The target category is already enabled in the same project and its account category is active, non-system, and canonically itemized.
-- No affected invoice source has been collected. A paid invoice or an active settlement/payment transaction for an affected line is a collection lock. Canceled invoices and canceled settlement transactions do not lock the correction.
+- Invoice and settlement state do not affect eligibility. Their records remain untouched; any category discrepancy is accepted for this feature.
 
 ### Atomic write contract
 
 One trusted operation must atomically:
 
-1. Re-read and validate the transaction and expected current category.
+1. Authenticate the account and check the request receipt first. Return the original result for an identical retry; reject conflicting request-ID reuse. Then re-read and validate the transaction and expected current category.
 2. Set the Purchase `budgetCategoryId` to the target category.
 3. Resolve current membership from both `Purchase.itemIds` and the reverse item `transactionId` association, require the ID sets and project scopes to match exactly, and set the same category on every resulting item.
-4. Keep any created or sent, uncollected invoice line category snapshots for affected sources aligned with the new category.
+4. Preserve all invoice and settlement records without querying their state or changing their category snapshots.
 5. Write a structured audit event containing actor, request ID, transaction ID, project ID, previous category, target category, affected active item IDs, and timestamp.
 
-The operation must fail without writes if membership is stale, the target is ineligible, or collection has locked any affected source. Direct client writes to movement `budgetCategoryId` remain prohibited; iOS and MCP use this dedicated operation.
+The operation must fail without writes if membership is stale or the target is ineligible. Direct client writes to movement `budgetCategoryId` remain prohibited; iOS and MCP use this dedicated operation.
+
+### Transaction details UI
+
+Expose **Change Category** from the details editor for eligible Purchases. Show project-enabled itemized categories, confirm the full Purchase amount and active item count, and call the dedicated command. Retain the same request ID after uncertain network outcomes. Keep other movement accounting controls locked and explain unsupported movement types. Ordinary transactions retain their existing category editor.
 
 ### What changes and what does not
 

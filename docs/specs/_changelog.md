@@ -1,5 +1,18 @@
 # Ledger Specs — Changelog
 
+## 2026-09-18
+
+- **Revised category-correction scope:** supersedes the earlier invoice requirements below. Invoice/settlement state no longer blocks correction, and invoice snapshots remain untouched. Removed collection migration and invoice provenance prerequisites, removed account-name matching from eligibility, specified replay-safe request receipts, and consolidated the duplicated category-reclassification section. The operation updates the Purchase and current items atomically with an audit record.
+
+- **Implemented Purchase-from-Inventory category correction locally.** The iOS
+  transaction-detail editor exposes Change Category for eligible active
+  Purchases while keeping generic movement accounting fields and direct
+  category writes locked. The trusted operation atomically updates the Purchase
+  and currently attached items, validates project-enabled itemized categories,
+  and records a replay-safe audit event. Invoice and settlement records are
+  intentionally untouched and do not block the correction. Production rollout
+  remains pending.
+
 ## 2026-08-29
 - **Added Space review notes.** While reconciling a physical Space with Ledger, members may record a text observation and optionally attach one photo from that Space with a non-destructive red marker.
 - **Kept the feature Space-scoped.** Review notes do not interact with Project Notes or Quick Note. Their red markers are independent from the green item-linked checkmarks on the source Space photo.

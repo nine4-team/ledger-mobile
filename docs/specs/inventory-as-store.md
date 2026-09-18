@@ -94,7 +94,7 @@ Both paths wipe the item's `budgetCategoryId` and set `projectId` to null. Both 
 
 An inventory-originated item that was sold to a project and then returned home is ordinary inventory again. Its current Return transaction must not surface Return to Project; its next project movement uses the configurable Sell flow.
 
-Before collection, the entire Purchase may be reclassified to another project-enabled itemized category through a dedicated atomic correction. The Purchase and its currently attached items change together. Departed items, downstream movements, amounts, prices, and the original vendor Purchase do not change. Collection locks the normal correction because invoice settlement accounting has already been categorized.
+The entire Purchase may be reclassified to another project-enabled itemized category through a dedicated atomic correction. The Purchase and its currently attached items change together. Departed items, downstream movements, amounts, prices, and the original vendor Purchase do not change. Invoice and settlement records are outside this correction; their state does not block it.
 
 ### Moving between projects
 

@@ -466,6 +466,71 @@ struct ItemDeletionTests {
         }
     }
 
+    @Test("inventory Purchase category correction cascades and records an audit event")
+    func inventoryPurchaseCategoryCorrectionCascades() async throws {
+        let batch = RecordingBatch()
+        let service = TransactionsService(
+            makeBatch: { batch },
+            loadTransaction: { _, _ in
+                var transaction = makeTransaction(
+                    id: "tx1",
+                    projectId: "project1",
+                    budgetCategoryId: "cat1",
+                    itemIds: ["i1", "i2"]
+                )
+                transaction.transactionType = .purchase
+                transaction.source = "Business Inventory"
+                return transaction
+            }
+        )
+
+        try await service.updateTransaction(
+            accountId: acct,
+            transactionId: "tx1",
+            fields: [
+                "budgetCategoryId": "cat2",
+                "__categoryCorrectionRequestId": "request-1",
+            ]
+        )
+
+        #expect(batch.commitCalled)
+        #expect(batch.updatesForPath("accounts/\(acct)/transactions/tx1").count == 1)
+        for itemId in ["i1", "i2"] {
+            let update = try #require(batch.updatesForPath("accounts/\(acct)/items/\(itemId)").first)
+            #expect(update.fields["budgetCategoryId"] as? String == "cat2")
+        }
+        let audit = try #require(batch.setsForPath("accounts/\(acct)/transactionCategoryEvents/request-1").first)
+        #expect(audit.fields["transactionId"] as? String == "tx1")
+        #expect(audit.fields["budgetCategoryId"] as? String == "cat2")
+    }
+
+    @Test("inventory movement category edits require the correction marker")
+    func inventoryMovementCategoryEditRequiresCorrectionMarker() async {
+        let batch = RecordingBatch()
+        let service = TransactionsService(
+            makeBatch: { batch },
+            loadTransaction: { _, _ in
+                var transaction = makeTransaction(
+                    id: "tx1",
+                    projectId: "project1",
+                    budgetCategoryId: "cat1"
+                )
+                transaction.transactionType = .purchase
+                transaction.source = "Business Inventory"
+                return transaction
+            }
+        )
+
+        await #expect(throws: TransactionCategoryCorrectionError.self) {
+            try await service.updateTransaction(
+                accountId: acct,
+                transactionId: "tx1",
+                fields: ["budgetCategoryId": "cat2"]
+            )
+        }
+        #expect(!batch.commitCalled)
+    }
+
     @Test("transaction inventory correction — detaches linked items into No Transaction state")
     func transactionInventoryCorrectionDetachesItems() async throws {
         let batch = RecordingBatch()

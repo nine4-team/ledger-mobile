@@ -191,6 +191,10 @@ await run('R6c: notes update on Purchase-from-Inventory → allowed', async () =
   await assertSucceeds(updateDoc(inventoryPurchaseRef, { notes: 'reviewed' }));
 });
 
+await run('R6d: category update on Purchase-from-Inventory → allowed', async () => {
+  await assertSucceeds(updateDoc(inventoryPurchaseRef, { budgetCategoryId: 'cat2' }));
+});
+
 await run('R7: update type on per-batch Sale → rejected', async () => {
   await assertFails(updateDoc(saleRef, { type: 'Purchase' }));
 });

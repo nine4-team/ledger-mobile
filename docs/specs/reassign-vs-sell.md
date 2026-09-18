@@ -186,7 +186,7 @@ Under the per-batch model, **inventory items have no `budgetCategoryId`** (the i
 
 There is no per-item category override and no mixed-category batches. Users wanting mixed categories must sell in separate batches. See [sale-transactions.md](sale-transactions.md) D4a.
 
-After the sale, the entire Purchase may be reclassified to another project-enabled itemized category while its affected invoice sources remain uncollected. This dedicated correction updates the Purchase and all currently attached items atomically. It does not reclassify only a selected subset, change prices/amounts, or rewrite departed items and downstream movement transactions.
+After the sale, the entire Purchase may be reclassified to another project-enabled itemized category. This dedicated correction updates the Purchase and all currently attached items atomically. It does not reclassify only a selected subset, change prices/amounts, or rewrite departed items and downstream movement transactions.
 
 The sell flow also requires a positive project price for every item. Before confirmation, Ledger persists `projectPriceCents = max(projectPriceCents ?? 0, purchasePriceCents ?? 0)`, preserving higher markup and raising any lower value to cost. A price-entry step appears only when neither price is positive. The resulting values establish the destination Purchase's initial amount; eligible project-price edits before the existing paid-invoice freeze boundary adjust that project-side total automatically.
 

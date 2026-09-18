@@ -4,6 +4,12 @@
 
 Implemented in the Ledger MCP; iOS UI exposure is deferred.
 
+This aggregate correction is intentionally separate from the
+Purchase-from-Inventory category-reclassification command. Generated inventory
+movement transactions retain their structural immutability and must use the
+dedicated category-reclassification design in
+[inventory-purchase-category-reclassification-plan.md](../plans/inventory-purchase-category-reclassification-plan.md).
+
 Date: 2026-08-30
 
 ## Purpose

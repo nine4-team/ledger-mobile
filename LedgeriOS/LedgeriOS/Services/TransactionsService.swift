@@ -1,3 +1,4 @@
+import FirebaseAuth
 import FirebaseFirestore
 
 struct TransactionDeletionNotice: Identifiable {
@@ -14,6 +15,17 @@ enum TransactionDeletionError: LocalizedError {
         case .linkedItems(let count):
             let noun = count == 1 ? "item" : "items"
             return "This transaction still has \(count) \(noun) attached. Move or remove the transaction from the attached \(noun), then try again."
+        }
+    }
+}
+
+enum TransactionCategoryCorrectionError: LocalizedError {
+    case notEligible
+
+    var errorDescription: String? {
+        switch self {
+        case .notEligible:
+            return "Only an active project Purchase from Inventory can be reclassified."
         }
     }
 }
@@ -138,10 +150,11 @@ struct TransactionsService: TransactionsServiceProtocol {
         if fields.keys.contains("itemIds") {
             throw ItemAssociationError.genericItemIdsUpdate
         }
-        let normalizedFields = AttachmentPrimaryPolicy.normalizedFields(
+        var normalizedFields = AttachmentPrimaryPolicy.normalizedFields(
             fields,
             attachmentFieldNames: ["receiptImages", "otherImages", "transactionImages"]
         )
+        let categoryCorrectionRequestId = normalizedFields.removeValue(forKey: "__categoryCorrectionRequestId") as? String
         if normalizedFields["projectId"] is NSNull {
             guard let existing = try await loadTransaction(accountId, transactionId) else {
                 throw ItemAssociationError.transactionNotFound(transactionId)
@@ -179,9 +192,22 @@ struct TransactionsService: TransactionsServiceProtocol {
             let nextProjectId = normalizedFields["projectId"] as? String ?? existing.projectId
             let nextCategoryId = normalizedFields["budgetCategoryId"] as? String ?? existing.budgetCategoryId
             try Self.validateCategory(projectId: nextProjectId, categoryId: nextCategoryId)
+
+            if existing.isInventoryMovement,
+               normalizedFields.keys.contains("budgetCategoryId") {
+                guard categoryCorrectionRequestId?.isEmpty == false,
+                      existing.transactionType == .purchase,
+                      existing.projectId != nil,
+                      existing.status != .canceled else {
+                    throw TransactionCategoryCorrectionError.notEligible
+                }
+            }
+
             if nextProjectId != existing.projectId || nextCategoryId != existing.budgetCategoryId {
                 let batch = makeBatch()
-                batch.updateData(normalizedFields, forDocumentAt: "accounts/\(accountId)/transactions/\(transactionId)")
+                var transactionFields = normalizedFields
+                transactionFields["updatedAt"] = FieldValue.serverTimestamp()
+                batch.updateData(transactionFields, forDocumentAt: "accounts/\(accountId)/transactions/\(transactionId)")
                 for itemId in existing.itemIds ?? [] {
                     var itemFields: [String: Any] = [
                         "projectId": nextProjectId as Any? ?? NSNull(),
@@ -210,6 +236,28 @@ struct TransactionsService: TransactionsServiceProtocol {
                             inCollection: "accounts/\(accountId)/lineageEdges"
                         )
                     }
+                }
+                if let requestId = categoryCorrectionRequestId,
+                   nextCategoryId != existing.budgetCategoryId {
+                    var auditFields: [String: Any] = [
+                        "accountId": accountId,
+                        "transactionId": transactionId,
+                        "requestId": requestId,
+                        "previousBudgetCategoryId": existing.budgetCategoryId as Any? ?? NSNull(),
+                        "budgetCategoryId": nextCategoryId as Any? ?? NSNull(),
+                        "projectId": existing.projectId as Any? ?? NSNull(),
+                        "itemIds": existing.itemIds ?? [],
+                        "source": "ios",
+                        "createdAt": FieldValue.serverTimestamp(),
+                    ]
+                    if let userId = Auth.auth().currentUser?.uid {
+                        auditFields["createdBy"] = userId
+                    }
+                    batch.setData(
+                        auditFields,
+                        forDocumentAt: "accounts/\(accountId)/transactionCategoryEvents/\(requestId)",
+                        merge: false
+                    )
                 }
                 try await batch.commit()
                 return

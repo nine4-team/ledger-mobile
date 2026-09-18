@@ -5,6 +5,9 @@ struct CategoryPickerList: View {
     let categories: [BudgetCategory]
     let selectedId: String?
     let onSelect: (BudgetCategory?) -> Void
+    /// When false, the caller is correcting a project-scoped record that must
+    /// retain a real category (for example an inventory Purchase).
+    var allowsNoCategory: Bool = true
     /// When true (default), the picker dismisses itself after a selection —
     /// appropriate when presented as its own sheet. Set to `false` when
     /// embedded inline inside another modal, where dismissing would tear
@@ -39,10 +42,11 @@ struct CategoryPickerList: View {
 
             ScrollView {
                 LazyVStack(spacing: 0) {
-                    // "No Category" option
-                    categoryRow(name: "No Category", isSelected: selectedId == nil) {
-                        onSelect(nil)
-                        if autoDismissOnSelect { dismiss() }
+                    if allowsNoCategory {
+                        categoryRow(name: "No Category", isSelected: selectedId == nil) {
+                            onSelect(nil)
+                            if autoDismissOnSelect { dismiss() }
+                        }
                     }
 
                     ForEach(visibleCategories) { category in

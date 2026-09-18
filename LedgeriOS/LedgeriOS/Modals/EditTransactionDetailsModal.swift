@@ -60,6 +60,26 @@ struct EditTransactionDetailsModal: View {
         transaction.needsItemizedAudit(category: selectedCategory)
     }
 
+    /// Inventory movement accounting fields remain locked, but an eligible
+    /// project-side Purchase can be reclassified as one aggregate operation.
+    private var canEditMovementCategory: Bool {
+        isAccountingLocked
+            && transaction.transactionType == .purchase
+            && transaction.isInventoryMovement
+            && transaction.isCanonicalInventorySale != true
+            && transaction.projectId != nil
+            && transaction.status != .canceled
+    }
+
+    private var canEditCategory: Bool {
+        !isAccountingLocked || canEditMovementCategory
+    }
+
+    private var categoryPickerCategories: [BudgetCategory] {
+        guard isAccountingLocked else { return budgetCategories }
+        return budgetCategories.filter { $0.resolvedCategoryType == .itemized }
+    }
+
     private var computedTaxAmount: String {
         guard let amount = textToCents(amountText),
               let subtotal = textToCents(subtotalText),
@@ -89,7 +109,7 @@ struct EditTransactionDetailsModal: View {
                     .disabled(isAccountingLocked)
 
                 if isAccountingLocked {
-                    Text("Movement source, totals, type, and category are managed by the inventory workflow. For a Purchase from Inventory, edit the sold item's project price to update its total.")
+                    Text("Movement source, totals, and type are managed by the inventory workflow. An eligible Purchase from Inventory can still be reclassified to another project item category.")
                         .font(Typography.caption)
                         .foregroundStyle(BrandColors.textSecondary)
                         .frame(maxWidth: .infinity, alignment: .leading)
@@ -130,7 +150,7 @@ struct EditTransactionDetailsModal: View {
                 ) {
                     showCategoryPicker = true
                 }
-                .disabled(isAccountingLocked)
+                .disabled(!canEditCategory)
 
                 // 9. Email Receipt
                 FormToggle(label: "Email Receipt", isOn: $hasEmailReceipt)
@@ -152,11 +172,12 @@ struct EditTransactionDetailsModal: View {
         }
         .adaptivePresentation(isPresented: $showCategoryPicker, style: .picker) {
             CategoryPickerList(
-                categories: budgetCategories,
+                categories: categoryPickerCategories,
                 selectedId: budgetCategoryId,
                 onSelect: { category in
                     budgetCategoryId = category?.id
-                }
+                },
+                allowsNoCategory: !isAccountingLocked
             )
         }
     }
@@ -184,11 +205,7 @@ struct EditTransactionDetailsModal: View {
                 fields["amountCents"] = cents
             }
 
-            if let catId = budgetCategoryId {
-                fields["budgetCategoryId"] = catId
-            } else {
-                fields["budgetCategoryId"] = NSNull()
-            }
+            fields["budgetCategoryId"] = budgetCategoryId as Any? ?? NSNull()
 
             if isItemizedCategory {
                 if let subtotal = textToCents(subtotalText) {
@@ -198,6 +215,12 @@ struct EditTransactionDetailsModal: View {
                     fields["taxRatePct"] = rate
                 }
             }
+        } else if canEditMovementCategory,
+                  let categoryId = budgetCategoryId {
+            fields["budgetCategoryId"] = categoryId
+            // Consumed by TransactionsService and never persisted. This keeps
+            // movement category corrections distinct from generic updates.
+            fields["__categoryCorrectionRequestId"] = UUID().uuidString
         }
 
         onSave(fields)

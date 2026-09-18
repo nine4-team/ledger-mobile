@@ -114,7 +114,7 @@ transactions link back to invoices with `settlementInvoiceId`.
 Clients also cannot edit `amountCents`, `subtotalCents`, or inventory-movement `budgetCategoryId` directly. Trusted workflows have two controlled exceptions:
 
 - While a sold item remains attached to a project-side Purchase from Inventory and is not on a paid invoice, a change to its effective project price adjusts that Purchase's amount/subtotal by the item's delta.
-- Before collection, the dedicated Purchase category-reclassification operation may change the entire Purchase to another active, non-system, project-enabled itemized category. It atomically changes the Purchase and its currently attached items, aligns uncollected invoice line category snapshots, and writes a structured audit event.
+- The dedicated Purchase category-reclassification operation may change the entire Purchase to another active, non-system, project-enabled itemized category. It atomically changes the Purchase and currently attached items and writes an audit event. Invoice/settlement state does not block it; those records remain unchanged.
 
 Vendor Purchases, source-side Returns/Sales, transactions the item has left, paid/settled invoice history, and downstream movements remain unchanged.
 
@@ -167,7 +167,7 @@ Collection is recorded by ordinary transactions linked with
 | snapshotName | string, nullable | Frozen display label |
 | settlementTransactionIds | array of string, nullable | Optional convenience reverse lookup; transaction settlement fields are source of truth |
 
-An item- or transaction-backed invoice line receives its category from the source record. Before collection, an eligible Purchase-from-Inventory category correction keeps affected created/sent line category snapshots aligned. Once an affected line has an active settlement transaction, or its invoice is paid, the normal Purchase category correction is blocked; changing collected accounting requires a separate explicit correction workflow.
+An item- or transaction-backed invoice line receives its category from its source when materialized. Purchase category reclassification does not update invoice or settlement snapshots, and their state does not block it. Any resulting category discrepancy is accepted for this feature.
 
 #### Returned Paid Item Credits
 
@@ -253,7 +253,7 @@ For every Item:
 
 Items in business inventory (`projectId == null`) have `budgetCategoryId == null`. Items in a project have a `budgetCategoryId`. Both clients (iOS and MCP) enforce this on every write.
 
-Project items may have `transactionId == null` while awaiting a correct transaction. Clearing a transaction preserves the item's category. When linked, item and transaction must share a project and category; association writes update the item, old/new `transaction.itemIds`, and correction lineage atomically. Ordinary transaction category edits cascade to currently owned items. The dedicated uncollected Purchase-from-Inventory reclassification does the same for current movement membership while leaving departed items and downstream transactions untouched. Generated inventory-movement structural identity fields remain immutable; eligible project Purchase totals are server-maintained from sold-item price deltas.
+Project items may have `transactionId == null` while awaiting a correct transaction. Clearing a transaction preserves the item's category. When linked, item and transaction must share a project and category; association writes update the item, old/new `transaction.itemIds`, and correction lineage atomically. Ordinary transaction category edits cascade to currently owned items. The dedicated Purchase-from-Inventory reclassification does the same for current movement membership while leaving departed items and downstream transactions untouched. Generated inventory-movement structural identity fields remain immutable; eligible project Purchase totals are server-maintained from sold-item price deltas.
 
 **This replaces** the legacy "items carry their `budgetCategoryId` across scope moves" model. Under the new model, categories belong to projects — when an item moves into inventory, its category is wiped; when an item moves into a project, a category is acquired (resolved at sell time from user input).
 
