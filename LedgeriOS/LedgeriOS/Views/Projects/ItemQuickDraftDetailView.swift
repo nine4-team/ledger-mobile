@@ -4,6 +4,81 @@ import FirebaseFirestore
 struct ItemQuickDraftDetailView: View {
     let protoItem: ProtoItem
 
+    @State private var isContentReady = false
+
+    var body: some View {
+        Group {
+            if isContentReady {
+                ItemQuickDraftContextContainer(protoItem: protoItem)
+            } else {
+                BrandColors.background
+                    .ignoresSafeArea()
+            }
+        }
+        .task {
+            // As with Item Detail, keep the state-heavy detail graph out of
+            // the parent project's navigation push transaction on macOS.
+            await Task.yield()
+            guard !Task.isCancelled else { return }
+            isContentReady = true
+        }
+    }
+}
+
+/// Establish the draft's own project scope after the navigation push, as Item
+/// Detail does. Injecting the parent list's live context into this route can
+/// make macOS repeatedly reconcile the parent and destination during the push.
+private struct ItemQuickDraftContextContainer: View {
+    let protoItem: ProtoItem
+
+    @Environment(AccountContext.self) private var accountContext
+    @Environment(AuthManager.self) private var authManager
+    @Environment(ProjectContext.self) private var ambientProjectContext
+    @State private var scopedProjectContext = ProjectContext(
+        projectService: ProjectService(),
+        transactionsService: TransactionsService(),
+        itemsService: ItemsService(),
+        protoItemsService: ProtoItemsService(),
+        spacesService: SpacesService(),
+        projectBudgetCategoriesService: ProjectBudgetCategoriesService()
+    )
+
+    var body: some View {
+        if let projectId = protoItem.projectId,
+           ambientProjectContext.currentProjectId != projectId {
+            ItemQuickDraftDetailContentView(protoItem: protoItem)
+                .environment(scopedProjectContext)
+                .task(id: [accountContext.currentAccountId ?? "", projectId, authManager.currentUser?.uid ?? ""]) {
+                    guard let accountId = accountContext.currentAccountId else { return }
+                    scopedProjectContext.activate(
+                        accountId: accountId,
+                        projectId: projectId,
+                        userId: authManager.currentUser?.uid,
+                        member: accountContext.member,
+                        rawBudgetCategories: accountContext.rawAllBudgetCategories
+                    )
+                }
+                .onChange(of: accountContext.member) { _, member in
+                    scopedProjectContext.updateFinancialContext(
+                        member: member,
+                        rawBudgetCategories: accountContext.rawAllBudgetCategories
+                    )
+                }
+                .onChange(of: accountContext.rawAllBudgetCategories) { _, categories in
+                    scopedProjectContext.updateFinancialContext(
+                        member: accountContext.member,
+                        rawBudgetCategories: categories
+                    )
+                }
+        } else {
+            ItemQuickDraftDetailContentView(protoItem: protoItem)
+        }
+    }
+}
+
+private struct ItemQuickDraftDetailContentView: View {
+    let protoItem: ProtoItem
+
     @Environment(AccountContext.self) private var accountContext
     @Environment(ProjectContext.self) private var projectContext
     @Environment(AuthManager.self) private var authManager

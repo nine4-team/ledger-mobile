@@ -25,7 +25,8 @@ struct ItemsTabView: View {
     @State private var showNewItem = false
     @State private var showNewItemDraft = false
     @State private var showAddItemMenu = false
-    @State private var selectedProtoItem: ProtoItem?
+    @State private var selectedProtoItemId: String?
+    @State private var showProtoItemDetail = false
     @State private var protoItemPendingDelete: ProtoItem?
     @State private var protoItemPendingConvert: ProtoItem?
     @State private var protoItemPendingMerge: ProtoItem?
@@ -242,9 +243,13 @@ struct ItemsTabView: View {
                 }
             )
         }
-        .navigationDestination(item: $selectedProtoItem) { protoItem in
-            ItemQuickDraftDetailView(protoItem: protoItem)
-                .environment(projectContext)
+        .navigationDestination(isPresented: $showProtoItemDetail) {
+            if let selectedProtoItemId,
+               let protoItem = projectContext.protoItems.first(where: { $0.id == selectedProtoItemId }) {
+                ItemQuickDraftDetailView(protoItem: protoItem)
+            } else {
+                ContentUnavailableView("Quick Draft Unavailable", systemImage: "cube.box")
+            }
         }
         .navigationDestination(isPresented: $showItemDetail) {
             if let selectedItemId,
@@ -312,7 +317,10 @@ struct ItemsTabView: View {
                     ForEach(activeProjectProtoItems) { protoItem in
                         ItemDraftCard(
                             protoItem: protoItem,
-                            onOpen: { selectedProtoItem = protoItem },
+                            onOpen: {
+                                selectedProtoItemId = protoItem.id
+                                showProtoItemDetail = protoItem.id != nil
+                            },
                             onConvert: { protoItemPendingConvert = protoItem },
                             onMerge: { protoItemPendingMerge = protoItem },
                             toastMessage: protoItem.id == protoItemToast?.id ? protoItemToast?.message : nil,
