@@ -1,11 +1,27 @@
 const test=require('node:test'),assert=require('node:assert/strict'),crypto=require('node:crypto');
-const {planMediaReferences,planTransactionMedia,transactionPublicationSQL,planExpenseReceipts}=require('../real-copy-transaction-media.cjs');
+const {planMediaReferences,planSpaceMedia,planTransactionMedia,transactionPublicationSQL,planExpenseReceipts}=require('../real-copy-transaction-media.cjs');
 const transaction='realcopy-b9d236394770-transaction-'+crypto.createHash('sha256').update('one').digest('hex').slice(0,24);
 const ids=new Set([transaction]);
 const ref=(object,kind='image')=>({mapValue:{fields:{url:{stringValue:'https://firebasestorage.googleapis.com/v0/b/ledger-nine4.firebasestorage.app/o/'+object},kind:{stringValue:kind}}}});
 const source=fields=>({account:'accounts/test',documents:[{name:'accounts/test/transactions/one',fields}]});
 const array=values=>({arrayValue:{values}});
 const copies=new Map(['image','pdf'].map(object=>[object,{object,contentType:object==='pdf'?'application/pdf':'image/jpeg',bytes:10,sha256:'a'.repeat(64),file:object}]));
+test('Space planning preserves mixed media and refuses partial galleries',()=>{
+  const space=transaction.replace('-transaction-','-space-');
+  const input={account:'accounts/test',documents:[{name:'accounts/test/spaces/one',fields:{images:array([ref('image'),ref('pdf','pdf')])}}]};
+  const planned=planSpaceMedia(input,copies,new Set([space]));
+  assert.equal(planned.spaces.length,1);
+  assert.deepEqual(planned.spaces[0].images.map(image=>image.contentType),['image/jpeg','application/pdf']);
+  assert.equal(planned.spaces[0].primaryIndex,0);
+  assert.equal(planned.objects.size,2);
+  assert.equal(planSpaceMedia(input,copies,new Set()).spaces.length,0);
+  const missing=planSpaceMedia(input,new Map([['image',copies.get('image')]]),new Set([space]));
+  assert.equal(missing.spaces.length,0);
+  assert.equal(missing.objects.size,0);
+  assert.equal(missing.blocked[0].reason,'original_not_copied');
+  input.documents[0].fields.images=array([]);
+  assert.equal(planSpaceMedia(input,copies,new Set([space])).spaces[0].images.length,0);
+});
 test('shared receipt planning retains exact reference evidence and refuses partial mappings',()=>{
   const references=[ref('pdf','pdf'),ref('image')];
   references[0].mapValue.fields.fileName={stringValue:'Original receipt.pdf'};

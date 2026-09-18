@@ -33,6 +33,25 @@ function planMediaReferences(raw, copies, section) {
 
 // Only already-imported Transactions are eligible. A missing original blocks
 // its whole section, never turns a partial import into an apparently empty one.
+function planSpaceMedia(source, copies, spaceIDs) {
+  const spaces = [], blocked = [], objects = new Map();
+  for (const document of source.documents) {
+    const prefix = source.account + '/spaces/';
+    if (!document.name.startsWith(prefix) || document.name.slice(prefix.length).includes('/')) continue;
+    const sourceID = document.name.slice(prefix.length), space = id('space',sourceID);
+    if (!spaceIDs.has(space)) continue;
+    // Space galleries permit both original images and PDFs. Reuse the same
+    // verified-copy and exact-reference validation as receipt attachments.
+    const planned = planMediaReferences(document.fields?.images,copies,'receipts');
+    if (planned.reason) { blocked.push({sourceID,reason:planned.reason}); continue; }
+    const images = planned.images;
+    const explicit = images.findIndex(image => image.primary);
+    spaces.push({id:id('space-set',sourceID),space,sourceID,images,primaryIndex:explicit < 0 ? 0 : explicit});
+    for (const image of images) objects.set(image.id,image);
+  }
+  return {spaces,blocked,objects};
+}
+
 function planTransactionMedia(source, copies, transactionIDs) {
   const sections = [], blocked = [], objects = new Map();
   for (const document of source.documents) {
@@ -144,5 +163,5 @@ async function expenseReceiptCommand() {
   console.log(JSON.stringify({sourceSHA256,accountID:request.targetAccountID,blocked:plan.blocked,
     receipts:plan.receipts.map(({sourceID,images})=>({sourceID,images:images.map(image=>({id:image.id,sha256:image.sha256,byteCount:String(image.bytes),mediaType:image.contentType,storagePath:image.storagePath}))}))}));
 }
-module.exports={planMediaReferences,planTransactionMedia,transactionPublicationSQL,planExpenseReceipts};
+module.exports={planMediaReferences,planSpaceMedia,planTransactionMedia,transactionPublicationSQL,planExpenseReceipts};
 if (require.main===module) expenseReceiptCommand().catch(()=>{console.error('Expense receipt preparation failed; no financial import authorized.');process.exitCode=1;});
