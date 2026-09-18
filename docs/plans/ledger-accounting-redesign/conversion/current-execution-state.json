@@ -1,6 +1,6 @@
 {
   "schemaVersion": 2,
-  "stateVersion": 1549,
+  "stateVersion": 1550,
   "userRequestedPause": {
     "date": "2026-09-15",
     "status": "resumed",
@@ -60,9 +60,9 @@
     "acceptanceCheckIds": ["SPACE-MEDIA-CATALOG","SPACE-MEDIA-UI","SPACE-MEDIA-BYTES","SPACE-MEDIA-SQL","SPACE-MEDIA-AUTH","SPACE-MEDIA-SYNC","SPACE-MEDIA-OFFLINE"],
     "meaning": "Read-only Space media; reuse existing gallery, PDF/image pinning, print helper and byte vault.",
     "verificationCommands": ["swift test --package-path LedgeriOS --no-parallel --filter DownloadedSpaceMediaTests","npm run conversion:state:check"],
-    "lastResult": "Space runtime close/removal2cases PASS0.361s /tmp/ledger-space-media-runtime-drain-fixed.log after correcting test cancellation ownership. macOS UI did NOT execute: authentication conflict during runner initialization /tmp/ledger-space-media-macos-ui.log. conversion:check/state and diff check PASS. Prior current build, SQL2466, live sync, catalog/PDF delivery evidence retained. No CI/hosted changes.",
+    "lastResult": "Current iPhone pin/missing-byte print2tests PASS30.817s /tmp/ledger-space-media-current-iphone.log. Protected Space bytes survive offline runtime reopen PASS0.280s /tmp/ledger-space-media-byte-restart-fixed.log. Print refuses incomplete or changed image sets. Prior runtime close/removal and live sync evidence preserved. State/diff checks PASS. macOS UI authentication failure remains; no CI/hosted changes.",
     "activeProcesses": {},
     "integrationCI": {"run":35359599965,"attempt":1,"commit":"cd8be156fa695f92e2b461cfccd961717c2e95ac","status":"failure","meaning":"Strict lint and SQL/races passed; physical stream test rejected approved live_pricing projection. Native jobs skipped. Repaired exact-column expectation and added absent-acquisition null assertion. All four downstream stream/MCP scripts passed locally. No hosted changes; new-commit integration still required."},
-    "nextWorkflowDecision": "Runtime shutdown verified. Continue current export/platform and missing-byte UI checks; macOS runner authentication failure needs environment resolution, not UI rewrite. Current exports compiled after prior iPhone proof. Actual sync is synthetic metadata only, not Storage-byte/native end-to-end proof. Preserve review/fallback fix. No tests currently running; O023/O053 mutations excluded."
+    "nextWorkflowDecision": "Finish pinned control fidelity: checklist now explicitly owns original Pin and navigation/zoom controls. Current SpacePinnedMediaView limits paging to images or a single PDF; verify against canonical mixed attachment navigation and connect existing PDF zoom controls (no new viewer). Then export/platform checks; macOS runner auth failure remains. Local byte restart and missing-byte UI now verified. Actual sync synthetic metadata only, not hosted Storage proof. No active tests; O023/O053 mutations excluded."
   }
 }

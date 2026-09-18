@@ -568,6 +568,38 @@ struct AccountWorkspacePendingWorkRuntimeTests {
         cancellation.continuation.finish()
     }
 
+    @Test("Space photo bytes survive encrypted restart without another download")
+    func spaceMediaOfflineBytesRestart() async throws {
+        let context = try RuntimeTestContext(suffix: "space-media-bytes-restart")
+        defer { context.remove() }
+        let bytes = Data([1, 2, 3])
+        let hash = try AttachmentContentSHA256.make(bytes: bytes).rawValue
+        var dependencies = physicalItemDependencies(context)
+        let validate = dependencies.validateStructuredDatabase
+        dependencies.validateStructuredDatabase = { database in
+            try await validate(database)
+            _ = try await database.execute(sql: "INSERT INTO spike_spaces(id,account_id,scope_kind,display_name,lifecycle,revision) VALUES('media-space','account-runtime','business_inventory','Room','active','1')", parameters: nil)
+            _ = try await database.execute(sql: "INSERT INTO item_image_objects(id,account_id,content_sha256,byte_count,media_type,storage_path) VALUES('space-photo','account-runtime',?,'3','image/png',?)", parameters: [hash, "accounts/account-runtime/attachments/space-photo/\(hash)"])
+            _ = try await database.execute(sql: "INSERT INTO space_media_sets(id,account_id,space_id,revision,expected_count) VALUES('set','account-runtime','media-space','1',1)", parameters: nil)
+            _ = try await database.execute(sql: "INSERT INTO space_media_references(id,account_id,space_id,attachment_id,set_revision,position,is_primary) VALUES('ref','account-runtime','media-space','space-photo','1',0,1)", parameters: nil)
+        }
+        dependencies.downloadImage = { _ in bytes }
+        let runtime = try await context.openRuntime(dependencies: dependencies)
+        let space = try SpaceID(validating: "media-space")
+        let catalog = try await runtime.readDownloadedSpaceMedia(accountId: context.accountId, spaceId: space, scope: .businessInventory)
+        let attachment = try #require(catalog.attachments.first)
+        #expect(try await runtime.loadDownloadedSpaceMedia(catalog: catalog, attachment: attachment, allowDownload: false) == nil)
+        #expect(try await runtime.loadDownloadedSpaceMedia(catalog: catalog, attachment: attachment, allowDownload: true) == bytes)
+        try await runtime.close()
+        var offline = context.dependencies()
+        offline.downloadImage = { _ in Issue.record("Offline reopen attempted network download"); throw CancellationError() }
+        let reopened = try await context.openRuntime(dependencies: offline)
+        let restored = try await reopened.readDownloadedSpaceMedia(accountId: context.accountId, spaceId: space, scope: .businessInventory)
+        #expect(restored == catalog)
+        #expect(try await reopened.loadDownloadedSpaceMedia(catalog: restored, attachment: attachment, allowDownload: false) == bytes)
+        try await reopened.close()
+    }
+
     @Test("Account profile facade reopens downloaded branding and denies foreign or locked workspaces")
     func accountProfileRestartAndIsolation() async throws {
         let context = try RuntimeTestContext(suffix: "profile-restart")

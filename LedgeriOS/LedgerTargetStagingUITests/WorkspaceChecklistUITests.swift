@@ -5487,6 +5487,28 @@ final class WorkspaceChecklistUITests: XCTestCase {
         XCTAssertFalse(unpin.exists)
     }
 
+    func testSpaceMediaMissingBytesCannotPrint() throws {
+        continueAfterFailure = false
+        let app = XCUIApplication()
+        app.launchArguments = ["--ledger-ui-test-workspace-checklist", "--ledger-ui-test-space-media", "--ledger-ui-test-space-media-missing"]
+        app.launch()
+        defer { app.terminate() }
+        let project = app.buttons["target-active-project-card-project-ui-test"]
+        XCTAssertTrue(project.waitForExistence(timeout: 10)); project.tap()
+        let spaces = app.buttons["target-active-project-spaces-tab"]
+        reveal(spaces, in: app); spaces.tap()
+        let space = app.buttons["target-active-space-card-space-ui-test"]
+        XCTAssertTrue(space.waitForExistence(timeout: 5)); reveal(space, in: app); space.tap()
+        let printPhotos = app.buttons["Print photos"]
+        XCTAssertTrue(printPhotos.waitForExistence(timeout: 5)); reveal(printPhotos, in: app); printPhotos.tap()
+        XCTAssertTrue(app.staticTexts["One or more space photos could not be downloaded."].waitForExistence(timeout: 5))
+        app.buttons["OK"].tap()
+        let photo = app.descendants(matching: .any)["target-space-media-space-media-0"].firstMatch
+        reveal(photo, in: app); photo.tap()
+        XCTAssertTrue(app.staticTexts["Image not downloaded. Reconnect and retry."].waitForExistence(timeout: 5))
+        XCTAssertTrue(app.buttons["target-item-image-retry"].exists)
+    }
+
     func testInventorySpaceChecklistInteraction() throws {
         try exerciseSpaceChecklist(inventory: true)
     }

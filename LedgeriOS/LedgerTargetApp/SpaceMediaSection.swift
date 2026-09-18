@@ -43,7 +43,7 @@ struct SpaceMediaSection: View {
 
     var body: some View {
         CollapsibleSection(title: "MEDIA",isExpanded: $expanded,onPrint: printPhotos,
-            isPrinting: printing,isPrintDisabled: catalog?.printableImages.isEmpty != false) {
+            isPrinting: printing,isPrintDisabled: catalog?.isComplete != true || catalog?.printableImages.isEmpty != false) {
             if loading { ProgressView("Loading media…") }
             else if let catalog {
                 if !catalog.isComplete { Text("Media information is not fully downloaded.").font(.caption) }
@@ -177,7 +177,7 @@ struct SpaceMediaSection: View {
     }
 
     private func printPhotos() {
-        guard !printing, let value = catalog, !value.printableImages.isEmpty else { return }
+        guard !printing, let value = catalog, value.isComplete, !value.printableImages.isEmpty else { return }
         let request = generation; printing = true
         printTask = Task {
             defer { if generation == request { printing = false; printTask = nil } }
@@ -191,7 +191,9 @@ struct SpaceMediaSection: View {
                 }
                 let pdf = try PhotoPrintPresentation.makePDF(from: photos)
                 let current = try await reader.readDownloadedSpaceMedia(accountId: accountId,spaceId: spaceId,scope: scope)
-                guard generation == request, value.printableImages.allSatisfy({ current.retains($0,from: value) }) else {
+                guard generation == request, current.isComplete,
+                      current.printableImages == value.printableImages,
+                      value.printableImages.allSatisfy({ current.retains($0,from: value) }) else {
                     throw CancellationError()
                 }
                 try Task.checkCancellation()
