@@ -2,6 +2,7 @@
 // key persistence, overwrite fallback, project creation or billing changes.
 const fs = require('node:fs');
 const crypto = require('node:crypto');
+const path = require('node:path');
 const {execFileSync} = require('node:child_process');
 const {planItemMedia, publicationSQL, uploadVerifiedOriginals} = require('./load-real-copy-item-media.cjs');
 const {verifiedCopies} = require('./copy-authorized-project-media.cjs');
@@ -21,12 +22,22 @@ function assertQAState(row) {
 }
 
 async function main() {
-  if(process.cwd()!==root || process.argv.length!==3 || !['--plan','--apply','--verify','--prepare-thumbnails','--publish-thumbnails','--plan-transactions','--apply-transactions','--verify-transactions','--plan-spaces'].includes(process.argv[2])) throw Error('Unexpected loader command or worktree');
+  const spacePlan=process.argv[2]==='--plan-spaces';
+  if(process.cwd()!==root || !(process.argv.length===3 || (spacePlan && process.argv.length===4)) || !['--plan','--apply','--verify','--prepare-thumbnails','--publish-thumbnails','--plan-transactions','--apply-transactions','--verify-transactions','--plan-spaces'].includes(process.argv[2])) throw Error('Unexpected loader command or worktree');
   const bytes=fs.readFileSync(directory+'/source.json');
   const manifest=JSON.parse(fs.readFileSync(directory+'/manifest.json'));
   if(hash(bytes)!=='9e597cb852f5d2048f774f4b20dd76c77fc9eec9bc93fc6ceaa8d6693c348183'
       || manifest.sourceSHA256!==hash(bytes) || manifest.accountID!==account || manifest.kind!=='partial-real-data-qa-copy') throw Error('Unexpected source copy');
-  const copies=verifiedCopies(mediaDirectory);
+  let selectedMediaDirectory=mediaDirectory;
+  if(spacePlan && process.argv[3]) {
+    selectedMediaDirectory=path.resolve(process.argv[3]);
+    if(path.dirname(selectedMediaDirectory)!==root+'/tmp/real-project-copy'
+      || !path.basename(selectedMediaDirectory).startsWith('media-')
+      || fs.lstatSync(selectedMediaDirectory).isSymbolicLink()) throw Error('Unexpected Space copy directory');
+    const identity=JSON.parse(fs.readFileSync(selectedMediaDirectory+'/source.json'));
+    if(identity.sha256!==hash(bytes) || identity.selection!=='space_originals') throw Error('Space copy source differs');
+  }
+  const copies=verifiedCopies(selectedMediaDirectory);
   if(process.argv[2]==='--plan-spaces') {
     const source=JSON.parse(bytes),prefix=source.account+'/spaces/';
     const spaces=new Set(source.documents.filter(d=>d.name.startsWith(prefix) && !d.name.slice(prefix.length).includes('/'))

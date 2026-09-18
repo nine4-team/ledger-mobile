@@ -1,11 +1,20 @@
 const test = require('node:test');
 const assert = require('node:assert/strict');
-const { storageURL, collectMediaReferences, verifiedCopies } = require('../copy-authorized-project-media.cjs');
+const { storageURL, collectMediaReferences, collectSpaceOriginals, verifiedCopies } = require('../copy-authorized-project-media.cjs');
 const fs = require('node:fs');
 const os = require('node:os');
 const path = require('node:path');
 const crypto = require('node:crypto');
 const base = 'https://firebasestorage.googleapis.com/v0/b/ledger-nine4.firebasestorage.app/o/';
+test('Space selection copies only exact-account Space gallery originals', () => {
+  const gallery={arrayValue:{values:[{mapValue:{fields:{url:{stringValue:base+'original.jpg'}}}}]}};
+  const source={account:'accounts/a',documents:[
+    {name:'accounts/a/spaces/one',fields:{images:gallery,mainImageThumbUrlSm:{stringValue:base+'thumbnail.jpg'}}},
+    {name:'accounts/a/spaces/empty',fields:{}},
+    ...['accounts/a/items/one','accounts/other/spaces/one','accounts/a/spaces/one/notes/child'].map(name=>({name,fields:{images:{arrayValue:{values:[{mapValue:{fields:{url:{stringValue:'https://unapproved.invalid/never-fetch'}}}}]}}}}))
+  ]};
+  assert.deepEqual([...collectSpaceOriginals(source).refs.keys()],['original.jpg']);
+});
 test('preserves token and encoded object name, requests bytes', () => {
   const result = storageURL(base + 'accounts%2Fexample%2Fimage.jpg?token=example');
   assert.equal(result.object, 'accounts/example/image.jpg');

@@ -60,25 +60,40 @@ function verifiedCopies(directory, selectedObjects = null) {
   }
   return copies;
 }
+function collectSpaceOriginals(source) {
+  const prefix = source.account + '/spaces/';
+  return collectMediaReferences(source.documents
+    .filter(doc => doc.name.startsWith(prefix) && !doc.name.slice(prefix.length).includes('/'))
+    .map(doc => ({name:doc.name,fields:{images:{arrayValue:{values:
+      (doc.fields?.images?.arrayValue?.values ?? []).map(value => ({mapValue:{fields:
+        value.mapValue?.fields?.url ? {url:value.mapValue.fields.url} : {}}}))
+    }}}})));
+}
 async function main() {
-  const resume = process.argv.length === 5 && process.argv[3] === '--resume';
-  if (process.cwd() !== workspace || (process.argv.length !== 3 && !resume)) throw Error('Expected source snapshot [--resume directory] in Supabase worktree');
-  const input = path.resolve(process.argv[2]);
+  const flags = process.argv.slice(2);
+  const spacesOnly = flags.includes('--spaces-only');
+  if (flags.filter(value => value === '--spaces-only').length > 1) throw Error('Duplicate selection flag');
+  const args = flags.filter(value => value !== '--spaces-only');
+  const resume = args.length === 3 && args[1] === '--resume';
+  if (process.cwd() !== workspace || (args.length !== 1 && !resume)) throw Error('Expected source snapshot [--resume directory] [--spaces-only] in Supabase worktree');
+  const input = path.resolve(args[0]);
   if (path.dirname(input) !== root || fs.lstatSync(input).isSymbolicLink()) throw Error('Invalid input');
   const sourceBytes = fs.readFileSync(input);
   const source = JSON.parse(sourceBytes);
   if (source.sourceProject !== 'ledger-nine4' || source.projectId !== '5abd46c9-9886-4b3e-b2b1-19f6cf995a44'
       || source.account !== 'projects/ledger-nine4/databases/(default)/documents/accounts/1dd4fd75-8eea-4f7a-98e7-bf45b987ae94') throw Error('Invalid source scope');
-  const { refs, unavailable } = collectMediaReferences(source.documents);
+  const { refs, unavailable } = spacesOnly ? collectSpaceOriginals(source) : collectMediaReferences(source.documents);
   if (refs.size > 10000) throw Error('Unexpected media count');
-  const directory = resume ? path.resolve(process.argv[4]) : fs.mkdtempSync(path.join(root, 'media-'));
+  const directory = resume ? path.resolve(args[2]) : fs.mkdtempSync(path.join(root, 'media-'));
   if (path.dirname(directory) !== root || !path.basename(directory).startsWith('media-')
       || fs.lstatSync(directory).isSymbolicLink() || !fs.lstatSync(directory).isDirectory()) throw Error('Invalid copy directory');
   const sourceIdentity = { input, sha256: crypto.createHash('sha256').update(sourceBytes).digest('hex'), expectedObjects: refs.size };
+  if (spacesOnly) sourceIdentity.selection = 'space_originals';
   if (resume) {
     const saved = path.join(directory, 'source.json');
     if (fs.lstatSync(saved).isSymbolicLink()) throw Error('Invalid saved source');
     const previous = JSON.parse(fs.readFileSync(saved, 'utf8'));
+    if ((previous.selection ?? 'all') !== (sourceIdentity.selection ?? 'all')) throw Error('Resume selection changed');
     if (Object.keys(sourceIdentity).some(key => previous[key] !== sourceIdentity[key])) throw Error('Resume source changed');
   }
   fs.chmodSync(directory, 0o700);
@@ -140,5 +155,5 @@ async function main() {
   console.log(JSON.stringify({ directory, copied: results.filter(x => x.status === 'copied').length, failures, reusedBytes, transferredBytes }));
   } finally { fs.unlinkSync(lockPath); }
 }
-module.exports = { storageURL, collectMediaReferences, verifiedCopies };
+module.exports = { storageURL, collectMediaReferences, collectSpaceOriginals, verifiedCopies };
 if (require.main === module) main().catch(error => { console.error('Media copy failed:', error.code || error.name); process.exitCode = 1; });
