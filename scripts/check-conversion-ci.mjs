@@ -284,7 +284,7 @@ function validateTargetJob(lines) {
   for (const worker of [target, ios]) {
     requireExactLine(worker, "    needs: [conversion-control, local-supabase-provider-slices]", "target same-commit database dependency");
     requireExactLine(worker, "    runs-on: macos-26", "target macOS runner");
-    requireExactLine(worker, "    timeout-minutes: 60", "native worker timeout");
+    requireExactLine(worker, `    timeout-minutes: ${worker === ios ? 120 : 60}`, "native worker timeout");
     requireExactLine(worker, "        uses: actions/checkout@v4", "native same-commit checkout");
     requireCondition(!worker.some(line => /^\s+(?:ref|repository):/.test(line)), "native checkout must use this PR commit");
     requireExactLine(worker, "          node-version: 24.14.0", "native pinned Node version");

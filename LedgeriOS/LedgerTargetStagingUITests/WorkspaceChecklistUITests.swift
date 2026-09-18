@@ -5530,7 +5530,11 @@ final class WorkspaceChecklistUITests: XCTestCase {
         let printPhotos = app.buttons["Print photos"]
         XCTAssertTrue(printPhotos.waitForExistence(timeout: 5)); reveal(printPhotos, in: app); printPhotos.tap()
         XCTAssertTrue(app.staticTexts["One or more space photos could not be downloaded."].waitForExistence(timeout: 5))
+        #if os(macOS)
+        app.sheets.buttons["OK"].tap()
+        #else
         app.buttons["OK"].tap()
+        #endif
         let photo = app.descendants(matching: .any)["target-space-media-space-media-0"].firstMatch
         reveal(photo, in: app); photo.tap()
         XCTAssertTrue(app.staticTexts["Image not downloaded. Reconnect and retry."].waitForExistence(timeout: 5))

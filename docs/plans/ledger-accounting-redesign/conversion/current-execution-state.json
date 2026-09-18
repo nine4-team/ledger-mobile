@@ -60,9 +60,9 @@
     "acceptanceCheckIds": ["SPACE-MEDIA-CAPACITY","SPACE-MEDIA-CATALOG","SPACE-MEDIA-BYTES","SPACE-MEDIA-OFFLINE"],
     "meaning": "Bounded media sync capacity repair, preserving existing readers/UI and authorized scopes; not production migration.",
     "verificationCommands": ["node --test scripts/tests/sync-output-tables.test.mjs","node scripts/test-local-item-charge-concurrency.mjs --media-only","node scripts/test-local-space-media-sync.mjs --live","npm run conversion:state:check"],
-    "lastResult": "Hosted/native PASS: migration/grants/RLS/publication, PowerSync v12, Node24 41/271, mixed+largest native (42/117 Items,41/117 galleries, encrypted restart/locked denial), explicit helper60/206, full real Project sync623 Items/614 galleries/705 refs/1406 objects/703 thumbs with exact fields/types. Initial sync_is_current mismatch was verifier-only; no product failure.",
+    "lastResult": "Hosted/backend/native PASS: PowerSync v12, Node24 41/271, native mixed+largest, helper60/206, real Project sync623/614/705/1406/703 exact. Focused macOS Space UI PASS: pin/PDF20.163s and missing-byte print12.877s after platform selector and narrow saved-window-frame fixes; SPACE-MEDIA-UI passed.",
     "activeProcesses": {},
     "integrationCI": {"run":35359599965,"attempt":1,"commit":"cd8be156fa695f92e2b461cfccd961717c2e95ac","status":"failure","meaning":"Strict lint and SQL/races passed; physical stream test rejected approved live_pricing projection. Native jobs skipped. Repaired exact-column expectation and added absent-acquisition null assertion. All four downstream stream/MCP scripts passed locally. No hosted changes; new-commit integration still required."},
-    "nextWorkflowDecision": "Scoped hosted media deployment, native/offline verification, corrected 60-gallery readback, and full real-Project catalog/media sync verification complete. Keep prior bulk PSYNC_S2305 evidence open; workflow remains implementation with UI/export/release/cutover gaps and prior CI failure/unresolved decisions in owning records."
+    "nextWorkflowDecision": "Scoped hosted/backend/native and Space macOS UI evidence complete. Next action: coherent-batch commit/push and normal CI; workflow remains implementation and this is not overall goal completion."
   }
 }

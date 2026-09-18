@@ -175,7 +175,10 @@ jobs:
     name: Native iOS verification
     needs: [conversion-control, local-supabase-provider-slices]
     runs-on: macos-26
-    timeout-minutes: 60
+    # Run35366670601 completed79/150 UI cases in51min before the60min
+    # job limit cancelled it. Allow the selected full suite (~98min + build).
+    # Focused local checks and backend-only UI selection remain unchanged.
+    timeout-minutes: 120
 
     steps:
       - name: Check out repository
