@@ -830,6 +830,63 @@ struct AccountWorkspacePendingWorkRuntimeTests {
         }
     }
 
+    @Test("Actual local source return downloads basis, queues offline and reads back authoritative placement",
+          .enabled(if: ProcessInfo.processInfo.environment["LEDGER_SOURCE_RETURN_LOCAL"] == "1"), .timeLimit(.minutes(1)))
+    func actualLocalSourceReturn() async throws {
+        let env = ProcessInfo.processInfo.environment
+        guard let account = env["LEDGER_SALE_LOCAL_ACCOUNT"], account.hasPrefix("sale-http-"),
+              let principal = env["LEDGER_SALE_LOCAL_PRINCIPAL"], let item = env["LEDGER_SALE_LOCAL_ITEM"],
+              let project = env["LEDGER_SALE_LOCAL_PROJECT"], let key = env["LEDGER_SALE_LOCAL_KEY"],
+              let email = env["LEDGER_SALE_LOCAL_EMAIL"], email.hasSuffix("@ledger-tests.invalid"),
+              let password = env["LEDGER_SALE_LOCAL_PASSWORD"] else { throw RuntimeInjectedFailure() }
+        let context = try RuntimeTestContext(suffix: "source-return-live", accountId: .init(validating: account),
+            principalId: .init(validating: principal))
+        defer { context.remove() }
+        let url = URL(string: "http://127.0.0.1:54321")!, sync = URL(string: "http://127.0.0.1:5590")!
+        let auth = AuthClient(configuration: .init(url: url.appendingPathComponent("auth/v1"), headers: ["apikey": key],
+            storageKey: "source-return-live", localStorage: CategoryAuthTestStorage(), fetch: { try await URLSession.shared.data(for: $0) },
+            autoRefreshToken: false, emitLocalSessionAsInitialSession: true))
+        let entry = await SupabaseOnlineSignIn(client: auth, supabaseURL: url, publishableKey: key)
+        try await entry.signIn(email: email, password: password)
+        let directory = try await entry.accounts(environment: context.environment.manifest.environment)
+        let authorization = try await entry.authorize(AccountSelectionPolicy.makeIntent(selecting: context.accountId,
+            from: directory.snapshot, requestedAt: Date()))
+        let itemId = try ItemID(validating: item), projectId = try ProjectID(validating: project)
+        let first = try await context.openRuntime()
+        try await entry.startWorkspaceSync(first, authorization: authorization, powerSyncURL: sync)
+        var downloaded: InventorySourceReturnReview?
+        for try await review in first.watchInventorySourceReturnReview(itemIds: [itemId]) {
+            if let review { downloaded = review; break }
+        }
+        let review = try #require(downloaded)
+        #expect(review.projectId == projectId && review.items[0].sourceAmount.minorUnits == 9007199254740993)
+        try await first.close()
+        let offline = try await context.openRuntime()
+        let payload = try review.makePayload(), uuid = UUID(), captured = Date()
+        let accepted = try await offline.returnInventoryItemsToSource(payload, operationUUID: uuid, capturedAt: captured)
+        #expect(accepted.localState == .queued)
+        try await offline.close()
+        let resumed = try await context.openRuntime()
+        #expect(try await resumed.returnInventoryItemsToSource(payload, operationUUID: uuid, capturedAt: captured) == accepted)
+        try await entry.startWorkspaceSync(resumed, authorization: authorization, powerSyncURL: sync)
+        for try await snapshot in resumed.watchInventorySourceReturn(accepted.operationId) {
+            if snapshot?.state.phase == .rejected { Issue.record("Source return rejected"); break }
+            if snapshot?.state.phase == .applied { break }
+        }
+        var readback: DownloadedItemPlacementHistory?
+        for try await history in resumed.watchDownloadedItemPlacementHistory(accountId: context.accountId, itemId: itemId) {
+            if history.intervals.first(where: { $0.endedAt == nil })?.scope == .project(projectId) {
+                readback = history; break
+            }
+        }
+        #expect(readback != nil)
+        try await resumed.close()
+        let finalOffline = try await context.openRuntime()
+        let saved = try await finalOffline.readDownloadedItemPlacementHistory(accountId: context.accountId, itemId: itemId)
+        #expect(saved.intervals.first(where: { $0.endedAt == nil })?.scope == .project(projectId))
+        try await finalOffline.close()
+    }
+
     @Test("Client Summary downloads hosted physical facts and survives encrypted offline reopening",
           .enabled(if: ProcessInfo.processInfo.environment["LEDGER_CLIENT_REPORT_HOSTED_QA"] == "1"), .timeLimit(.minutes(1)))
     func clientSummaryHostedReplication() async throws {

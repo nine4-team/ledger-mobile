@@ -393,6 +393,20 @@ public final class LedgerOfflineClientRuntime:
             await self.lifecycleOwner.startUninvoicedReturnReviewWatch(id: id, projectId: projectId, itemIds: itemIds, continuation: continuation)
         }
     }
+    public func watchInventorySourceReturnReview(itemIds: [ItemID]) -> AsyncThrowingStream<InventorySourceReturnReview?, Error> {
+        trackedStream { id, continuation in
+            await self.lifecycleOwner.startInventorySourceReturnReviewWatch(id: id, itemIds: itemIds, continuation: continuation)
+        }
+    }
+    public func watchInventorySourceReturn(_ operationId: OperationID) -> AsyncThrowingStream<OperationSnapshot?, Error> {
+        trackedStream { id, continuation in
+            await self.lifecycleOwner.startInventorySourceReturnWatch(id: id, operationId: operationId, continuation: continuation)
+        }
+    }
+    public func returnInventoryItemsToSource(_ payload: ReturnInventoryItemsToSourcePayload,
+        operationUUID: UUID, capturedAt: Date) async throws -> OperationReceipt {
+        try await lifecycleOwner.returnInventoryItemsToSource(payload, operationUUID: operationUUID, capturedAt: capturedAt)
+    }
 
     public func uninvoicedReturnStatus(_ operationId: OperationID) async throws -> OperationSnapshot? {
         try await lifecycleOwner.uninvoicedReturnStatus(operationId)
@@ -881,4 +895,5 @@ extension LedgerOfflineClientRuntime: ItemDetailsEditing {}
 extension LedgerOfflineClientRuntime: TransactionDetailsEditing {}
 extension LedgerOfflineClientRuntime: TransactionReceiptLinesEditing {}
 extension LedgerOfflineClientRuntime: UninvoicedReturnWorkflowServing {}
+extension LedgerOfflineClientRuntime: InventorySourceReturnWorkflowServing {}
 extension LedgerOfflineClientRuntime: SpaceCoreDetailsQuerying {}

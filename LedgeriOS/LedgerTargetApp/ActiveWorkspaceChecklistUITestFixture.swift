@@ -759,7 +759,7 @@ private struct UITestFixtureSpaceDetailQuery: SpaceCoreDetailsQuerying {
         source.stream
     }
 }
-private struct UITestFixtureItemReader: DownloadedItemPlacementReading, DownloadedProjectItemsReading, DownloadedItemPlacementHistoryReading, AccountBusinessProfileReading, DownloadedItemImageReading, DownloadedSpaceMediaReading, InventorySaleWorkflowServing, UninvoicedReturnWorkflowServing, PaidReturnWorkflowServing, ProjectInvoicingReading, ProjectInvoiceCreating, ProjectInvoiceRevising, ProjectFeeInstallmentCreating, ExpenseCreating, ExpenseEditing, ItemPriceEditing, ItemDetailsEditing, ProjectBudgetReading {
+private struct UITestFixtureItemReader: DownloadedItemPlacementReading, DownloadedProjectItemsReading, DownloadedItemPlacementHistoryReading, AccountBusinessProfileReading, DownloadedItemImageReading, DownloadedSpaceMediaReading, InventorySaleWorkflowServing, InventorySourceReturnWorkflowServing, UninvoicedReturnWorkflowServing, PaidReturnWorkflowServing, ProjectInvoicingReading, ProjectInvoiceCreating, ProjectInvoiceRevising, ProjectFeeInstallmentCreating, ExpenseCreating, ExpenseEditing, ItemPriceEditing, ItemDetailsEditing, ProjectBudgetReading {
     func readDownloadedSpaceMedia(accountId: AccountID, spaceId: SpaceID, scope: SpaceCreationScope) async throws -> DownloadedSpaceMedia {
         let populated = ProcessInfo.processInfo.arguments.contains("--ledger-ui-test-space-media")
         var entries: [DownloadedSpaceMedia.Attachment] = []
@@ -1428,6 +1428,38 @@ private struct UITestFixtureItemReader: DownloadedItemPlacementReading, Download
         return OperationReceipt(operationId: try OperationID(validating: operationUUID.uuidString), localState: .queued)
     }
     func watchInventorySale(_ operationId: OperationID) -> AsyncThrowingStream<OperationSnapshot?, Error> {
+        AsyncThrowingStream { $0.yield(nil) }
+    }
+    func watchInventorySourceReturnReview(itemIds: [ItemID]) -> AsyncThrowingStream<InventorySourceReturnReview?, Error> {
+        AsyncThrowingStream { continuation in
+            guard ProcessInfo.processInfo.arguments.contains("--ledger-ui-test-source-return"),
+                  !ProcessInfo.processInfo.arguments.contains("--ledger-ui-test-source-return-mixed") else {
+                continuation.yield(nil); return
+            }
+            do {
+                continuation.yield(try .init(accountId: .init(validating: "account-ui-test"),
+                    principalId: .init(validating: "principal-ui-test"), items: itemIds.map {
+                        try .init(itemId: $0, placementId: .init(validating: "history-\($0.rawValue)"),
+                            inventoryEntryId: .init(validating: "entry-\($0.rawValue)"), sourceProjectId: .init(validating: "project-ui-test"),
+                            sourceCategoryId: .init(validating: "furnishings-ui"),
+                            sourceAmount: .init(minorUnits: $0.rawValue == "physical-ui-chair" ? 12550 : 777,
+                                currency: .init(validating: "USD")), categoryDisplayName: "Furnishings")
+                    }, projectDisplayName: "UI Test Project"))
+            } catch { continuation.finish(throwing: error) }
+        }
+    }
+    func returnInventoryItemsToSource(_ payload: ReturnInventoryItemsToSourcePayload, operationUUID: UUID,
+                                     capturedAt: Date) async throws -> OperationReceipt {
+        guard ProcessInfo.processInfo.arguments.contains("--ledger-ui-test-source-return"),
+              !ProcessInfo.processInfo.arguments.contains("--ledger-ui-test-source-return-mixed"),
+              payload.projectId.rawValue == "project-ui-test", payload.items.allSatisfy({
+                  $0.placementId.rawValue == "history-\($0.itemId.rawValue)"
+                    && $0.inventoryEntryId.rawValue == "entry-\($0.itemId.rawValue)"
+              }) else { throw InventorySourceReturnReview.Failure.invalidSelection }
+        await saleAccepted?()
+        return .init(operationId: try .init(validating: operationUUID.uuidString), localState: .queued)
+    }
+    func watchInventorySourceReturn(_ operationId: OperationID) -> AsyncThrowingStream<OperationSnapshot?, Error> {
         AsyncThrowingStream { $0.yield(nil) }
     }
     func watchUninvoicedReturnReview(projectId: ProjectID, itemIds: [ItemID]) -> AsyncThrowingStream<UninvoicedReturnReview?, Error> {

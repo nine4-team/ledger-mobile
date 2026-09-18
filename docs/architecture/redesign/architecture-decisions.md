@@ -4549,3 +4549,39 @@ An actual upload versus an unrelated thumbnail also reproduced the redundant FK
 cycle in `/tmp/ledger-media-unrelated-original-before.log`. The final ten-case
 run is `/tmp/ledger-media-lock-review-final.log`; SQL regression is
 `/tmp/ledger-media-lock-review-sql-final.log`.
+
+### 2026-09-18 — Consume immutable source entries without inventing acquisition policy
+
+Story7 Return-to-source now consumes a private immutable `inventory_source_entries`
+fact: exact Item/current Inventory placement, prior Project placement, source Project,
+category, amount and currency. Structural foreign keys and a recorded-transition
+guard bind the snapshot; no authenticated/service-role insert, update or deletion
+grant exists. No historical backfill or public acquisition writer is introduced.
+O031 still governs creating the monetary basis; neither receipt totals nor current
+project prices can stand in for a proven saved entry. Synthetic tests explicitly
+seed trusted snapshots and do not establish Project-to-Inventory acquisition.
+
+The identity-only command restores the source and each saved basis, ends the exact
+current Inventory placement, creates a new `inventory_entry` positive charge and
+an immutable entry-to-charge link atomically. Existing budget/Invoicing projections
+therefore count it once as unpaid. No cash Transaction, old credit, collected line
+or mutable Item price is rewritten. Project/Client lifecycle and category visibility
+are revalidated under the existing membership/Item locking protocol. Stable sorted
+Item locks serialize competing ordinary Sell; operation identity binds exact bytes.
+
+The existing physical Account stream carries category-authorized entry facts; the
+reader additionally requires a completed stream, current custody and active source.
+Sell and Return reserve the same placement in the existing durable operation queue,
+but Return-only missing/mixed provenance never participates in sale admission.
+The existing Item controls and return FormSheet are extended, not replaced. Sheets
+are owned by the Item/list route, not transient macOS Menu content. Five real
+two-session races and an actual Auth/PowerSync encrypted offline restart/upload/
+readback test cover the boundary. Deployment and entry creation remain separate.
+
+UI review follow-up: source-return eligibility observation belongs to the stable
+Item detail/list parent, never the transient Menu action. Starting a watch when
+opening a macOS menu caused an asynchronous state update to dismiss it; silently
+reopening the menu in a test would conceal that regression. The action now takes
+a synchronous review snapshot, while parent watches retain Account/Item/selection/
+scope cancellation fences and the confirmation form independently revalidates.
+The interaction test must succeed without reopening a dismissed menu.

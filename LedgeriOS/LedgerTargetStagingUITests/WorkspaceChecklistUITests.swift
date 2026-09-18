@@ -3955,6 +3955,77 @@ final class WorkspaceChecklistUITests: XCTestCase {
         XCTAssertEqual(app.staticTexts["target-ui-fixture-acceptance-count"].value as? String, "1")
     }
 
+    func testInventorySourceReturnUsesExistingConfirmationAndIndependentSell() throws {
+        continueAfterFailure = false
+        let app = XCUIApplication()
+        app.launchArguments = ["--ledger-ui-test-workspace-checklist", "--ledger-ui-test-inventory-space",
+            "--ledger-ui-test-reset-inventory-section", "--ledger-ui-test-source-return"]
+        app.launch(); defer { app.terminate() }
+        let inventory = app.buttons["target-business-inventory-card"]
+        XCTAssertTrue(inventory.waitForExistence(timeout: 10)); inventory.tap()
+        let item = app.buttons["target-physical-item-physical-ui-chair"]
+        reveal(item, in: app, fullyInsideScrollView: true); item.tap()
+        func openReturn() {
+            let actions = app.descendants(matching: .any)["target-item-detail-actions"]
+            XCTAssertTrue(actions.waitForExistence(timeout: 5)); actions.tap()
+            #if os(macOS)
+            func saleMenuItem() -> XCUIElement { app.menuItems["Sell to Project"] }
+            func sourceMenuItem() -> XCUIElement { app.menuItems["Return to Project"] }
+            #else
+            func saleMenuItem() -> XCUIElement { app.buttons["Sell to Project"] }
+            func sourceMenuItem() -> XCUIElement { app.buttons["Return to Project"] }
+            #endif
+            func sourceIsEnabled() -> Bool {
+                let source = sourceMenuItem()
+                return source.exists && source.isEnabled
+            }
+            let sale = saleMenuItem()
+            XCTAssertTrue(sale.waitForExistence(timeout: 5)); XCTAssertTrue(sale.isEnabled)
+            XCTAssertTrue(sourceMenuItem().waitForExistence(timeout: 5))
+            XCTAssertTrue(waitUntil { sourceIsEnabled() }, app.debugDescription)
+            sourceMenuItem().tap()
+            XCTAssertTrue(app.buttons["Confirm Return"].waitForExistence(timeout: 5))
+            XCTAssertTrue(waitUntil { app.buttons["Confirm Return"].isEnabled })
+            XCTAssertTrue(displayedText(app.staticTexts["target-source-return-project"]).contains("UI Test Project"))
+            XCTAssertTrue(displayedText(app.staticTexts["target-source-return-basis-physical-ui-chair"]).contains("125.50"))
+            XCTAssertFalse(app.textFields["0.00"].exists)
+        }
+        openReturn(); app.buttons["Cancel"].tap()
+        XCTAssertEqual(app.staticTexts["target-ui-fixture-acceptance-count"].value as? String, "0")
+        openReturn(); app.buttons["Confirm Return"].tap()
+        XCTAssertTrue(waitUntil { self.displayedText(app.staticTexts["target-return-status"]).contains("saved on this device") })
+        XCTAssertEqual(app.staticTexts["target-ui-fixture-acceptance-count"].value as? String, "1")
+    }
+    func testInventorySourceReturnBulkAndMixedSelectionKeepSellIndependent() throws {
+        continueAfterFailure = false
+        for mixed in [false,true] {
+            let app = XCUIApplication()
+            app.launchArguments = ["--ledger-ui-test-workspace-checklist", "--ledger-ui-test-inventory-space",
+                "--ledger-ui-test-reset-inventory-section", "--ledger-ui-test-source-return"]
+            if mixed { app.launchArguments.append("--ledger-ui-test-source-return-mixed") }
+            app.launch(); defer { app.terminate() }
+            let inventory = app.buttons["target-business-inventory-card"]
+            XCTAssertTrue(inventory.waitForExistence(timeout: 10)); inventory.tap()
+            let select = app.buttons["target-items-select-all"]
+            reveal(select, in: app, fullyInsideScrollView: true); select.tap()
+            let sale = app.buttons["target-items-sell"], source = app.buttons["target-items-return-source"]
+            reveal(source, in: app, fullyInsideScrollView: true)
+            XCTAssertTrue(sale.exists && sale.isEnabled)
+            if mixed {
+                XCTAssertFalse(source.isEnabled)
+                XCTAssertEqual(app.staticTexts["target-ui-fixture-acceptance-count"].value as? String, "0")
+            } else {
+                XCTAssertTrue(waitUntil { source.isEnabled }); source.tap()
+                let confirm = app.buttons["Confirm Return"]
+                XCTAssertTrue(confirm.waitForExistence(timeout: 5)); XCTAssertTrue(waitUntil { confirm.isEnabled })
+                XCTAssertTrue(displayedText(app.staticTexts["target-source-return-basis-physical-ui-chair"]).contains("125.50"))
+                confirm.tap()
+                XCTAssertTrue(app.buttons["Done"].waitForExistence(timeout: 5))
+                XCTAssertEqual(app.staticTexts["target-ui-fixture-acceptance-count"].value as? String, "1")
+            }
+        }
+    }
+
     #if os(iOS)
     func testInventorySaleReviewChangesRequireFreshReview() throws {
         try exerciseSaleReviewChange(withdraws: false)

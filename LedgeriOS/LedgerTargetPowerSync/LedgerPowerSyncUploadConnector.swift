@@ -276,6 +276,7 @@ public struct LedgerPowerSyncCommandAppliers: Sendable {
     var transactionDetailsEdit: (any EditTransactionDetailsApplying)?
     var transactionReceiptLinesEdit: (any EditTransactionReceiptLinesApplying)?
     var uninvoicedReturn: (any ReturnUninvoicedItemsCommandApplying)?
+    var sourceReturn: (any InventorySourceReturnCommandApplying)?
     var paidReturn: (any ReturnPaidItemsCommandApplying)?
     var expenseCreation: (any CreateExpenseCommandApplying)?
     var expenseEdit: (any EditExpenseCommandApplying)?
@@ -295,6 +296,7 @@ public struct LedgerPowerSyncCommandAppliers: Sendable {
                 transactionDetailsEdit: (any EditTransactionDetailsApplying)? = nil,
                 transactionReceiptLinesEdit: (any EditTransactionReceiptLinesApplying)? = nil,
                 uninvoicedReturn: (any ReturnUninvoicedItemsCommandApplying)? = nil,
+                sourceReturn: (any InventorySourceReturnCommandApplying)? = nil,
                 paidReturn: (any ReturnPaidItemsCommandApplying)? = nil,
                 expenseCreation: (any CreateExpenseCommandApplying)? = nil,
                 expenseEdit: (any EditExpenseCommandApplying)? = nil,
@@ -313,6 +315,7 @@ public struct LedgerPowerSyncCommandAppliers: Sendable {
         self.transactionDetailsEdit = transactionDetailsEdit
         self.transactionReceiptLinesEdit = transactionReceiptLinesEdit
         self.uninvoicedReturn = uninvoicedReturn
+        self.sourceReturn = sourceReturn
         self.paidReturn = paidReturn
         self.expenseCreation = expenseCreation
         self.expenseEdit = expenseEdit
@@ -341,6 +344,7 @@ final class LedgerPowerSyncUploadConnector: PowerSyncBackendConnectorProtocol, @
     private let transactionDetailsEditApplier: (any EditTransactionDetailsApplying)?
     private let transactionReceiptLinesEditApplier: (any EditTransactionReceiptLinesApplying)?
     private let uninvoicedReturnApplier: (any ReturnUninvoicedItemsCommandApplying)?
+    private let sourceReturnApplier: (any InventorySourceReturnCommandApplying)?
     private let paidReturnApplier: (any ReturnPaidItemsCommandApplying)?
     private let expenseCreationApplier: (any CreateExpenseCommandApplying)?
     private let expenseEditApplier: (any EditExpenseCommandApplying)?
@@ -367,6 +371,7 @@ final class LedgerPowerSyncUploadConnector: PowerSyncBackendConnectorProtocol, @
         transactionDetailsEditApplier: (any EditTransactionDetailsApplying)? = nil,
         transactionReceiptLinesEditApplier: (any EditTransactionReceiptLinesApplying)? = nil,
         uninvoicedReturnApplier: (any ReturnUninvoicedItemsCommandApplying)? = nil,
+        sourceReturnApplier: (any InventorySourceReturnCommandApplying)? = nil,
         paidReturnApplier: (any ReturnPaidItemsCommandApplying)? = nil,
         expenseCreationApplier: (any CreateExpenseCommandApplying)? = nil,
         invoiceCreationApplier: (any CreateInvoiceCommandApplying)? = nil,
@@ -392,6 +397,7 @@ final class LedgerPowerSyncUploadConnector: PowerSyncBackendConnectorProtocol, @
         self.transactionDetailsEditApplier = transactionDetailsEditApplier
         self.transactionReceiptLinesEditApplier = transactionReceiptLinesEditApplier
         self.uninvoicedReturnApplier = uninvoicedReturnApplier
+        self.sourceReturnApplier = sourceReturnApplier
         self.paidReturnApplier = paidReturnApplier
         self.expenseCreationApplier = expenseCreationApplier
         self.expenseEditApplier = expenseEditApplier
@@ -482,6 +488,12 @@ final class LedgerPowerSyncUploadConnector: PowerSyncBackendConnectorProtocol, @
             }
             try await ReturnUninvoicedItemsUpload.apply(entry, database: database,
                 accessFence: accessFence, applier: uninvoicedReturnApplier)
+        case LedgerPowerSyncTable.sourceReturnCommands:
+            guard let sourceReturnApplier else {
+                throw LedgerPowerSyncUploadFailure.unsupportedCommandTable(entry.table)
+            }
+            try await InventorySourceReturnUpload.apply(entry, database: database,
+                accessFence: accessFence, applier: sourceReturnApplier)
         case LedgerPowerSyncTable.paidReturnCommands:
             guard let paidReturnApplier else {
                 throw LedgerPowerSyncUploadFailure.unsupportedCommandTable(entry.table)

@@ -149,7 +149,7 @@ struct ProjectBudgetPowerSyncQuery: Sendable {
                   AND (o.command_type='manage_categories' OR (
                     o.command_type IN ('create_expense','edit_expense','create_fee_installment',
                       'create_invoice','revise_created_invoice','sell_inventory_items',
-                      'return_uninvoiced_items','return_paid_items','edit_uncollected_item_price',
+                      'return_uninvoiced_items','return_paid_items','return_inventory_to_source','edit_uncollected_item_price',
                       'edit_transaction_details','edit_transaction_receipt_lines')
                     AND COALESCE(json_extract(o.command_envelope_json,'$.payload.projectId'),
                       json_extract(o.command_envelope_json,'$.payload.entry.projectId'),

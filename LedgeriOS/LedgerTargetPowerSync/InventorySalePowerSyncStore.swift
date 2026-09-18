@@ -281,7 +281,7 @@ actor InventorySalePowerSyncStore {
                 let reserved = try local.get(sql: """
                     SELECT count(*) AS n FROM spike_local_operations op,
                       json_each(op.command_envelope_json,'$.payload.items') selected
-                    WHERE op.account_id=? AND op.command_type='sell_inventory_items'
+                    WHERE op.account_id=? AND op.command_type IN ('sell_inventory_items','return_inventory_to_source')
                       AND op.local_state IN ('queued','applying','applied')
                       AND json_extract(selected.value,'$.itemId')=?
                       AND json_extract(selected.value,'$.placementId')=?

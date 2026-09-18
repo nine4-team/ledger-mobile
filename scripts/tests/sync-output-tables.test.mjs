@@ -39,12 +39,12 @@ test('every checked-in stream output resolves to the native schema', () => {
   const nativeSchema = readFileSync(new URL('../../LedgeriOS/LedgerTargetPowerSync/LedgerPowerSyncSchema.swift', import.meta.url), 'utf8');
   const count = validateSyncOutputTables(yaml, nativeSchema);
   // Project and Inventory reads include coherent placement-revision evidence.
-  assert.equal(count, 98);
+  assert.equal(count, 99);
   const compiled = SqlSyncRules.fromYaml(yaml, { defaultSchema: 'public', throwOnError: false });
   assert.deepEqual(compiled.errors.map(error => error.message), []);
   const nativeNames = new Set([...nativeSchema.matchAll(/public static let \w+ = "([a-z_]+)"/g)].map(m => m[1]));
   const outputs = Object.keys(compiled.config.debugGetOutputTables());
-  assert.equal(outputs.length, 46);
+  assert.equal(outputs.length, 47);
   for (const output of outputs) assert.ok(nativeNames.has(output), `Service outputs unknown client table ${output}`);
 });
 test('adjustment and Project category lookups constrain the subscribed Account before expansion', () => {

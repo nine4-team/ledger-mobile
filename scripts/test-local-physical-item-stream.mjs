@@ -27,9 +27,11 @@ const acquisitionQueries = allQueries.filter(sql => sql.includes('FROM ledger_pr
 assert.equal(acquisitionQueries.length, 1);
 const returnQueries = allQueries.filter(sql => sql.includes('FROM ledger_private.item_return_reviews'));
 assert.equal(returnQueries.length, 1);
+const sourceEntryQueries = allQueries.filter(sql => sql.includes('FROM ledger_private.inventory_source_entries'));
+assert.equal(sourceEntryQueries.length, 1);
 const versionQueries = allQueries.filter(sql => sql.includes('FROM item_placement_versions'));
 assert.equal(versionQueries.length, 1);
-const queries = allQueries.filter(sql => !priceQueries.includes(sql) && !acquisitionQueries.includes(sql) && !returnQueries.includes(sql) && !versionQueries.includes(sql));
+const queries = allQueries.filter(sql => !priceQueries.includes(sql) && !acquisitionQueries.includes(sql) && !returnQueries.includes(sql) && !sourceEntryQueries.includes(sql) && !versionQueries.includes(sql));
 assert.equal(queries.length, 4, "Review changes to the physical stream projections");
 assert.equal(block.replace(/^    queries:\n/, "")
   .replace(/^      - \|\n((?:        .*(?:\n|$))+)/gm, "").trim(), "", "No unparsed stream configuration");
@@ -38,7 +40,7 @@ for (const sql of allQueries) {
   assert.ok(!sql.split(/\bFROM\b/)[0].includes("*"), "Projection must name columns explicitly");
   assert.ok(!sql.includes(";"), "Expected one SELECT per stream query");
   assert.equal(sql.match(/auth\.user_id\(\)/g)?.length, 1);
-  assert.equal(sql.match(/subscription\.parameter\('account_id'\)/g)?.length, queries.includes(sql) || versionQueries.includes(sql) ? 1 : returnQueries.includes(sql) ? 3 : 2);
+  assert.equal(sql.match(/subscription\.parameter\('account_id'\)/g)?.length, queries.includes(sql) || versionQueries.includes(sql) ? 1 : returnQueries.includes(sql) || sourceEntryQueries.includes(sql) ? 3 : 2);
 }
 const quote = (value) => `'${value.replaceAll("'", "''")}'`;
 const suffix = randomUUID();
@@ -49,6 +51,7 @@ const projectId = `stream-project-${suffix}`, projectItem = `stream-project-item
 const userA = "10000000-0000-0000-0000-000000000002"; // Employee: no financial access.
 const userB = "10000000-0000-0000-0000-000000000003";
 const statements = ["begin; set local standard_conforming_strings=on; set local statement_timeout='5s';"];
+const sourceIDs = [0,1].map(index => `stream-source-${index}-${suffix}`);
 for (const [index, account, principal] of [[0, "account-primary", "principal-restricted"], [1, "account-other", "principal-other"]]) {
   statements.push(`insert into public.spike_items(id,account_id,description,workflow_status,bookmark,source,current_source,notes,created_by_principal_id) values (${quote(fixtureIDs[0][index])},${quote(account)},'Synthetic physical stream test','legacy sold',${index === 0 ? 'true' : 'null'},'Original vendor','Design Inventory','  Descriptive notes  ',${quote(principal)});`);
   statements.push(`insert into ledger_private.item_project_prices(account_id,item_id,amount_minor_units,currency,updated_at,updated_by_principal_id)
@@ -57,13 +60,30 @@ for (const [index, account, principal] of [[0, "account-primary", "principal-res
   statements.push(`insert into public.spike_spaces(id,account_id,scope_kind,display_name) values (${quote(fixtureIDs[2][index])},${quote(account)},'business_inventory','Synthetic stream space');`);
   statements.push(`insert into public.spike_item_placements(id,account_id,item_id,scope_kind,space_id,started_at,started_by_principal_id) values (${quote(fixtureIDs[1][index])},${quote(account)},${quote(fixtureIDs[0][index])},'business_inventory',${quote(fixtureIDs[2][index])},'2026-09-01',${quote(principal)});`);
 }
+for (const [index, account, principal] of [[0, "account-primary", "principal-restricted"], [1, "account-other", "principal-other"]]) {
+  const id = sourceIDs[index];
+  statements.push(`insert into public.spike_clients(id,account_id,display_name,created_at,updated_at,created_at_ms,updated_at_ms,created_by_principal_id)
+    values (${quote(id)},${quote(account)},'Synthetic source',now(),now(),1,1,${quote(principal)});
+    insert into public.spike_projects(id,account_id,client_id,display_name,created_at,updated_at,created_at_ms,updated_at_ms,created_by_principal_id)
+    values (${quote(id)},${quote(account)},${quote(id)},'Synthetic source',now(),now(),1,1,${quote(principal)});
+    insert into public.spike_budget_categories(id,account_id,display_name,kind,presentation_order,created_at_ms,updated_at_ms)
+    values (${quote(id)},${quote(account)},'Synthetic source','itemized',99,1,1);
+    insert into public.spike_items(id,account_id,description,created_by_principal_id)
+    values (${quote(id)},${quote(account)},'Synthetic source',${quote(principal)});
+    insert into public.spike_item_placements(id,account_id,item_id,scope_kind,project_id,started_at,started_by_principal_id,ended_at,ended_by_principal_id)
+    values (${quote(id+'-old')},${quote(account)},${quote(id)},'project',${quote(id)},'2026-08-01',${quote(principal)},'2026-09-01',${quote(principal)});
+    insert into public.spike_item_placements(id,account_id,item_id,scope_kind,started_at,started_by_principal_id)
+    values (${quote(id+'-inventory')},${quote(account)},${quote(id)},'business_inventory','2026-09-01',${quote(principal)});
+    insert into ledger_private.inventory_source_entries(id,account_id,item_id,inventory_placement_id,source_placement_id,source_project_id,source_category_id,amount_minor_units,currency,created_at,created_by_principal_id)
+    values (${quote(id)},${quote(account)},${quote(id)},${quote(id+'-inventory')},${quote(id+'-old')},${quote(id)},${quote(id)},9007199254740993,'USD','2026-09-01',${quote(principal)});`);
+}
 statements.push(`insert into public.spike_spaces(id,account_id,scope_kind,display_name,lifecycle) values
   (${quote(unusedArchivedSpace)},'account-primary','business_inventory','Unused archived','archived'),
   (${quote(endedArchivedSpace)},'account-primary','business_inventory','Ended archived','archived');`);
 statements.push(`insert into public.spike_item_placements(id,account_id,item_id,scope_kind,space_id,started_at,started_by_principal_id,ended_at,ended_by_principal_id) values
   (${quote(`stream-ended-placement-${suffix}`)},'account-primary',${quote(fixtureIDs[0][0])},'business_inventory',${quote(endedArchivedSpace)},'2026-08-01','principal-restricted','2026-08-02','principal-restricted');`);
 function capture(label, user, account) {
-  for (const [index, source] of [...queries.entries(), [5, priceQueries[0]], [6, acquisitionQueries[0]], [7, returnQueries[0]], [8, versionQueries[0]]]) {
+  for (const [index, source] of [...queries.entries(), [5, priceQueries[0]], [6, acquisitionQueries[0]], [7, returnQueries[0]], [8, versionQueries[0]], [9, sourceEntryQueries[0]]]) {
     // Only the two PowerSync parameter functions are translated; the real
     // projection, joins and predicates remain exactly those in the YAML.
     const sql = source.replace("auth.user_id()", `${quote(user)}::uuid`)
@@ -104,13 +124,20 @@ captureProject('project-marker-foreign',userB,'account-primary',projectId);
 captureProject('project-marker-other-project',userA,'account-primary','absent-project');
 statements.push(`update public.spike_item_placements set ended_at='2026-09-02',ended_by_principal_id='principal-owner' where id=${quote(projectItem)};`);
 captureProject('project-marker-ended',userA,'account-primary',projectId);
+statements.push(`update public.spike_budget_categories set kind='fee' where account_id='account-primary' and id=${quote(sourceIDs[0])};`);
+for (const [label,user] of [['source-hidden-denied',userA],['source-hidden-full-access','10000000-0000-0000-0000-000000000001']]) {
+  const sql = sourceEntryQueries[0].replace('auth.user_id()',`${quote(user)}::uuid`)
+    .replaceAll("subscription.parameter('account_id')",quote('account-primary'));
+  statements.push(`select json_build_object('label',${quote(label)},'index',9,'rows',coalesce(json_agg(row_to_json(t)),'[]')) from (${sql})t;`);
+}
+statements.push(`update public.spike_budget_categories set kind='itemized' where account_id='account-primary' and id=${quote(sourceIDs[0])};`);
 statements.push("update public.spike_account_memberships set state='removed' where account_id='account-primary' and principal_id='principal-restricted';");
 capture("removed-same-user", userA, "account-primary");
 statements.push("rollback;");
 const output = execFileSync("docker", ["exec", "-i", container, "psql", "-X", "-q", "-A", "-t", "-U", "postgres", "-d", "postgres", "-v", "ON_ERROR_STOP=1"],
   { input: statements.join("\n"), encoding: "utf8", timeout: 30_000 });
 const results = output.trim().split("\n").map((line) => JSON.parse(line));
-assert.equal(results.length, 68);
+assert.equal(results.length, 78);
 const columns = [
   ["id", "account_id", "item_id", "revision", "expected_count"],
   ["id", "account_id", "name", "description", "sku", "workflow_status", "bookmark", "source", "current_source", "notes", "market_value_minor_units", "market_value_currency", "revision", "created_at", "created_by_principal_id"],
@@ -118,6 +145,24 @@ const columns = [
   ["id", "account_id", "scope_kind", "project_id", "display_name", "lifecycle", "revision"],
 ];
 for (const { label, index, rows } of results) {
+  if (index === 9) {
+    const permitted = ['member','other-member','archived-parent','source-hidden-full-access'].includes(label);
+    if (!permitted) {
+      assert.deepEqual(rows, [], `${label}: source entry denied`);
+      continue;
+    }
+    const other = label === 'other-member', account = other ? 'account-other' : 'account-primary';
+    const id = sourceIDs[other ? 1 : 0];
+    assert.deepEqual(rows.find(row => row.id === id), {id,account_id:account,item_id:id,
+      inventory_placement_id:id+'-inventory',source_project_id:id,source_category_id:id,
+      amount_minor_units:'9007199254740993',currency:'USD'}, `${label}: exact immutable source projection`);
+    for (const row of rows) {
+      assert.equal(row.account_id,account);
+      assert.deepEqual(Object.keys(row).sort(),['id','account_id','item_id','inventory_placement_id',
+        'source_project_id','source_category_id','amount_minor_units','currency'].sort());
+    }
+    continue;
+  }
   if (index === 4) {
     if (label === 'project-marker') {
       assert.equal(rows.length,1,'Only current Project Item marker; no Inventory marker');
@@ -205,4 +250,4 @@ for (const { label, index, rows } of results) {
     }
   }
 }
-console.log("local-physical-item-stream: 68 actual SQL captures pass member, exact placement revision/location, acquisition absence markers, return-history columns/denials, exact Int64 Item prices, scoped image markers, current archived parent, unreferenced/ended archived exclusion, cross-Account, other-user, removal and physical-column checks; all fixtures rolled back (not PowerSync engine validation)");
+console.log("local-physical-item-stream: 78 actual SQL captures pass member, exact placement revision/location, acquisition absence markers, return-history columns/denials, immutable source-entry exact Int64 basis/identity/category visibility, exact Int64 Item prices, scoped image markers, current archived parent, unreferenced/ended archived exclusion, cross-Account, other-user, removal and physical-column checks; all fixtures rolled back (not PowerSync engine validation)");

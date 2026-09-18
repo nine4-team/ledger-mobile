@@ -66,6 +66,8 @@ public enum LedgerPowerSyncTable {
     public static let transactionDetailsEditCommands = "spike_transaction_details_edit_commands"
     public static let transactionReceiptLinesEditCommands = "spike_transaction_receipt_lines_edit_commands"
     public static let uninvoicedReturnCommands = "spike_uninvoiced_return_commands"
+    public static let sourceReturnCommands = "spike_source_return_commands"
+    public static let inventorySourceEntries = "inventory_source_entries"
     public static let paidReturnCommands = "spike_paid_return_commands"
     public static let expenseCommands = "spike_expense_commands"
     public static let expenseEntryRecovery = "spike_expense_entry_recovery"
@@ -657,6 +659,12 @@ public enum LedgerPowerSyncSchema {
                       .text("contract_version"), .text("fingerprint"), .text("envelope_json")],
             insertOnly: true
         ),
+        Table(name: LedgerPowerSyncTable.sourceReturnCommands,
+            columns: [.text("account_id"), .text("actor_principal_id"), .text("project_id"),
+                      .text("contract_version"), .text("fingerprint"), .text("envelope_json")], insertOnly: true),
+        Table(name: LedgerPowerSyncTable.inventorySourceEntries, columns: [.text("account_id"), .text("item_id"),
+            .text("inventory_placement_id"), .text("source_project_id"), .text("source_category_id"),
+            .text("amount_minor_units"), .text("currency")]),
         Table(
             name: LedgerPowerSyncTable.expenses,
             columns: [.text("account_id"), .text("project_id"), .text("category_id"), .text("vendor"),

@@ -56,7 +56,7 @@ try {
     new URL(process.env.LEDGER_TARGET_SUPABASE_URL ?? ""), process.env.LEDGER_TARGET_PUBLISHABLE_KEY ?? "");
   const invoicingItems = new SupabaseProjectInvoicingItemsReader(
     new URL(process.env.LEDGER_TARGET_SUPABASE_URL ?? ""), process.env.LEDGER_TARGET_PUBLISHABLE_KEY ?? "");
-  const server = createTargetServer(reader, context, clientSummaryReader, categoryManagement, transactionReceipts, transactionDetails, inventorySale, expenseCreation, expenseCreation, collectedInvoices, liveInvoices, invoiceCreation, feeCreation, fees, invoiceRevision, uninvoicedReturn, inventorySale, inventorySale, paidReturn, projectBudget, invoicingItems);
+  const server = createTargetServer(reader, context, clientSummaryReader, categoryManagement, transactionReceipts, transactionDetails, inventorySale, expenseCreation, expenseCreation, collectedInvoices, liveInvoices, invoiceCreation, feeCreation, fees, invoiceRevision, uninvoicedReturn, inventorySale, inventorySale, paidReturn, projectBudget, invoicingItems, inventorySale);
   await server.connect(new StdioServerTransport());
 } catch {
   process.stderr.write("Ledger target MCP could not start: check target configuration and user session.\n");

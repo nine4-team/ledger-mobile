@@ -194,7 +194,7 @@ try {
   assert.equal(sql("select to_regprocedure('ledger_private.lock_item_charge_source(text,text)') is not null and to_regprocedure('ledger_private.validate_collected_item_charge()') is not null"), 't');
   sql(`insert into public.spike_projects(id,account_id,client_id,display_name,created_at,updated_at,created_at_ms,updated_at_ms,created_by_principal_id)
     values('race-project','account-primary','client-existing','Synthetic concurrency',now(),now(),1,1,'principal-owner');`);
-  if (!process.argv.includes('--adjustments-only') && !process.argv.includes('--media-only')) {
+  if (!process.argv.includes('--adjustments-only') && !process.argv.includes('--media-only') && !process.argv.includes('--source-return-only')) {
   prepare('correction-first');
   for (const scenario of ['exact', 'changed', 'rollback']) {
     const id = `mixed-import-${scenario}`;
@@ -625,7 +625,7 @@ try {
   }
   console.log('PASS Transaction receipt-line retry, competing edit, rollback, removal and financial-visibility races');
   }
-  if (!process.argv.includes('--adjustments-only')) {
+  if (!process.argv.includes('--adjustments-only') && !process.argv.includes('--source-return-only')) {
     for (const operation of ['insert','update']) {
       const name=`media-marker-order-${operation}`, id=source(name); prepare(name,false);
       sql(`begin;
@@ -750,6 +750,46 @@ try {
     assert.equal(sql(`select count(*) from ledger_private.media_sync_objects where scope_kind='project' and scope_id='race-project'
       and attachment_id in ('race-media-scope-a','race-media-scope-b')`),'2');
     console.log('PASS media routing: both thumbnail/reference publication orders, rollback, and concurrent Project scope refresh preserve exact descriptors.');
+  }
+  if (!process.argv.includes('--adjustments-only') && !process.argv.includes('--media-only')) {
+    sql("update public.spike_accounts set furnishings_category_id='category-furnishings' where id='account-primary';");
+    const auth = `set local role authenticated; select set_config('request.jwt.claim.sub','10000000-0000-0000-0000-000000000001',true);`;
+    for (const scenario of ['retry','return-first','sale-first','rollback','revocation']) {
+      const id = `source-race-${scenario}`;
+      sql(`insert into public.spike_items(id,account_id,description,created_by_principal_id)
+          values('${id}','account-primary','Source return race','principal-owner');
+        insert into public.spike_item_placements(id,account_id,item_id,scope_kind,project_id,started_at,started_by_principal_id,ended_at,ended_by_principal_id)
+          values('${id}-source','account-primary','${id}','project','race-project','2024-01-01','principal-owner','2025-01-01','principal-owner');
+        insert into public.spike_item_placements(id,account_id,item_id,scope_kind,started_at,started_by_principal_id)
+          values('${id}-inventory','account-primary','${id}','business_inventory','2025-01-01','principal-owner');
+        insert into ledger_private.inventory_source_entries(id,account_id,item_id,inventory_placement_id,source_placement_id,
+          source_project_id,source_category_id,amount_minor_units,currency,created_at,created_by_principal_id)
+          values('${id}-entry','account-primary','${id}','${id}-inventory','${id}-source','race-project','category-furnishings',
+            12345,'USD','2025-01-01','principal-owner');`);
+      function invoke(kind, suffix, expected) {
+        const command = { operationId: `${id}-${kind}-${suffix}`, accountId: 'account-primary', actorPrincipalId: 'principal-owner',
+          projectId: 'race-project', createdAtMs: '1788523200000',
+          contractVersion: kind === 'return' ? 'return-inventory-to-source-v1' : 'inventory-sale-v1',
+          ...(kind === 'sale' ? { currency: 'USD' } : {}),
+          items: [{ itemId: id, placementId: `${id}-inventory`, occurrenceId: `${id}-${kind}-${suffix}-charge`,
+            ...(kind === 'return' ? { inventoryEntryId: `${id}-entry`, projectPlacementId: `${id}-${kind}-${suffix}-placement` }
+              : { priceRevision: '0', reviewedPriceMinorUnits: '999', newPlacementId: `${id}-${kind}-${suffix}-placement` }) }] };
+        return `${auth} do $check$ declare r public.spike_operation_results; begin
+          r:=public.${kind === 'return' ? 'spike_return_inventory_to_source' : 'spike_sell_inventory_items'}('${JSON.stringify(command)}');
+          if coalesce(r.error_code,r.phase)<>'${expected}' then raise exception 'Unexpected result: %',row_to_json(r); end if;
+          end $check$; reset role;`;
+      }
+      const holder = scenario === 'revocation'
+        ? "update public.spike_account_memberships set state='removed' where account_id='account-primary' and principal_id='principal-owner';"
+        : invoke(scenario === 'sale-first' ? 'sale' : 'return','first','applied');
+      const waiter = invoke(scenario === 'return-first' ? 'sale' : 'return',scenario === 'retry' ? 'first' : 'second',
+        scenario === 'return-first' ? 'sale_placement_stale' : scenario === 'sale-first' ? 'source_return_placement_stale' : 'applied');
+      await race(id,holder,waiter,scenario === 'rollback' ? 'rollback' : 'commit',scenario === 'revocation' ? '42501' : null);
+      if (scenario === 'revocation') sql("update public.spike_account_memberships set state='active' where account_id='account-primary' and principal_id='principal-owner';");
+      assert.equal(sql(`select count(*) from ledger_private.item_charge_occurrences where item_id='${id}'`), scenario === 'revocation' ? '0' : '1');
+      assert.equal(sql(`select amount_minor_units from ledger_private.inventory_source_entries where id='${id}-entry'`),'12345');
+    }
+    console.log('PASS source return: identical retry, competing Sell in both orders, rollback and membership revocation; one charge, immutable basis');
   }
   if (process.argv.includes('--adjustments-only')) {
     for (const scenario of ['retry','competing','rollback','header','collected-first','edit-first']) {

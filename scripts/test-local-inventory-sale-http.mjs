@@ -17,6 +17,8 @@ assert.equal(local.API_URL,'http://127.0.0.1:54321');
 const budgetRead = process.argv.includes('--native-budget');
 const profileLogo = process.argv.includes('--native-profile-logo');
 const profileRead = profileLogo || process.argv.includes('--native-profile');
+const sourceReturn = process.argv.includes('--source-return');
+if (sourceReturn) assert.deepEqual(process.argv.slice(2), ['--mcp','--source-return'], 'Source return uses its isolated existing fixture branch');
 if (profileRead) assert.deepEqual(process.argv.slice(2), [profileLogo ? '--native-profile-logo' : '--native-profile'], 'Profile read uses an isolated read-only scenario');
 const profileLogoBytes = Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+jH1sAAAAASUVORK5CYII=', 'base64');
 const profileStorageFixtures = [];
@@ -77,6 +79,7 @@ const email=key+'@ledger-tests.invalid', password=randomUUID()+'-aA1!';
 // Resolve optional test adapters before provisioning a synthetic user. A loader
 // failure must not leave a signed-in fixture outside the cleanup block.
 const mcp=process.argv.includes('--mcp') ? await import('../LedgerTargetMCP/src/inventorySale.ts') : null;
+const sourceReturnMCP=sourceReturn ? await import('../LedgerTargetMCP/src/inventorySourceReturn.ts') : null;
 const budgetMCP=budgetRead ? await import('../LedgerTargetMCP/src/projectBudgetRead.ts') : null;
 const priceMCP=process.argv.includes('--price-edit') ? await import('../LedgerTargetMCP/src/itemPriceEdit.ts') : null;
 const priceTransport=priceMCP ? await import('../LedgerTargetMCP/src/inventorySale.ts') : null;
@@ -149,6 +152,7 @@ try {
                 ...(process.argv.includes('--native-price-edit')?{LEDGER_PRICE_LOCAL:'1'}:{}),
                 ...(liveAdjustments?{LEDGER_PRICE_ADJUSTMENTS_LOCAL:'1'}:{}),
                 ...(process.argv.includes('--native-return')?{LEDGER_RETURN_LOCAL:'1'}:{}),
+                ...(sourceReturn?{LEDGER_SOURCE_RETURN_LOCAL:'1'}:{}),
                 ...(process.argv.includes('--native-resale')?{LEDGER_RESALE_LOCAL:'1'}:{}),
                 ...(process.argv.includes('--native-resale-other-project')?{LEDGER_RESALE_PROJECT:key+'-native-project'}:{}),
                 LEDGER_RETURN_LOCAL_PROJECT_COUNT:String(returnScale),
@@ -174,7 +178,80 @@ try {
             'Native integration must execute a nonzero number of matching tests');
         console.log(output.slice(-2500));
     };
-    if(process.argv.includes('--expense')) {
+    if(sourceReturn) {
+        sql(`insert into public.spike_item_placements(id,account_id,item_id,scope_kind,project_id,started_at,started_by_principal_id,ended_at,ended_by_principal_id)
+          values(${q(key+'-source')},${q(account)},${q(item)},'project',${q(project)},'2025-01-01',${q(principal)},'2026-01-01',${q(principal)});
+          insert into ledger_private.inventory_source_entries(id,account_id,item_id,inventory_placement_id,source_placement_id,
+            source_project_id,source_category_id,amount_minor_units,currency,created_at,created_by_principal_id)
+          values(${q(key+'-entry')},${q(account)},${q(item)},${q(key+'-old')},${q(key+'-source')},${q(project)},${q(category)},
+            9007199254740993,'USD','2026-01-01',${q(principal)});`);
+        const review=sourceReturnMCP.validateInventorySourceReturnReview(await service.reviewSourceReturn({itemIds:[item]},context),{itemIds:[item]},context);
+        assert.equal(review.items[0].amountMinorUnits,'9007199254740993');
+        assert.equal(review.projectId,project);
+        await runNative('actualLocalSourceReturn');
+        assert.equal(sql(`select amount_minor_units from ledger_private.item_charge_occurrences where account_id=${q(account)} and item_id=${q(item)}`),'9007199254740993');
+        assert.equal(sql(`select count(*) from ledger_private.inventory_source_returns where account_id=${q(account)}`),'1');
+        assert.equal(sql(`select count(*) from public.spike_transactions where account_id=${q(account)}`),'0');
+        const sourceInput={operationUUID:randomUUID(),clientCreatedAtMilliseconds:1788523200000,payload:{projectId:project,
+          items:[{itemId:item,placementId:key+'-old',inventoryEntryId:key+'-entry',projectPlacementId:key+'-mcp-placement',occurrenceId:key+'-mcp-charge'}]}};
+        const mcpRejected=await sourceReturnMCP.inventorySourceReturnTool(sourceInput,context,service);
+        assert.equal(mcpRejected.errorCode,'source_return_placement_stale');
+        assert.deepEqual(await sourceReturnMCP.inventorySourceReturnTool(sourceInput,context,service),mcpRejected);
+        const command={operationId:key+'-stale',accountId:account,actorPrincipalId:principal,projectId:project,
+          contractVersion:'return-inventory-to-source-v1',createdAtMs:'1788523200000',items:[{itemId:item,placementId:key+'-old',
+            inventoryEntryId:key+'-entry',projectPlacementId:key+'-retry-placement',occurrenceId:key+'-retry-charge'}]};
+        const body={p_command:JSON.stringify(command)}, endpoint='/rest/v1/rpc/spike_return_inventory_to_source';
+        const stale=await call(endpoint,body,token); assert.equal(stale.status,200);
+        assert.equal((await stale.json()).error_code,'source_return_placement_stale');
+        assert.ok([401,403].includes((await call(endpoint,body)).status));
+        for (const change of ['category','membership']) {
+            const controller=new AbortController(), deadline=setTimeout(()=>controller.abort(),20000);
+            let entryBucket, checkpointBuckets=new Set(), stage='download', purged=false, pending='';
+            try {
+                const response=await fetch('http://127.0.0.1:5590/sync/stream',{
+                    method:'POST',signal:controller.signal,headers:{Authorization:'Bearer '+token,
+                        'Content-Type':'application/json',Accept:'application/x-ndjson'},
+                    body:JSON.stringify({buckets:[],raw_data:true,client_id:'source-withdrawal-'+randomUUID(),
+                        streams:{include_defaults:false,subscriptions:[{stream:'physical_account_items',override_priority:null,
+                            parameters:{account_id:account}}]}})});
+                assert.equal(response.status,200); assert.ok(response.body);
+                const reader=response.body.pipeThrough(new TextDecoderStream()).getReader();
+                try {
+                    while(!purged) {
+                        const chunk=await reader.read(); if(chunk.done) break;
+                        pending+=chunk.value; const lines=pending.split('\n'); pending=lines.pop();
+                        for(const line of lines) {
+                            if(!line.trim()) continue;
+                            const message=JSON.parse(line); assert.ok(!message.error);
+                            if(message.checkpoint) {
+                                for(const stream of message.checkpoint.streams??[]) assert.deepEqual(stream.errors,[]);
+                                checkpointBuckets=new Set(message.checkpoint.buckets.map(b=>b.bucket));
+                            }
+                            if(message.checkpoint_diff) {
+                                for(const bucket of message.checkpoint_diff.removed_buckets??[]) checkpointBuckets.delete(bucket);
+                                for(const bucket of message.checkpoint_diff.updated_buckets??[]) checkpointBuckets.add(bucket.bucket);
+                            }
+                            for(const row of message.data?.data??[]) if(row.op==='PUT' && row.object_type==='inventory_source_entries'
+                                && row.object_id===key+'-entry') entryBucket=message.data.bucket;
+                            if(message.checkpoint_complete && entryBucket) {
+                                if(stage==='download' && checkpointBuckets.has(entryBucket)) {
+                                    sql(change==='category'
+                                        ? `update public.spike_budget_categories set kind='fee' where account_id=${q(account)} and id=${q(category)}`
+                                        : `update public.spike_account_memberships set state='removed' where account_id=${q(account)} and principal_id=${q(principal)}`);
+                                    stage='withdraw';
+                                } else if(stage==='withdraw' && !checkpointBuckets.has(entryBucket)) purged=true;
+                            }
+                        }
+                    }
+                } finally { await reader.cancel().catch(()=>{}); }
+                assert.ok(purged,`${change} change removes the exact source basis bucket`);
+            } finally { clearTimeout(deadline); controller.abort(); }
+            if(change==='category') sql(`update public.spike_budget_categories set kind='itemized' where account_id=${q(account)} and id=${q(category)}`);
+        }
+        assert.equal((await call(endpoint,body,token)).status,403);
+        console.log(JSON.stringify({sourceReturnNativeOfflineReadback:true,exactBasis:true,mcpReview:true,replay:true,
+            categoryAndMembershipNetworkWithdrawal:true,anonymousAndRemovedDenied:true}));
+    } else if(process.argv.includes('--expense')) {
         assert.ok(process.argv.includes('--financial'),'Expense requires authorized financial fixture');
         const expense=key+'-expense', expenseCategory=key+'-expense-category';
         const receiptAttachmentIds=[];

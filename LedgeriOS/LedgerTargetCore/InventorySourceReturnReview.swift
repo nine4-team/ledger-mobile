@@ -1,5 +1,12 @@
 import Foundation
 
+public protocol InventorySourceReturnWorkflowServing: Sendable {
+    func watchInventorySourceReturnReview(itemIds: [ItemID]) -> AsyncThrowingStream<InventorySourceReturnReview?, Error>
+    func returnInventoryItemsToSource(_ payload: ReturnInventoryItemsToSourcePayload, operationUUID: UUID,
+                                     capturedAt: Date) async throws -> OperationReceipt
+    func watchInventorySourceReturn(_ operationId: OperationID) -> AsyncThrowingStream<OperationSnapshot?, Error>
+}
+
 /// Review of a current, proven Project-origin Inventory entry. Providers must
 /// bind each entry to its current placement and authorized Account before building
 /// this value. This is not inferred from an Item's current price or old label.
@@ -13,13 +20,16 @@ public struct InventorySourceReturnReview: Equatable, Sendable {
         public let sourceProjectId: ProjectID
         public let sourceCategoryId: BudgetCategoryID
         public let sourceAmount: Money
+        public let categoryDisplayName: String?
 
         public init(itemId: ItemID, placementId: EntityID, inventoryEntryId: EntityID,
-                    sourceProjectId: ProjectID, sourceCategoryId: BudgetCategoryID, sourceAmount: Money) throws {
+                    sourceProjectId: ProjectID, sourceCategoryId: BudgetCategoryID, sourceAmount: Money,
+                    categoryDisplayName: String? = nil) throws {
             guard sourceAmount.minorUnits > 0 else { throw Failure.invalidBasis }
             self.itemId = itemId; self.placementId = placementId; self.inventoryEntryId = inventoryEntryId
             self.sourceProjectId = sourceProjectId; self.sourceCategoryId = sourceCategoryId
             self.sourceAmount = sourceAmount
+            self.categoryDisplayName = categoryDisplayName
         }
     }
 
@@ -27,8 +37,9 @@ public struct InventorySourceReturnReview: Equatable, Sendable {
     public let principalId: PrincipalID
     public let projectId: ProjectID
     public let items: [Item]
+    public let projectDisplayName: String?
 
-    public init(accountId: AccountID, principalId: PrincipalID, items: [Item]) throws {
+    public init(accountId: AccountID, principalId: PrincipalID, items: [Item], projectDisplayName: String? = nil) throws {
         guard (1...100).contains(items.count), let first = items.first,
               Set(items.map(\.itemId)).count == items.count,
               Set(items.map(\.placementId)).count == items.count,
@@ -41,6 +52,7 @@ public struct InventorySourceReturnReview: Equatable, Sendable {
         }
         self.accountId = accountId; self.principalId = principalId
         self.projectId = first.sourceProjectId; self.items = items
+        self.projectDisplayName = projectDisplayName
     }
 
     /// Capture once for retry. No editable destination, amount or category: the

@@ -39,6 +39,7 @@ struct LocalOperationIdentityGuardTests {
             LedgerPowerSyncTable.transactionDetailsEditCommands,
             LedgerPowerSyncTable.transactionReceiptLinesEditCommands,
             LedgerPowerSyncTable.uninvoicedReturnCommands,
+            LedgerPowerSyncTable.sourceReturnCommands,
             LedgerPowerSyncTable.paidReturnCommands,
             LedgerPowerSyncTable.expenseCommands,
             LedgerPowerSyncTable.invoiceCommands,
@@ -480,7 +481,7 @@ struct LocalOperationIdentityGuardTests {
                 // Account-bound command families intentionally cannot share an
                 // operation ID. Their cross-family rejection is covered by each
                 // family's identity-contract tests rather than the shared-ID race.
-                if pair.filter({ [.reviseSpaceChecklists, .archiveProject, .archiveClient, .manageCategories, .sellInventoryItems, .editUncollectedItemPrice, .editItemDetails, .editTransactionDetails, .editTransactionReceiptLines, .returnUninvoicedItems, .returnPaidItems, .createExpense, .editExpense, .createInvoice, .reviseCreatedInvoice, .createFeeInstallment].contains($0) }).count > 1
+                if pair.filter({ [.reviseSpaceChecklists, .archiveProject, .archiveClient, .manageCategories, .sellInventoryItems, .editUncollectedItemPrice, .editItemDetails, .editTransactionDetails, .editTransactionReceiptLines, .returnUninvoicedItems, .returnInventoryToSource, .returnPaidItems, .createExpense, .editExpense, .createInvoice, .reviseCreatedInvoice, .createFeeInstallment].contains($0) }).count > 1
                 {
                     pairIndex += 1
                     continue
@@ -1001,6 +1002,11 @@ struct LocalOperationIdentityGuardTests {
                 INSERT INTO spike_paid_return_commands(id,account_id,actor_principal_id,project_id,contract_version,fingerprint,envelope_json)
                 VALUES (?, 'account', 'principal', 'project', 'contract', ?, ?)
                 """, parameters: [id, fingerprint, envelope])
+        case .returnInventoryToSource:
+            _ = try await database.execute(sql: """
+                INSERT INTO spike_source_return_commands(id,account_id,actor_principal_id,project_id,contract_version,fingerprint,envelope_json)
+                VALUES (?, 'account', 'principal', 'project', 'contract', ?, ?)
+                """, parameters: [id, fingerprint, envelope])
         case .returnUninvoicedItems:
             _ = try await database.execute(sql: """
                 INSERT INTO spike_uninvoiced_return_commands(id,account_id,actor_principal_id,project_id,contract_version,fingerprint,envelope_json)
@@ -1081,7 +1087,7 @@ struct LocalOperationIdentityGuardTests {
         database: any PowerSyncDatabaseProtocol
     ) async throws {
         switch family {
-        case .sellInventoryItems, .editUncollectedItemPrice, .editItemDetails, .editTransactionDetails, .editTransactionReceiptLines, .returnUninvoicedItems, .returnPaidItems, .createExpense, .editExpense, .createInvoice, .reviseCreatedInvoice, .createFeeInstallment: break
+        case .sellInventoryItems, .editUncollectedItemPrice, .editItemDetails, .editTransactionDetails, .editTransactionReceiptLines, .returnUninvoicedItems, .returnInventoryToSource, .returnPaidItems, .createExpense, .editExpense, .createInvoice, .reviseCreatedInvoice, .createFeeInstallment: break
         case .manageCategories:
             _ = try await database.execute(sql: "UPDATE spike_local_operations SET category_projection_json = '[]' WHERE id = ?", parameters: [id])
         case .createClient:
@@ -1252,7 +1258,7 @@ struct LocalOperationIdentityGuardTests {
         case .createInvoice, .reviseCreatedInvoice: "invoice"
         case .createExpense, .editExpense: "expense"
         case .createClient, .archiveClient: "client"
-        case .createProject, .archiveProject, .sellInventoryItems, .returnUninvoicedItems, .returnPaidItems: "project"
+        case .createProject, .archiveProject, .sellInventoryItems, .returnUninvoicedItems, .returnInventoryToSource, .returnPaidItems: "project"
         case .assignItemsToSpace, .reviseSpaceChecklists: "space"
         case .clearItemSpaceAssignments, .manageCategories: "account"
         }
@@ -1863,6 +1869,9 @@ struct LocalOperationIdentityGuardTests {
         if families.contains(.returnUninvoicedItems) {
             return try ReturnUninvoicedItemsOperationIdentity.make(accountId: guardAccountId, uuid: checkpointUUID(index: index))
         }
+        if families.contains(.returnInventoryToSource) {
+            return try InventorySourceReturnOperationIdentity.make(accountId: guardAccountId, uuid: checkpointUUID(index: index))
+        }
         if families.contains(.sellInventoryItems) {
             return try InventorySaleOperationIdentity.make(accountId: guardAccountId, uuid: checkpointUUID(index: index))
         }
@@ -1952,6 +1961,14 @@ struct LocalOperationIdentityGuardTests {
             _ = try await database.execute(sql: "INSERT INTO ps_stream_subscriptions(stream_name,active,is_default,local_params,last_synced_at) VALUES('item_return_review',1,0,?,1000000)", parameters: [params])
             return
         }
+        if families.contains(.returnInventoryToSource) {
+            try await seedAuthorityIfNeeded(for: families.filter { $0 != .returnInventoryToSource } + [.sellInventoryItems], database: database)
+            _ = try await database.execute(sql: "INSERT OR REPLACE INTO spike_budget_categories(id,account_id,kind,visibility_class) VALUES('source-category',?,'itemized','ordinary')", parameters: [guardAccountId.rawValue])
+            _ = try await database.execute(sql: "INSERT OR REPLACE INTO inventory_source_entries(id,account_id,item_id,inventory_placement_id,source_project_id,source_category_id,amount_minor_units,currency) VALUES('source-entry',?,'sale-item','sale-old','project','source-category','100','USD')", parameters: [guardAccountId.rawValue])
+            let params = String(decoding: try OperationContractCodec.encode(["account_id":guardAccountId.rawValue]), as: UTF8.self)
+            _ = try await database.execute(sql: "INSERT INTO ps_stream_subscriptions(stream_name,active,is_default,local_params,last_synced_at) VALUES('physical_account_items',1,0,?,1000000)", parameters: [params])
+            return
+        }
         if families.contains(.reviseCreatedInvoice) {
             try await seedAuthorityIfNeeded(for: families.filter { $0 != .reviseCreatedInvoice } + [.createInvoice], database: database)
             _ = try await database.execute(sql: "INSERT OR REPLACE INTO live_invoices(id,account_id,project_id,status,revision) VALUES ('invoice',?,'project','created','1')", parameters: [guardAccountId.rawValue])
@@ -2018,6 +2035,8 @@ struct LocalOperationIdentityGuardTests {
             return try await submitExpense(operationId, changed: false, database: database)
         case .returnUninvoicedItems:
             return try await submitReturn(operationId, changed: false, database: database)
+        case .returnInventoryToSource:
+            return try await submitSourceReturn(operationId, changed: false, database: database)
         case .returnPaidItems:
             return try await submitPaidReturn(operationId, changed: false, database: database)
         case .sellInventoryItems:
@@ -2416,6 +2435,18 @@ struct LocalOperationIdentityGuardTests {
                     inventoryPlacementId: .init(validating: changed ? "return-new-changed" : "return-new"),
                     returnOccurrenceId: .init(validating: "return-fact"))]))
         return try await ReturnUninvoicedItemsPowerSyncStore(database: database, accountId: guardAccountId,
+            principalId: guardPrincipalId, accessFence: .init(), now: { guardAcceptedAt }).submit(command)
+    }
+    private static func submitSourceReturn(_ operationId: OperationID, changed: Bool,
+                                          database: any PowerSyncDatabaseProtocol) async throws -> OperationReceipt {
+        let command = try ReturnInventoryItemsToSourceCommand(operationId: operationId, accountId: guardAccountId,
+            actorPrincipalId: guardPrincipalId, capturedAt: guardAcceptedAt,
+            payload: .init(projectId: .init(validating: "project"), items: [
+                .init(itemId: .init(validating: "sale-item"), placementId: .init(validating: "sale-old"),
+                    inventoryEntryId: .init(validating: "source-entry"),
+                    projectPlacementId: .init(validating: changed ? "source-new-changed" : "source-new"),
+                    occurrenceId: .init(validating: "source-charge"))]))
+        return try await InventorySourceReturnPowerSyncStore(database: database, accountId: guardAccountId,
             principalId: guardPrincipalId, accessFence: .init(), now: { guardAcceptedAt }).submit(command)
     }
 
@@ -3123,6 +3154,8 @@ struct LocalOperationIdentityGuardTests {
             return try await submitExpense(operationId, changed: true, database: database)
         case .returnUninvoicedItems:
             return try await submitReturn(operationId, changed: true, database: database)
+        case .returnInventoryToSource:
+            return try await submitSourceReturn(operationId, changed: true, database: database)
         case .returnPaidItems:
             return try await submitPaidReturn(operationId, changed: true, database: database)
         case .sellInventoryItems:

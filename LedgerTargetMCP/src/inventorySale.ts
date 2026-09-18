@@ -1,4 +1,6 @@
 import { createHash } from "node:crypto";
+import { inventorySourceReturnReviewInputSchema, validateInventorySourceReturnReview, validateInventorySourceReturnResult,
+  type InventorySourceReturnServing, type InventorySourceReturnRequest, type InventorySourceReturnReviewInput } from "./inventorySourceReturn.js";
 import { z } from "zod";
 import { validateItemDetailsEditResult, type ItemDetailsEditRequest, type ItemDetailsEditServing } from "./itemDetailsEdit.js";
 import { canonicalJSON, TargetMCPFailure, validateIdentifier, type TargetMCPRequestContext } from "./contractSupport.js";
@@ -100,7 +102,7 @@ export async function inventorySaleReviewTool(input: { itemIds: string[] }, cont
   return validateInventorySaleReview(await service.review(parsed.data.itemIds, context), parsed.data.itemIds, context);
 }
 
-export class SupabaseInventorySaleService implements InventorySaleServing, ItemPriceEditServing, ItemDetailsEditServing {
+export class SupabaseInventorySaleService implements InventorySaleServing, ItemPriceEditServing, ItemDetailsEditServing, InventorySourceReturnServing {
   readonly #url: URL;
   constructor(url: URL, readonly key: string, readonly fetchImplementation: typeof fetch = fetch) {
     if (!["http:", "https:"].includes(url.protocol) || !url.hostname || url.username || url.password || url.search || url.hash) {
@@ -128,6 +130,19 @@ export class SupabaseInventorySaleService implements InventorySaleServing, ItemP
   async review(itemIds: string[], context: TargetMCPRequestContext): Promise<unknown> {
     const result = await this.#rpc("spike_read_inventory_sale_review", { p_account_id: context.accountId, p_item_ids: itemIds }, context);
     return validateInventorySaleReview(result, itemIds, context);
+  }
+  async reviewSourceReturn(input: InventorySourceReturnReviewInput, context: TargetMCPRequestContext): Promise<unknown> {
+    const parsed = inventorySourceReturnReviewInputSchema.safeParse(input);
+    if (!parsed.success) throw new TargetMCPFailure("source_return_payload_invalid");
+    const result = await this.#rpc("spike_read_inventory_source_return_review", {
+      p_account_id: context.accountId, p_item_ids: parsed.data.itemIds }, context);
+    return validateInventorySourceReturnReview(result, parsed.data, context);
+  }
+  async applySourceReturn(request: InventorySourceReturnRequest, context: TargetMCPRequestContext): Promise<unknown> {
+    if (request.accountId !== context.accountId || request.actorPrincipalId !== context.principalId) return fail("account_not_authorized");
+    const result = await this.#rpc("spike_return_inventory_to_source", { p_command: request.commandJSON }, context);
+    validateInventorySourceReturnResult(result, request);
+    return result;
   }
   async reviewItemPriceEdit(input: ItemPriceEditReviewInput, context: TargetMCPRequestContext) {
     const parsed = itemPriceEditReviewInputSchema.safeParse(input);

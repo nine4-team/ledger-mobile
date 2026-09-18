@@ -19,6 +19,8 @@ struct DownloadedItemsView: View {
     @State private var selectedItem: ItemSelection?
     @State private var saleSelection: SaleSelection?
     @State private var returnSelection: ReturnSelection?
+    @State private var sourceReturnSelection: InventorySourceReturnSelection?
+    @State private var sourceReturnReview: InventorySourceReturnReview?
     @State private var statusSelection: StatusSelection?
     @State private var search = ""
     @State private var order = DownloadedItemOrder.newest
@@ -33,6 +35,17 @@ struct DownloadedItemsView: View {
         let accountId: AccountID
         let itemId: ItemID
         var id: String { itemId.rawValue }
+    }
+
+    private struct SourceReturnRequest: Equatable {
+        let account: AccountID
+        let scope: ItemPlacementScope
+        let space: SpaceID?
+        let items: [ItemID]
+    }
+    private var sourceReturnRequest: SourceReturnRequest {
+        .init(account: accountId, scope: scope, space: spaceId,
+              items: selection.ids.intersection(selectionEvidence ?? []).sorted { $0.rawValue < $1.rawValue })
     }
 
     private struct StatusSelection: Identifiable {
@@ -204,6 +217,22 @@ struct DownloadedItemsView: View {
                     spaceNavigation: spaceNavigation)
             }
         }
+        .task(id: sourceReturnRequest) {
+            let request = sourceReturnRequest
+            sourceReturnReview = nil
+            guard request.scope == .businessInventory, !request.items.isEmpty,
+                  let service = reader as? any InventorySourceReturnWorkflowServing else { return }
+            do {
+                for try await value in service.watchInventorySourceReturnReview(itemIds: request.items) {
+                    guard !Task.isCancelled, request == sourceReturnRequest else { return }
+                    sourceReturnReview = value?.accountId == request.account &&
+                        Set(value?.items.map(\.itemId) ?? []) == Set(request.items) ? value : nil
+                }
+            } catch {
+                guard !Task.isCancelled, request == sourceReturnRequest else { return }
+                sourceReturnReview = nil
+            }
+        }
         .alert("Could not copy Item IDs", isPresented: $copyFailed) {
             Button("OK", role: .cancel) {}
         } message: { Text("Try copying the Item IDs again.") }
@@ -225,6 +254,13 @@ struct DownloadedItemsView: View {
                let service = reader as? any UninvoicedReturnWorkflowServing {
                 UninvoicedReturnForm(accountId: accountId, projectId: selected.projectId,
                     itemIds: selected.itemIds, service: service)
+            }
+        }
+        .sheet(item: $sourceReturnSelection) { selected in
+            if selected.review.accountId == accountId, scope == .businessInventory,
+               let service = reader as? any InventorySourceReturnWorkflowServing & UninvoicedReturnWorkflowServing {
+                UninvoicedReturnForm(accountId: accountId, projectId: selected.review.projectId,
+                    itemIds: selected.review.items.map(\.itemId), service: service, sourceService: service)
             }
         }
         .onChange(of: accountId) { _, _ in resetContext() }
@@ -273,6 +309,16 @@ struct DownloadedItemsView: View {
                         guard names.count == selected.count else { return }
                         saleSelection = SaleSelection(accountId: accountId, names: names)
                     }.accessibilityIdentifier("target-items-sell")
+                }
+                if scope == .businessInventory,
+                   reader is any InventorySourceReturnWorkflowServing & UninvoicedReturnWorkflowServing {
+                    InventorySourceReturnAction(review: sourceReturnReview?.accountId == accountId &&
+                        Set(sourceReturnReview?.items.map(\.itemId) ?? []) == selection.ids.intersection(ids)
+                        ? sourceReturnReview : nil) { review in
+                            guard let current = selectionEvidence, review.accountId == accountId,
+                                  Set(review.items.map(\.itemId)) == selection.ids.intersection(current) else { return }
+                            sourceReturnSelection = .init(review: review)
+                        }
                 }
                 if case .project(let projectId) = scope, reader is any UninvoicedReturnWorkflowServing {
                     Button("Return to Inventory") {
@@ -526,6 +572,8 @@ struct DownloadedItemsView: View {
     private func resetContext() {
         saleSelection = nil
         returnSelection = nil
+        sourceReturnSelection = nil
+        sourceReturnReview = nil
         statusSelection = nil
         selectedItem = nil
         search = ""
@@ -579,6 +627,8 @@ struct DownloadedItemDetailView: View {
     @State private var mediaExpanded = true
     @State private var notesExpanded = true
     @State private var showingNotesEdit = false
+    @State private var sourceReturnSelection: InventorySourceReturnSelection?
+    @State private var sourceReturnReview: InventorySourceReturnReview?
     @State private var showingStatusEdit = false
     @State private var showingMarketEdit = false
     @State private var detailsExpanded = true
@@ -652,6 +702,13 @@ struct DownloadedItemDetailView: View {
                history.accountId == accountId, history.itemId == itemId,
                case .project(let projectId) = history.intervals.first(where: { $0.endedAt == nil })?.scope {
                 UninvoicedReturnForm(accountId: accountId, projectId: projectId, itemIds: [itemId], service: service)
+            }
+        }
+        .sheet(item: $sourceReturnSelection) { selected in
+            if selected.review.accountId == accountId, selected.review.items.map(\.itemId) == [itemId],
+               let service = reader as? any InventorySourceReturnWorkflowServing & UninvoicedReturnWorkflowServing {
+                UninvoicedReturnForm(accountId: accountId, projectId: selected.review.projectId,
+                    itemIds: [itemId], service: service, sourceService: service)
             }
         }
         .sheet(isPresented: $showingStatusEdit) {
@@ -733,6 +790,19 @@ struct DownloadedItemDetailView: View {
                             Button("Sell to Project") { showingInventorySale = true }
                                 .accessibilityIdentifier("target-item-detail-sell")
                         }
+                        if reader is any InventorySourceReturnWorkflowServing & UninvoicedReturnWorkflowServing,
+                           case .downloaded(let history) = model.state,
+                           history.intervals.first(where: { $0.endedAt == nil })?.scope == .businessInventory {
+                            InventorySourceReturnAction(review: sourceReturnReview?.accountId == accountId &&
+                                sourceReturnReview?.items.map(\.itemId) == [itemId] ? sourceReturnReview : nil,
+                                accessibilityID: "target-item-detail-return-source") { review in
+                                    guard case .downloaded(let current) = model.state, current.accountId == accountId,
+                                          current.itemId == itemId, review.accountId == accountId,
+                                          review.items.map(\.itemId) == [itemId],
+                                          current.intervals.first(where: { $0.endedAt == nil })?.scope == .businessInventory else { return }
+                                    sourceReturnSelection = .init(review: review)
+                                }
+                        }
                         if reader is any UninvoicedReturnWorkflowServing,
                            case .downloaded(let history) = model.state,
                            case .project = history.intervals.first(where: { $0.endedAt == nil })?.scope {
@@ -772,6 +842,21 @@ struct DownloadedItemDetailView: View {
             await model.load(accountId: accountId, itemId: itemId, reader: reader)
         }
         .onDisappear { model.clear() }
+        .task(id: Request(accountBytes: Array(accountId.rawValue.utf8),
+                          itemBytes: Array(itemId.rawValue.utf8), refresh: refresh)) {
+            let account = accountId, item = itemId
+            sourceReturnReview = nil
+            guard let service = reader as? any InventorySourceReturnWorkflowServing else { return }
+            do {
+                for try await value in service.watchInventorySourceReturnReview(itemIds: [item]) {
+                    guard !Task.isCancelled, account == accountId, item == itemId else { return }
+                    sourceReturnReview = value?.accountId == account && value?.items.map(\.itemId) == [item] ? value : nil
+                }
+            } catch {
+                guard !Task.isCancelled, account == accountId, item == itemId else { return }
+                sourceReturnReview = nil
+            }
+        }
         .sheet(item: $selectedSpace) { selected in
             if let spaceNavigation, let itemReader = reader as? any DownloadedItemPlacementReading {
                 ReferencedSpaceDetailView(accountId: accountId, spaceId: selected.id,

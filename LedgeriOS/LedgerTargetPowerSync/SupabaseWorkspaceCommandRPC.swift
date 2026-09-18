@@ -5,7 +5,7 @@ import LedgerTargetCore
 /// Business validation and terminal-result checks stay in their existing owners.
 struct SupabaseWorkspaceCommandRPC: ClientCreationCommandApplying, ProjectCreationCommandApplying,
     EditTransactionDetailsApplying, EditTransactionReceiptLinesApplying,
-    CategoryManagementCommandApplying, InventorySaleCommandApplying, EditUncollectedItemPriceApplying, EditItemDetailsApplying, ReturnUninvoicedItemsCommandApplying, ReturnPaidItemsCommandApplying, CreateExpenseCommandApplying, EditExpenseCommandApplying, CreateInvoiceCommandApplying, ReviseCreatedInvoiceCommandApplying, CreateFeeInstallmentCommandApplying, InventorySaleReviewReading, TransactionReceiptReading, Sendable {
+    CategoryManagementCommandApplying, InventorySaleCommandApplying, InventorySourceReturnCommandApplying, EditUncollectedItemPriceApplying, EditItemDetailsApplying, ReturnUninvoicedItemsCommandApplying, ReturnPaidItemsCommandApplying, CreateExpenseCommandApplying, EditExpenseCommandApplying, CreateInvoiceCommandApplying, ReviseCreatedInvoiceCommandApplying, CreateFeeInstallmentCommandApplying, InventorySaleReviewReading, TransactionReceiptReading, Sendable {
     enum Failure: Error, Equatable { case scopeMismatch, invalidResponse, rejected(Int) }
     let url: URL
     let key: String
@@ -94,6 +94,13 @@ struct SupabaseWorkspaceCommandRPC: ClientCreationCommandApplying, ProjectCreati
                          principal: command.envelope.actorPrincipalId.rawValue)
         let request = try InventorySaleUploadRequest(command)
         let result: InventorySaleServerResult = try await call("spike_sell_inventory_items", body: request.rpcBody)
+        try result.validate(for: command)
+        return result
+    }
+    func apply(_ command: ReturnInventoryItemsToSourceCommand) async throws -> InventorySourceReturnServerResult {
+        try requireScope(account: command.envelope.accountId.rawValue, principal: command.envelope.actorPrincipalId.rawValue)
+        let request = try InventorySourceReturnUploadRequest(command)
+        let result: InventorySourceReturnServerResult = try await call("spike_return_inventory_to_source", body: request.rpcBody)
         try result.validate(for: command)
         return result
     }

@@ -976,6 +976,19 @@ streams:
   physical_account_items:
     queries:
       - |
+        SELECT inventory_source_entries.id,inventory_source_entries.account_id,inventory_source_entries.item_id,
+          inventory_source_entries.inventory_placement_id,inventory_source_entries.source_project_id,
+          inventory_source_entries.source_category_id,inventory_source_entries.amount_minor_units::text AS amount_minor_units,
+          inventory_source_entries.currency
+        FROM ledger_private.inventory_source_entries
+        JOIN spike_budget_categories AS category ON category.account_id=inventory_source_entries.account_id AND category.id=inventory_source_entries.source_category_id
+        JOIN spike_account_memberships AS membership ON membership.account_id=inventory_source_entries.account_id
+        JOIN spike_principals AS principal ON principal.id=membership.principal_id
+        WHERE inventory_source_entries.account_id=subscription.parameter('account_id')
+          AND membership.account_id=subscription.parameter('account_id') AND category.account_id=subscription.parameter('account_id')
+          AND principal.auth_user_id=auth.user_id() AND membership.state='active'
+          AND (category.visibility_class='ordinary' OR membership.financial_access='full')
+      - |
         SELECT item_placement_versions.id, item_placement_versions.account_id,
           item_placement_versions.revision::text AS revision,
           item_placement_versions.placement_id, item_placement_versions.space_id, item_placement_versions.project_id
