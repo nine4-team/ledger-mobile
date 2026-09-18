@@ -12,7 +12,7 @@ assert.equal(realpathSync(labels['com.supabase.cli.workdir']),realpathSync(proce
 const block=readFileSync('powersync/sync-streams.yaml','utf8').match(/^  item_images:\n([\s\S]*?)(?=^  \S)/m)?.[1];
 assert.ok(block);
 const queries=[...block.matchAll(/^      - \|\n((?:        .*(?:\n|$))+)/gm)].map(m=>m[1].replace(/^        /gm,'').trim());
-assert.equal(queries.length,5);
+assert.equal(queries.length,4);
 const q=s=>`'${s.replaceAll("'","''")}'`;
 const item=`image-stream-${randomUUID()}`,other=`other-${randomUUID()}`,object=`object-${randomUUID()}`;
 const statements=['begin;set local statement_timeout=\'5s\';'];
@@ -48,17 +48,25 @@ statements.push('rollback;');
 const output=execFileSync('docker',['exec','-i',container,'psql','-X','-q','-A','-t','-U','postgres','-d','postgres','-v','ON_ERROR_STOP=1'],
  {input:statements.join('\n'),encoding:'utf8',timeout:30000});
 const results=output.trim().split('\n').map(JSON.parse);
-assert.equal(results.length,30);
+assert.equal(results.length,24);
 for(const {label,index,rows} of results){
  if(label==='member'){
-  assert.equal(rows.length,1);
-  assert.equal(rows[0].account_id,'account-primary');
+  assert.equal(rows.length,index===2?2:1);
+  for(const row of rows) assert.equal(row.account_id,'account-primary');
   if(index===0) assert.equal(rows[0].revision,'2');
   if(index===1){assert.equal(rows[0].id,`ref-${item}`);assert.equal(rows[0].set_revision,'2');}
-  if(index===2){assert.equal(rows[0].id,object);assert.equal(rows[0].byte_count,'9007199254740993');}
+  if(index===2){
+   const objects=new Map(rows.map(row=>[row.id,row]));
+   assert.deepEqual([...objects.keys()].sort(),[object,small].sort());
+   assert.equal(objects.get(object).byte_count,'9007199254740993');
+   assert.equal(objects.get(object).media_type,'image/png');
+   assert.equal(objects.get(object).storage_path,`accounts/account-primary/attachments/${object}/${'a'.repeat(64)}`);
+   assert.equal(objects.get(small).byte_count,'123');
+   assert.equal(objects.get(small).media_type,'image/jpeg');
+   assert.equal(objects.get(small).storage_path,`accounts/account-primary/attachments/${small}/${'b'.repeat(64)}`);
+  }
   if(index===3){assert.equal(rows[0].id,link);assert.equal(rows[0].original_attachment_id,object);assert.equal(rows[0].thumbnail_attachment_id,small);}
-  if(index===4){assert.equal(rows[0].id,small);assert.equal(rows[0].byte_count,'123');assert.equal(rows[0].media_type,'image/jpeg');}
  }else if(label==='empty' && index===0){assert.equal(rows.length,1);assert.equal(rows[0].expected_count,0);}
  else assert.deepEqual(rows,[],`${label}/${index}: no unauthorized or historical rows`);
 }
-console.log('item-image-stream:30 privileged actual SQL captures pass current revision,known empty,explicit derivative,exact bytes,wrong Item,Account,user and removal;fixtures rolled back (not hosted replication)');
+console.log('item-image-stream:24 privileged actual SQL captures pass current revision,known empty,combined original/derivative,exact bytes/paths,wrong Item,Account,user and removal;fixtures rolled back (not hosted replication)');
