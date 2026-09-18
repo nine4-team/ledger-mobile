@@ -1,6 +1,6 @@
 {
   "schemaVersion": 2,
-  "stateVersion": 1547,
+  "stateVersion": 1549,
   "userRequestedPause": {
     "date": "2026-09-15",
     "status": "resumed",
@@ -28,9 +28,9 @@
     "outcome": "Connect existing Space gallery, image/PDF pinning and photo printing to authorized downloaded media, preserving honest missing-byte and access-loss behavior.",
     "baseCommit": "596573186b47a3faa0469c16d81f2187aaa5dcf2",
     "nextActions": [
-      "Item-linked Space media UI wired; shared gallery/PDF/pinning/print rendering reused. macOS build and two print tests pass. Normal Space route, gallery exports and end-to-end verification remain. No capture/delete/primary/markers.",
+      "Normal and Item-linked Space routes now wired to reused gallery/PDF/pinning/print. Gallery exports and protected PDF sharing added. iPhone Space pin and Transaction PDF withdrawal tests passed before latest export/review fix. Finish current platform/export/runtime verification; no capture/delete/primary/markers.",
       "Prior photo/adjustment batch remains integration-unverified: CI35359599965 failed stale physical-stream expectation; repair59657318 locally passes all four stream/MCP scripts. No running CI or duplicate dispatch. Prior batch base c5226c1 remains in evidence; new Space batch does not waive failures.",
-      "Space migration20260918151339 applied LOCAL without history, as were prior local migrations; do not replay. Stream config has not been activated by local service restart; no hosted changes."
+      "Space migration20260918151339 applied LOCAL without history; do not replay. Local service restarted to activate rules. Live metadata test initially timed out: tables absent from publication. Added publication migration/preflight and local replication grants; actual download and membership withdrawal now pass. No hosted changes."
     ]
   },
   "blockers": [
@@ -60,9 +60,9 @@
     "acceptanceCheckIds": ["SPACE-MEDIA-CATALOG","SPACE-MEDIA-UI","SPACE-MEDIA-BYTES","SPACE-MEDIA-SQL","SPACE-MEDIA-AUTH","SPACE-MEDIA-SYNC","SPACE-MEDIA-OFFLINE"],
     "meaning": "Read-only Space media; reuse existing gallery, PDF/image pinning, print helper and byte vault.",
     "verificationCommands": ["swift test --package-path LedgeriOS --no-parallel --filter DownloadedSpaceMediaTests","npm run conversion:state:check"],
-    "lastResult": "macOSbuildPASS;2printtestsPASS /tmp/ledger-space-media-{app-build,print-tests}.log. Environment gatePASS. Prior11native/2466SQL preserved. Normal Space route/export/device/live replication/runtime shutdown proof remain; no CI/hosted changes.",
+    "lastResult": "Space runtime close/removal2cases PASS0.361s /tmp/ledger-space-media-runtime-drain-fixed.log after correcting test cancellation ownership. macOS UI did NOT execute: authentication conflict during runner initialization /tmp/ledger-space-media-macos-ui.log. conversion:check/state and diff check PASS. Prior current build, SQL2466, live sync, catalog/PDF delivery evidence retained. No CI/hosted changes.",
     "activeProcesses": {},
     "integrationCI": {"run":35359599965,"attempt":1,"commit":"cd8be156fa695f92e2b461cfccd961717c2e95ac","status":"failure","meaning":"Strict lint and SQL/races passed; physical stream test rejected approved live_pricing projection. Native jobs skipped. Repaired exact-column expectation and added absent-acquisition null assertion. All four downstream stream/MCP scripts passed locally. No hosted changes; new-commit integration still required."},
-    "nextWorkflowDecision": "Wire normal entry in ActiveWorkspaceToSpaceChecklistStagingComposition.swift.spaceDetail (separate from now-wired ReferencedSpaceDetailView). Place pin layout at owning Form host in LedgerTargetStagingApp.swift and ActiveWorkspaceChecklistUITestFixture.swift; do not nest GeometryReader pin layout inside Form row. UITestFixtureItemReader needs media conformance/data. Preserve existing gallery save/share/copy and PDF share (not yet bound). Shared PhotoPrintPresentation/AuthorizedPDFContent extracted and build-tested. Then runtime/device/live replication and final review; no redo of passing core/SQL checks. O023/O053 mutations excluded."
+    "nextWorkflowDecision": "Runtime shutdown verified. Continue current export/platform and missing-byte UI checks; macOS runner authentication failure needs environment resolution, not UI rewrite. Current exports compiled after prior iPhone proof. Actual sync is synthetic metadata only, not Storage-byte/native end-to-end proof. Preserve review/fallback fix. No tests currently running; O023/O053 mutations excluded."
   }
 }

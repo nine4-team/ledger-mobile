@@ -513,6 +513,61 @@ struct AccountWorkspacePendingWorkRuntimeTests {
         context.remove()
     }
 
+    @Test("Space media download and watch drain before close or access removal", .timeLimit(.minutes(1)), arguments: [false, true])
+    func spaceMediaDownloadDrain(removing: Bool) async throws {
+        let context = try RuntimeTestContext(suffix: "space-media-drain-\(removing)")
+        defer { context.remove() }
+        let events = LockedRecorder<AccountWorkspaceRuntimeLifecycleEvent>()
+        let gate = ManualGate()
+        let cancellation = AsyncStream<Void>.makeStream()
+        let bytes = Data([1, 2, 3])
+        let hash = try AttachmentContentSHA256.make(bytes: bytes).rawValue
+        var dependencies = physicalItemDependencies(context)
+        dependencies.lifecycleEvent = { events.append($0) }
+        let validate = dependencies.validateStructuredDatabase
+        dependencies.validateStructuredDatabase = { database in
+            try await validate(database)
+            _ = try await database.execute(sql: "INSERT INTO spike_spaces(id,account_id,scope_kind,display_name,lifecycle,revision) VALUES('media-space','account-runtime','business_inventory','Room','active','1')", parameters: nil)
+            _ = try await database.execute(sql: "INSERT INTO item_image_objects(id,account_id,content_sha256,byte_count,media_type,storage_path) VALUES('space-photo','account-runtime',?,'3','image/png',?)", parameters: [hash, "accounts/account-runtime/attachments/space-photo/\(hash)"])
+            _ = try await database.execute(sql: "INSERT INTO space_media_sets(id,account_id,space_id,revision,expected_count) VALUES('set','account-runtime','media-space','1',1)", parameters: nil)
+            _ = try await database.execute(sql: "INSERT INTO space_media_references(id,account_id,space_id,attachment_id,set_revision,position,is_primary) VALUES('ref','account-runtime','media-space','space-photo','1',0,1)", parameters: nil)
+        }
+        dependencies.downloadImage = { _ in
+            await withTaskCancellationHandler { await gate.wait() } onCancel: {
+                cancellation.continuation.yield(())
+            }
+            return bytes
+        }
+        let runtime = try await context.openRuntime(dependencies: dependencies)
+        let space = try SpaceID(validating: "media-space")
+        var watch = runtime.watchDownloadedSpaceMedia(accountId: context.accountId, spaceId: space, scope: .businessInventory).makeAsyncIterator()
+        let catalog = try #require(try await watch.next() ?? nil)
+        let attachment = try #require(catalog.attachments.first)
+        let download = Task { try await runtime.loadDownloadedSpaceMedia(catalog: catalog, attachment: attachment, allowDownload: true) }
+        await gate.waitUntilEntered()
+        let closing = Task {
+            if removing { try await runtime.lockAccessPreservingPendingWork() }
+            else { try await runtime.close() }
+        }
+        // Finite reads belong to their caller: close waits for their leases,
+        // while access removal fences their result. Cancel the caller explicitly.
+        download.cancel()
+        var cancelled = cancellation.stream.makeAsyncIterator()
+        #expect(await cancelled.next() != nil)
+        #expect(!events.values.contains(.structuredDatabaseCloseAttempted))
+        #expect(!events.values.contains(.attachmentDatabaseCloseAttempted))
+        await gate.release()
+        await #expect(throws: (any Error).self) { _ = try await download.value }
+        try await closing.value
+        try await Self.expectClosed(runtime.watchDownloadedSpaceMedia(accountId: context.accountId, spaceId: space, scope: .businessInventory))
+        await #expect(throws: LedgerOfflineClientRuntimeFailure.runtimeClosed) {
+            _ = try await runtime.readDownloadedSpaceMedia(accountId: context.accountId, spaceId: space, scope: .businessInventory)
+        }
+        #expect(events.values.filter { $0 == .structuredDatabaseCloseAttempted }.count == 1)
+        #expect(events.values.filter { $0 == .attachmentDatabaseCloseAttempted }.count == 1)
+        cancellation.continuation.finish()
+    }
+
     @Test("Account profile facade reopens downloaded branding and denies foreign or locked workspaces")
     func accountProfileRestartAndIsolation() async throws {
         let context = try RuntimeTestContext(suffix: "profile-restart")

@@ -3,6 +3,7 @@
 import assert from 'node:assert/strict';
 import { readFileSync, realpathSync } from 'node:fs';
 import { execFileSync } from 'node:child_process';
+import { createHmac, randomUUID } from 'node:crypto';
 assert.ok(!process.env.DOCKER_HOST && !process.env.DOCKER_CONTEXT);
 const docker = args => execFileSync('docker', args, { encoding: 'utf8', timeout: 15000 });
 assert.match(JSON.parse(docker(['context','inspect','--format','{{json .Endpoints.docker.Host}}'])), /^unix:\/\//);
@@ -42,3 +43,77 @@ const stale = evaluate(change('space_media_sets',{revision:2,expected_count:0}))
 // existence is not row delivery; only the object lookup must disappear here.
 assert.ok(stale[0] > 0 && stale[2] === 0, `revision change withdraws old object lookup: ${stale}`);
 console.log('PASS Space media service parameter evaluation: current, foreign Account/Space/user, removed, archived visibility and stale revisions. Not live replication.');
+
+if (process.argv.includes('--live')) {
+  const local = JSON.parse(execFileSync('npx',['--offline','--yes','supabase@2.116.0','status','-o','json'],
+    {encoding:'utf8',stdio:['ignore','pipe','ignore'],timeout:15000}));
+  assert.equal(local.API_URL,'http://127.0.0.1:54321');
+  const container = 'supabase_db_ledger_target_supabase_local';
+  const labels = JSON.parse(docker(['inspect','--format','{{json .Config.Labels}}',container]));
+  assert.equal(realpathSync(labels['com.supabase.cli.workdir']),realpathSync(process.cwd()));
+  const sql = input => execFileSync('docker',['exec','-i',container,'psql','-X','-q','-A','-t','-U','postgres','-d','postgres','-v','ON_ERROR_STOP=1'],
+    {input,encoding:'utf8',timeout:15000,stdio:['pipe','pipe','pipe']});
+  const id = 'space-media-' + randomUUID(), now = Math.floor(Date.now()/1000);
+  assert.equal(sql("select count(*) from pg_publication_tables where pubname='powersync' and schemaname='public' and tablename in ('space_media_sets','space_media_references');").trim(), '2',
+    'Space media tables must be published before testing live replication');
+  const unsigned = [{alg:'HS256',typ:'JWT'},{aud:'authenticated',role:'authenticated',
+    sub:'10000000-0000-0000-0000-000000000002',iat:now,exp:now+120}]
+    .map(v => Buffer.from(JSON.stringify(v)).toString('base64url')).join('.');
+  const token = unsigned + '.' + createHmac('sha256',local.JWT_SECRET).update(unsigned).digest('base64url');
+  const controller = new AbortController(), timer = setTimeout(() => controller.abort(),30000);
+  let created = false;
+  try {
+    sql(`begin;
+      insert into public.spike_accounts(id,display_name) values('${id}','Synthetic Space media');
+      insert into public.spike_account_memberships(account_id,principal_id,role,state,financial_access)
+        values('${id}','principal-restricted','employee','active','limited');
+      insert into public.spike_spaces(id,account_id,scope_kind,display_name) values('${id}','${id}','business_inventory','Synthetic Space');
+      insert into public.item_image_objects(id,account_id,content_sha256,byte_count,media_type,storage_path)
+        values('${id}','${id}',repeat('a',64),4,'application/pdf','accounts/${id}/attachments/${id}/'||repeat('a',64));
+      insert into public.space_media_sets values('${id}','${id}','${id}',1,1);
+      insert into public.space_media_references values('${id}','${id}','${id}','${id}',1,0,true,'Synthetic.pdf');
+      commit;`);
+    created = true;
+    const response = await fetch('http://127.0.0.1:5590/sync/stream',{method:'POST',signal:controller.signal,
+      headers:{Authorization:'Bearer '+token,'Content-Type':'application/json',Accept:'application/x-ndjson'},
+      body:JSON.stringify({buckets:[],raw_data:true,client_id:id,streams:{include_defaults:false,
+        subscriptions:[{stream:'space_media',override_priority:null,parameters:{account_id:id,space_id:id}}]}})});
+    assert.equal(response.status,200);
+    const reader = response.body.pipeThrough(new TextDecoderStream()).getReader();
+    let pending = '', buckets = new Set(), received = new Set(), stage = 'download', removed = false;
+    try {
+      while (!removed) {
+        const chunk = await reader.read(); if (chunk.done) break;
+        pending += chunk.value; const lines = pending.split('\n'); pending = lines.pop();
+        for (const line of lines.filter(v => v.trim())) {
+          const message = JSON.parse(line); assert.ok(!message.error);
+          if (message.checkpoint) {
+            for (const stream of message.checkpoint.streams ?? []) assert.deepEqual(stream.errors,[]);
+            buckets = new Set(message.checkpoint.buckets.map(b => b.bucket));
+          }
+          if (message.checkpoint_diff) {
+            for (const bucket of message.checkpoint_diff.removed_buckets ?? []) buckets.delete(bucket);
+            for (const bucket of message.checkpoint_diff.updated_buckets ?? []) buckets.add(bucket.bucket);
+          }
+          for (const row of message.data?.data ?? []) if (row.op === 'PUT') {
+            assert.equal(row.object_id,id,'No foreign Space media delivered');
+            const data = typeof row.data === 'string' ? JSON.parse(row.data) : row.data;
+            assert.equal(data.account_id,id);
+            received.add(row.object_type);
+          }
+          if (message.checkpoint_complete) {
+            if (stage === 'download' && ['space_media_sets','space_media_references','item_image_objects'].every(t => received.has(t))) {
+              sql(`update public.spike_account_memberships set state='removed' where account_id='${id}';`);
+              stage = 'withdraw';
+            } else if (stage === 'withdraw' && buckets.size === 0) removed = true;
+          }
+        }
+      }
+    } finally { await reader.cancel().catch(() => {}); }
+    assert.ok(removed,'Same-session removal must withdraw every Space media bucket');
+    console.log('PASS live Space media: exact catalog/reference/object downloaded and same-session membership removal withdrew all buckets. Synthetic metadata only; no Storage bytes or native app proof.');
+  } finally {
+    clearTimeout(timer); controller.abort();
+    if (created) sql(`update public.spike_account_memberships set state='removed' where account_id='${id}';`);
+  }
+}

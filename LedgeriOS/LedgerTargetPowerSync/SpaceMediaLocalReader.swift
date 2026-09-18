@@ -2,6 +2,28 @@ import Foundation
 import LedgerTargetCore
 import PowerSync
 
+/// Use the existing protected temporary-file lifetime for native PDF sharing.
+public enum SpaceMediaPDFDelivery {
+    @MainActor public static func deliver(data: Data,catalog: DownloadedSpaceMedia,
+        attachment: DownloadedSpaceMedia.Attachment,reader: any DownloadedSpaceMediaReading,
+        scratchRoot: URL? = nil,handoff: @MainActor (URL) async throws -> Void) async throws {
+        let hash = try ProtectedArtifactSHA256.make(bytes: data)
+        guard !attachment.isImage, catalog.retains(attachment,from: catalog),
+              hash.rawValue == attachment.object.contentSHA256.rawValue,
+              Int64(data.count) == attachment.object.byteCount else { throw DownloadedSpaceMedia.Failure.invalidEvidence }
+        let scope = try JSONSerialization.data(withJSONObject: [catalog.accountId.rawValue,catalog.spaceId.rawValue,
+            String(describing: catalog.scope),String(catalog.revision!),attachment.id.rawValue])
+        let reference = try ProtectedArtifactSnapshotReference(snapshotID: .init(validating: String(hash.rawValue.prefix(32))),
+            snapshotHash: hash,visibilityScopeID: .make(bytes: scope),profileVersion: .init(validating: "space-pdf-v1"),
+            authorityVersion: .init(validating: "space-media-v1"))
+        try await ProtectedReportDelivery.deliver(data: data,format: .pdf,reference: reference,scratchRoot: scratchRoot,
+            revalidate: {
+                let current = try await reader.readDownloadedSpaceMedia(accountId: catalog.accountId,spaceId: catalog.spaceId,scope: catalog.scope)
+                guard current.retains(attachment,from: catalog) else { throw DownloadedSpaceMedia.Failure.unavailable }
+            },handoff: handoff)
+    }
+}
+
 struct SpaceMediaLocalReader: Sendable {
     let database: any PowerSyncDatabaseProtocol
     let principalId: PrincipalID

@@ -165,6 +165,8 @@ struct ActiveWorkspaceChecklistUITestFixtureView: View {
                 ProjectSetupStagingExerciseView(model: fixture.projectSetup, onCancel: {}, onDone: {})
             } else {
             NavigationStack {
+            SpaceMediaPinHost(reader: fixture.model.itemReader as? any DownloadedSpaceMediaReading,
+                route: fixture.model.route) { onPin in
             ScrollView {
               VStack(alignment: .leading, spacing: 16) {
                 Section("Fixture evidence") {
@@ -193,7 +195,7 @@ struct ActiveWorkspaceChecklistUITestFixtureView: View {
                             }
                             signOutCalled = true
                             await fixture.model.stop()
-                        })
+                        }, onPinSpaceMedia: onPin)
                 }
                 if signOutCalled { Text("Sign-out boundary called").accessibilityIdentifier("target-ui-signout-called") }
                 if ProcessInfo.processInfo.arguments.contains("--ledger-ui-test-sync-signout-dismiss") {
@@ -205,6 +207,7 @@ struct ActiveWorkspaceChecklistUITestFixtureView: View {
             }
             .itemThumbnailViewport()
             .accessibilityIdentifier("target-workspace-scroll")
+            }
             }
             }
         }
@@ -756,7 +759,39 @@ private struct UITestFixtureSpaceDetailQuery: SpaceCoreDetailsQuerying {
         source.stream
     }
 }
-private struct UITestFixtureItemReader: DownloadedItemPlacementReading, DownloadedProjectItemsReading, DownloadedItemPlacementHistoryReading, AccountBusinessProfileReading, DownloadedItemImageReading, InventorySaleWorkflowServing, UninvoicedReturnWorkflowServing, PaidReturnWorkflowServing, ProjectInvoicingReading, ProjectInvoiceCreating, ProjectInvoiceRevising, ProjectFeeInstallmentCreating, ExpenseCreating, ExpenseEditing, ItemPriceEditing, ItemDetailsEditing, ProjectBudgetReading {
+private struct UITestFixtureItemReader: DownloadedItemPlacementReading, DownloadedProjectItemsReading, DownloadedItemPlacementHistoryReading, AccountBusinessProfileReading, DownloadedItemImageReading, DownloadedSpaceMediaReading, InventorySaleWorkflowServing, UninvoicedReturnWorkflowServing, PaidReturnWorkflowServing, ProjectInvoicingReading, ProjectInvoiceCreating, ProjectInvoiceRevising, ProjectFeeInstallmentCreating, ExpenseCreating, ExpenseEditing, ItemPriceEditing, ItemDetailsEditing, ProjectBudgetReading {
+    func readDownloadedSpaceMedia(accountId: AccountID, spaceId: SpaceID, scope: SpaceCreationScope) async throws -> DownloadedSpaceMedia {
+        let populated = ProcessInfo.processInfo.arguments.contains("--ledger-ui-test-space-media")
+        var entries: [DownloadedSpaceMedia.Attachment] = []
+        if populated {
+            for index in 0..<3 {
+                let pdf = index == 2
+                let bytes = pdf ? await TransactionBrowserFixtureReader.pdfBytes : imageBytes
+                let id = "space-media-\(index)", hash = try AttachmentContentSHA256.make(bytes: bytes).rawValue
+                entries.append(try .init(id: .init(validating: id),object: .init(accountId: accountId,
+                    attachmentId: id,sha256: hash,byteCount: String(bytes.count),mediaType: pdf ? "application/pdf" : "image/gif",
+                    storagePath: "accounts/\(accountId.rawValue)/attachments/\(id)/\(hash)",kind: pdf ? .pdf : .image),
+                    position: index,isPrimary: index == 0,fileName: pdf ? "Space plan.pdf" : "Space photo \(index + 1)"))
+            }
+        }
+        return try .init(accountId: accountId,spaceId: spaceId,scope: scope,revision: 1,isComplete: true,attachments: entries)
+    }
+    func watchDownloadedSpaceMedia(accountId: AccountID, spaceId: SpaceID, scope: SpaceCreationScope)
+        -> AsyncThrowingStream<DownloadedSpaceMedia?,Error> {
+        AsyncThrowingStream { continuation in
+            let task = Task {
+                do { continuation.yield(try await readDownloadedSpaceMedia(accountId: accountId,spaceId: spaceId,scope: scope)) }
+                catch { continuation.finish(throwing: error) }
+            }
+            continuation.onTermination = { _ in task.cancel() }
+        }
+    }
+    func loadDownloadedSpaceMedia(catalog: DownloadedSpaceMedia,attachment: DownloadedSpaceMedia.Attachment,
+                                 allowDownload: Bool) async throws -> Data? {
+        guard catalog.attachments.contains(attachment) else { throw DownloadedSpaceMedia.Failure.unavailable }
+        if ProcessInfo.processInfo.arguments.contains("--ledger-ui-test-space-media-missing") { return nil }
+        return attachment.isImage ? imageBytes : await TransactionBrowserFixtureReader.pdfBytes
+    }
     func readProjectBudget(accountId: AccountID, projectId: ProjectID, currency: CurrencyCode) async throws -> ProjectBudgetRead {
         guard accountId.rawValue == "account-ui-test", projectId.rawValue == "project-ui-test" else {
             throw ProjectBudgetCalculation.Failure.scopeMismatch

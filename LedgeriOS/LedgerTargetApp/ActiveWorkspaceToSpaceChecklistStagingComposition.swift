@@ -27,6 +27,7 @@ struct ActiveWorkspaceToSpaceChecklistStagingView: View {
     var onSignOut: (() async throws -> Void)? = nil
     var pendingWork: AccountPendingWorkStagingExercise? = nil
     var onEndSession: ((SessionEndRequest) async throws -> Void)? = nil
+    var onPinSpaceMedia: ((SpacePinnedMedia) -> Void)? = nil
     @State private var signingOut = false
     @State private var signOutFailure: String?
     @State private var showingPropertyReport = false
@@ -450,6 +451,10 @@ struct ActiveWorkspaceToSpaceChecklistStagingView: View {
                     .accessibilityIdentifier("target-active-space-detail-name")
                 checklists
                 if let reader = model.itemReader {
+                    if let mediaReader = reader as? any DownloadedSpaceMediaReading, let onPinSpaceMedia {
+                        SpaceMediaSection(accountId: model.accountId,spaceId: spaceId,scope: scope,
+                            reader: mediaReader,onPin: onPinSpaceMedia)
+                    }
                     DownloadedItemsView(accountId: model.accountId,
                         scope: placementScope(scope), reader: reader, spaceId: spaceId,
                         spaceNavigation: itemSpaceNavigation)

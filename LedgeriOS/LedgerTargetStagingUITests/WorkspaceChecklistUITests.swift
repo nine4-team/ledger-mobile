@@ -5456,6 +5456,37 @@ final class WorkspaceChecklistUITests: XCTestCase {
         }
     }
 
+    func testSpaceMediaUsesExistingImageAndPDFPins() throws {
+        continueAfterFailure = false
+        let app = XCUIApplication()
+        app.launchArguments = ["--ledger-ui-test-workspace-checklist", "--ledger-ui-test-space-media"]
+        app.launch()
+        defer { app.terminate() }
+        let project = app.buttons["target-active-project-card-project-ui-test"]
+        XCTAssertTrue(project.waitForExistence(timeout: 10)); project.tap()
+        let spaces = app.buttons["target-active-project-spaces-tab"]
+        reveal(spaces,in: app); spaces.tap()
+        let space = app.buttons["target-active-space-card-space-ui-test"]
+        XCTAssertTrue(space.waitForExistence(timeout: 5)); reveal(space,in: app); space.tap()
+        let photo = app.descendants(matching: .any)["target-space-media-space-media-0"].firstMatch
+        XCTAssertTrue(photo.waitForExistence(timeout: 5)); reveal(photo,in: app); photo.tap()
+        let pin = app.buttons["target-space-image-pin"]
+        XCTAssertTrue(pin.waitForExistence(timeout: 5)); pin.tap()
+        let unpin = app.buttons["target-space-pinned-image-unpin"]
+        XCTAssertTrue(unpin.waitForExistence(timeout: 5))
+        XCTAssertTrue(app.staticTexts["target-space-pinned-images-counter"].exists)
+        unpin.tap()
+        let pdf = app.descendants(matching: .any)["target-space-media-space-media-2"].firstMatch
+        reveal(pdf,in: app); pdf.tap()
+        let pdfPin = app.buttons["Pin PDF for reference"]
+        XCTAssertTrue(pdfPin.waitForExistence(timeout: 5)); pdfPin.tap()
+        XCTAssertTrue(unpin.waitForExistence(timeout: 5))
+        XCTAssertTrue(app.descendants(matching: .any)["target-space-pinned-pdf"].firstMatch.waitForExistence(timeout: 5))
+        XCTAssertFalse(app.buttons["Match Items"].exists)
+        unpin.tap()
+        XCTAssertFalse(unpin.exists)
+    }
+
     func testInventorySpaceChecklistInteraction() throws {
         try exerciseSpaceChecklist(inventory: true)
     }

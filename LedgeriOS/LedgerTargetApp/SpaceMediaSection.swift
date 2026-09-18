@@ -1,10 +1,26 @@
 import LedgerTargetCore
+import LedgerTargetAppModel
+import LedgerTargetPowerSync
 import SwiftUI
 
 struct SpacePinnedMedia: Identifiable {
     let catalog: DownloadedSpaceMedia
     let attachment: DownloadedSpaceMedia.Attachment
     var id: String { catalog.spaceId.rawValue + ":" + String(catalog.revision ?? 0) + ":" + attachment.id.rawValue }
+}
+
+/// Keep the original resizable pin layout outside scrolling detail content.
+struct SpaceMediaPinHost<Content: View>: View {
+    let reader: (any DownloadedSpaceMediaReading)?
+    let route: ActiveWorkspaceToSpaceChecklistRoute
+    @ViewBuilder let content: (@escaping (SpacePinnedMedia) -> Void) -> Content
+    @State private var pin: SpacePinnedMedia?
+    var body: some View {
+        PinnedImageLayoutPresentation(pinIdentity: pin?.id) {
+            if let pin, let reader { SpacePinnedMediaView(pin: pin,reader: reader,onClose: { self.pin = nil }) }
+        } content: { content { pin = $0 } }
+        .onChange(of: route) { _, _ in pin = nil }
+    }
 }
 
 /// Space-scoped loading/actions around the existing gallery controls.
@@ -22,6 +38,8 @@ struct SpaceMediaSection: View {
     @State private var printTask: Task<Void,Never>?
     @State private var printing = false
     @State private var notice: String?
+    @State private var exporting = false
+    private enum ExportAction { case save, share, copy }
 
     var body: some View {
         CollapsibleSection(title: "MEDIA",isExpanded: $expanded,onPrint: printPhotos,
@@ -35,8 +53,13 @@ struct SpaceMediaSection: View {
                     ThumbnailGridPresentation(count: catalog.attachments.count,
                         isPrimary: { catalog.attachments[$0].isPrimary },thumbnail: { index in
                             let attachment = catalog.attachments[index]
-                            if attachment.isImage { photo(catalog,attachment,thumbnail: true,scale: .constant(1)) }
-                            else { PDFThumbnailTile(fileName: attachment.fileName) }
+                            Group {
+                                if attachment.isImage { photo(catalog,attachment,thumbnail: true,scale: .constant(1)) }
+                                else { PDFThumbnailTile(fileName: attachment.fileName) }
+                            }
+                            .accessibilityElement(children: .ignore)
+                            .accessibilityLabel(attachment.fileName ?? "Space media")
+                            .accessibilityIdentifier("target-space-media-" + attachment.id.rawValue)
                         },upload: { _ in EmptyView() },onThumbnailTap: { selected = catalog.attachments[$0] })
                 }
             } else { Text("Media unavailable. Refresh Space to retry.").font(.caption) }
@@ -47,7 +70,7 @@ struct SpaceMediaSection: View {
         #else
         .adaptivePresentation(item: $selected,style: .viewer) { viewer($0) }
         #endif
-        .alert("Print Space Photos",isPresented: Binding(get: { notice != nil },set: { if !$0 { notice = nil } })) {
+        .alert("Space Media",isPresented: Binding(get: { notice != nil },set: { if !$0 { notice = nil } })) {
             Button("OK") { notice = nil }
         } message: { Text(notice ?? "") }
         .task(id: [accountId.rawValue,spaceId.rawValue,String(describing: scope)]) {
@@ -75,13 +98,17 @@ struct SpaceMediaSection: View {
                 ImageGalleryPresentation(imageIDs: images.map { identity(catalog,$0) },
                     initialIndex: images.firstIndex(of: attachment) ?? 0,isPresented: presented,
                     onPinImage: { onPin(.init(catalog: catalog,attachment: images[$0])) },
-                    caption: { images[$0].fileName },accessibilityPrefix: "target-space") { context in
+                    onSaveImage: { try await performExport(catalog,images[$0],action: .save) },
+                    onShareImage: { export(catalog,images[$0],action: .share) },
+                    onCopyImage: { try await performExport(catalog,images[$0],action: .copy) },
+                    caption: { images[$0].fileName },actionsDisabled: exporting,accessibilityPrefix: "target-space") { context in
                         photo(catalog,images[context.index],scale: context.zoom,onTap: context.onTap)
                     }
             } else {
                 AuthorizedPDFViewer(fileName: attachment.fileName,
                     load: { try await reader.loadDownloadedSpaceMedia(catalog: catalog,attachment: attachment,allowDownload: true) },
-                    isPresented: presented,onPin: { onPin(.init(catalog: catalog,attachment: attachment)) })
+                    isPresented: presented,onPin: { onPin(.init(catalog: catalog,attachment: attachment)) },
+                    onShare: exporting ? nil : { export(catalog,attachment,action: .share) })
                     .id(identity(catalog,attachment))
             }
         }
@@ -96,6 +123,59 @@ struct SpaceMediaSection: View {
             load: { try await reader.loadDownloadedSpaceMedia(catalog: catalog,attachment: attachment,allowDownload: true) },
             thumbnail: thumbnail,onTap: onTap,scale: scale)
     }
+    private func export(_ value: DownloadedSpaceMedia,_ attachment: DownloadedSpaceMedia.Attachment,action: ExportAction) {
+        guard !exporting else { return }
+        let request = generation
+        Task {
+            do { try await performExport(value,attachment,action: action) }
+            catch is CancellationError { }
+            catch { if generation == request { notice = error.localizedDescription } }
+        }
+    }
+
+    private func performExport(_ value: DownloadedSpaceMedia,_ attachment: DownloadedSpaceMedia.Attachment,
+                               action: ExportAction) async throws {
+        guard !exporting else { throw AuthorizedMediaExport.Failure.alreadyExporting }
+        exporting = true; defer { exporting = false }
+        let request = generation
+        #if os(macOS)
+        var destination: URL?
+        #endif
+        try await AuthorizedMediaExport.perform(validate: {
+            guard generation == request, catalog?.retains(attachment,from: value) == true else {
+                throw DownloadedSpaceMedia.Failure.unavailable
+            }
+        },prepareDestination: {
+            if action == .save {
+                #if os(iOS)
+                try await DownloadedImagePhotoSaving.requestPermission()
+                #else
+                destination = try await PropertyManagementReportSystemDelivery.imageSaveDestination(
+                    fileName: attachment.fileName,mediaType: attachment.object.mediaType)
+                #endif
+            }
+        },load: {
+            try await reader.loadDownloadedSpaceMedia(catalog: value,attachment: attachment,allowDownload: true)
+        },handoff: { bytes in
+            let current = try await reader.readDownloadedSpaceMedia(accountId: accountId,spaceId: spaceId,scope: scope)
+            guard generation == request, current.retains(attachment,from: value) else { throw DownloadedSpaceMedia.Failure.unavailable }
+            if !attachment.isImage {
+                try await SpaceMediaPDFDelivery.deliver(data: bytes,catalog: value,attachment: attachment,reader: reader) { url in
+                    guard generation == request, catalog?.retains(attachment,from: value) == true else { throw CancellationError() }
+                    try await PropertyManagementReportSystemDelivery.handoff(url,action: .share)
+                }
+            } else if action == .copy { try Clipboard.copyImage(bytes,mediaType: attachment.object.mediaType) }
+            else if action == .save {
+                #if os(iOS)
+                try await DownloadedImagePhotoSaving.save(bytes)
+                #else
+                guard let destination else { throw CancellationError() }
+                try await PropertyManagementReportSystemDelivery.saveImage(bytes,to: destination)
+                #endif
+            } else { try await PropertyManagementReportSystemDelivery.handoffImage(bytes) }
+        })
+    }
+
     private func printPhotos() {
         guard !printing, let value = catalog, !value.printableImages.isEmpty else { return }
         let request = generation; printing = true
@@ -158,6 +238,8 @@ struct SpacePinnedMediaView: View {
                 for try await value in reader.watchDownloadedSpaceMedia(accountId: pin.catalog.accountId,spaceId: pin.catalog.spaceId,scope: pin.catalog.scope) {
                     try Task.checkCancellation()
                     guard let value, value.retains(pin.attachment,from: pin.catalog) else { break }
+                    let next = value.selection(retaining: selected,fallback: pin.attachment)?.id
+                    if selected != next { selected = next; zoom = 1 }
                     catalog = value
                 }
             } catch { }

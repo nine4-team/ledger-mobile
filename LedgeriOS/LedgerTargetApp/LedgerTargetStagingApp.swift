@@ -166,13 +166,16 @@ struct OfflineProviderSpikeView: View {
     var body: some View {
         WorkspaceAccessGate(access: model.access) {
         NavigationStack {
+        SpaceMediaPinHost(reader: model.activeWorkspaceToSpaceChecklist.itemReader as? any DownloadedSpaceMediaReading,
+            route: model.activeWorkspaceToSpaceChecklist.route) { onPin in
         ScrollView {
         VStack {
-            workspaceContent
+            workspaceContent(onPinSpaceMedia: onPin)
         }
         }
         .itemThumbnailViewport()
         .accessibilityIdentifier("target-workspace-scroll")
+        }
         }
         }
         .task { await model.start(validatedEnvironment: environment) }
@@ -182,7 +185,7 @@ struct OfflineProviderSpikeView: View {
     }
 
     @ViewBuilder
-    private var workspaceContent: some View {
+    private func workspaceContent(onPinSpaceMedia: @escaping (SpacePinnedMedia) -> Void) -> some View {
         Section("Offline Client Creation") {
             TextField("Client name", text: $model.displayName)
                 .textFieldStyle(.roundedBorder)
@@ -227,7 +230,7 @@ struct OfflineProviderSpikeView: View {
             }, pendingWork: model.pendingWork, onEndSession: { request in
                 try await model.signOut(entry: entry, environment: environment, request: request)
                 signedOut()
-            }
+            }, onPinSpaceMedia: onPinSpaceMedia
         )
         TransferDestinationSelectionStagingExerciseView(
             model: model.transferDestinations

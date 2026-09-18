@@ -62,4 +62,11 @@ struct DownloadedSpaceMediaTests {
         #expect(try !catalog([photo], spaceId: SpaceID(validating: "other")).retains(photo, from: original))
         #expect(try !catalog().retains(photo, from: original))
     }
+
+    @Test func partialUpdateFallsBackToPinnedAnchor() throws {
+        let a = try attachment("a"), b = try attachment("b",position: 1)
+        #expect(try catalog([a,b]).selection(retaining: b.id,fallback: a) == b)
+        #expect(try catalog([a],complete: false).selection(retaining: b.id,fallback: a) == a)
+        #expect(try catalog().selection(retaining: b.id,fallback: a) == nil)
+    }
 }

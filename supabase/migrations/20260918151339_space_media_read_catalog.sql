@@ -25,6 +25,11 @@ create table public.space_media_references (
 );
 create unique index space_media_one_primary on public.space_media_references(account_id,space_id,set_revision) where is_primary;
 create index space_media_object_reference on public.space_media_references(account_id,attachment_id);
+do $$ begin
+  if exists(select 1 from pg_publication where pubname='powersync') then
+    alter publication powersync add table public.space_media_sets, public.space_media_references;
+  end if;
+end $$;
 alter table public.space_media_sets enable row level security;
 alter table public.space_media_sets force row level security;
 alter table public.space_media_references enable row level security;

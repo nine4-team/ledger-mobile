@@ -51,6 +51,13 @@ public struct DownloadedSpaceMedia: Equatable, Sendable {
     /// still resolve every image's bytes and revalidate access before handoff.
     public var printableImages: [Attachment] { attachments.filter(\.isImage) }
 
+    /// Partial updates may temporarily omit a paged-to attachment while keeping
+    /// the pinned anchor. Keep a represented selection so its controls remain.
+    public func selection(retaining selected: EntityID?, fallback: Attachment) -> Attachment? {
+        guard attachments.contains(fallback) else { return nil }
+        return attachments.first(where: { $0.id == selected }) ?? fallback
+    }
+
     public func retains(_ attachment: Attachment, from previous: Self) -> Bool {
         revision != nil && revision == previous.revision
             && accountId == previous.accountId && spaceId == previous.spaceId && scope == previous.scope
