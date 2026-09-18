@@ -1,6 +1,6 @@
 {
   "schemaVersion": 2,
-  "stateVersion": 1543,
+  "stateVersion": 1544,
   "userRequestedPause": {
     "date": "2026-09-15",
     "status": "resumed",
@@ -21,17 +21,16 @@
     "meaning": "Historical attempt1 passed all five jobs including1086native tests/156suites and25Mac/30iPhoneUI tests. Attempt2 failed iOS UI. Not a currently clean full-UI baseline or broad Item/Purchase/hosted/migration/cutover proof."
   },
   "activeWorkflow": {
-    "id": "live-item-adjustments",
-    "integrationWorkflowIds": ["live-item-adjustments", "existing-item-photo-capture"],
+    "id": "space-media-view-print",
     "kind": "product_ui",
     "status": "implementation",
     "recordPath": "docs/plans/ledger-accounting-redesign/conversion/product-behavior-checklist.json",
-    "outcome": "Implement confirmed2026-09-17 live Item adjustment allocation, inclusive Project price edits and exact unadjusted-price audit. Preserve editability, clear errors, deterministic pennies and collected history; verify native/offline/Postgres/MCP/migration parity under the linked contract.",
-    "baseCommit": "c5226c11992a46357a9d4a51b81c53f68e814d24",
+    "outcome": "Connect existing Space gallery, image/PDF pinning and photo printing to authorized downloaded media, preserving honest missing-byte and access-loss behavior.",
+    "baseCommit": "596573186b47a3faa0469c16d81f2187aaa5dcf2",
     "nextActions": [
-      "Photo/pricing/export batch committed and pushed febe461ea8ce90120c82677d4a942404a4003baa. Prior local evidence/review retained. Draft PR1 is CONFLICTING, so PR checks did not start; one explicit integration workflow dispatched at this head. Save its run ID; no duplicate dispatch or Firebase merge.",
-      "Prior Item-photo local checks/review finished; evidence and limits remain in its checklist record, measurement/old goal in efficiency assessment. Integration list preserves its dirty-file ownership, not acceptance of new accounting work.",
-      "Item-photo migrations appliedLOCAL without history; do not replay."
+      "Space media catalog and reader port implemented; four native tests passed. Continue read-only schema/RLS, scoped stream/provider, existing byte cache and existing UI/print bindings. No capture/delete/primary/markers.",
+      "Prior photo/adjustment batch remains integration-unverified: CI35359599965 failed stale physical-stream expectation; repair59657318 locally passes all four stream/MCP scripts. No running CI or duplicate dispatch. Prior batch base c5226c1 remains in evidence; new Space batch does not waive failures.",
+      "Prior local migrations applied without history; do not replay. Space changes have not touched any database yet."
     ]
   },
   "blockers": [
@@ -56,14 +55,14 @@
     "instruction": "Follow the active checklist record and nextActions. Preserve failures; no full-suite context recovery."
   },
   "currentTask": {
-    "id": "live-item-adjustments",
+    "id": "space-media-view-print",
     "status": "implementation",
-    "acceptanceCheckIds": ["ADJUSTMENT-EXPORT","ADJUSTMENT-INPUTS","ADJUSTMENT-EXACT","ADJUSTMENT-ATOMIC","ADJUSTMENT-REPLAY","ADJUSTMENT-AUTH","ADJUSTMENT-IDENTITY","ADJUSTMENT-SYNC","ADJUSTMENT-OFFLINE","ADJUSTMENT-MCP","ADJUSTMENT-MIGRATION","ADJUSTMENT-UI"],
-    "meaning": "Live proportional Item adjustments and inclusive price edits; exact audit, no save locks, frozen history unchanged. Reuse receipt/price UI.",
-    "verificationCommands": ["npm run conversion:check","node --test scripts/tests/analyze-agent-usage.test.mjs"],
-    "lastResult": "Live adjustments locally implemented/reviewed. Final29native/23MCP/2449SQL/iPhone PASS; logs /tmp/ledger-adjustments-review-*.log. Migration20260918001914 appliedLOCAL without history; do not replay blindly. Hosted unchanged; exact-commit CI/newMacUI not proven. Older receipt CI35269076888 status is historical/unverified, not an active process for this slice.",
+    "acceptanceCheckIds": ["SPACE-MEDIA-CATALOG","SPACE-MEDIA-UI","SPACE-MEDIA-BYTES","SPACE-MEDIA-SQL","SPACE-MEDIA-AUTH","SPACE-MEDIA-SYNC","SPACE-MEDIA-OFFLINE"],
+    "meaning": "Read-only Space media; reuse existing gallery, PDF/image pinning, print helper and byte vault.",
+    "verificationCommands": ["swift test --package-path LedgeriOS --no-parallel --filter DownloadedSpaceMediaTests","npm run conversion:state:check"],
+    "lastResult": "Core catalog/port plus4native tests PASS /tmp/ledger-space-media-core.log. Not a working Space media feature yet: schema/provider/UI/export remain. No new CI, hosted changes or cursor control.",
     "activeProcesses": {},
     "integrationCI": {"run":35359599965,"attempt":1,"commit":"cd8be156fa695f92e2b461cfccd961717c2e95ac","status":"failure","meaning":"Strict lint and SQL/races passed; physical stream test rejected approved live_pricing projection. Native jobs skipped. Repaired exact-column expectation and added absent-acquisition null assertion. All four downstream stream/MCP scripts passed locally. No hosted changes; new-commit integration still required."},
-    "nextWorkflowDecision": "Physical stream test repair verified locally; no duplicate CI dispatched for this small repair. Next independent candidate: required space-media-view-print (docs/specs/spaces.md Detail, Media and Review Coverage), using existing SpaceDetailView/MediaGallerySection/PhotoPrintHelper and target ReferencedSpaceDetailView; no target Space media reader found. Do not rebuild controls; capture/delete/markers remain O023/O053-blocked. Session ending already implemented—no rebuild. Sept18 async O052/O053 member editing and O039 note-text questions await replies."
+    "nextWorkflowDecision": "Continue active Space media outcome, not another planning pass. Read-only catalog and port now exist; use TransactionAttachmentLocalReader as authorization/revalidation pattern, shared DownloadedMediaObjectReference/vault, SpaceDetailView MEDIA/PhotoPrintHelper, and target ReferencedSpaceDetailView. Add schema/RLS and stream before UI binding. Do not rebuild controls. Capture/delete/markers remain O023/O053-blocked. Sept18 async O052/O053 member editing and O039 note-text questions await replies."
   }
 }
