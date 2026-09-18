@@ -516,6 +516,8 @@ function makePlan({ projectId, projectName, transactionSnapshots, itemSnapshotsB
       lineageEdgesToRewire: [],
       deleteOriginals: options.deleteOriginals,
       backupOnly: options.backupOnly,
+      sourceIds: [],
+      replacementIds: [],
     };
   }
 
