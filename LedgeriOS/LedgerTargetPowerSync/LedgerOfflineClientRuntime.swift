@@ -38,7 +38,7 @@ public enum LedgerOfflineClientRuntimeFailure: Error, Equatable, Sendable {
 }
 
 public final class LedgerOfflineClientRuntime:
-    ItemSpaceAssigning, ItemSpaceAssignmentClearing, SpaceChecklistRevising, CategoryManaging, ExpenseCreating, ExpenseEditing, TransactionBrowsing, TransactionReceiptWatching, TransactionExportReading, DownloadedTransactionAttachmentReading, TransactionAttachmentCapturing, ItemImageCapturing,
+    ItemSpaceAssigning, ItemSpaceAssignmentClearing, SpaceChecklistRevising, CategoryManaging, ExpenseCreating, ExpenseEditing, TransactionBrowsing, TransactionReceiptWatching, TransactionExportReading, DownloadedTransactionAttachmentReading, DownloadedSpaceMediaReading, TransactionAttachmentCapturing, ItemImageCapturing,
     RejectedOperationRecoveryQuerying, DownloadedItemPlacementReading, DownloadedItemPlacementHistoryReading, PropertyManagementReportReading,
     PropertyManagementReportWatching, ClientSummaryPhysicalReportReading, ClientSummaryPhysicalReportWatching, AccountBusinessProfileReading, DownloadedProjectItemsReading, DownloadedItemImageReading, ProjectInvoicingReading, ProjectBudgetReading, Sendable
 {
@@ -66,6 +66,21 @@ public final class LedgerOfflineClientRuntime:
             await self.lifecycleOwner.startInvoicingChargeWatch(id: id, accountId: accountId,
                 projectId: projectId, continuation: continuation)
         }
+    }
+    public func watchDownloadedSpaceMedia(accountId: AccountID, spaceId: SpaceID, scope: SpaceCreationScope)
+        -> AsyncThrowingStream<DownloadedSpaceMedia?, Error> {
+        trackedStream { id, continuation in
+            await self.lifecycleOwner.startSpaceMediaWatch(id: id,accountId: accountId,spaceId: spaceId,
+                scope: scope,continuation: continuation)
+        }
+    }
+    public func readDownloadedSpaceMedia(accountId: AccountID, spaceId: SpaceID, scope: SpaceCreationScope)
+        async throws -> DownloadedSpaceMedia {
+        try await lifecycleOwner.readDownloadedSpaceMedia(accountId: accountId,spaceId: spaceId,scope: scope)
+    }
+    public func loadDownloadedSpaceMedia(catalog: DownloadedSpaceMedia, attachment: DownloadedSpaceMedia.Attachment,
+                                        allowDownload: Bool) async throws -> Data? {
+        try await lifecycleOwner.loadDownloadedSpaceMedia(catalog: catalog,attachment: attachment,allowDownload: allowDownload)
     }
     public func watchDownloadedTransactionAttachments(scope: TransactionScope, transactionId: TransactionID,
         section: TransactionAttachmentSection) -> AsyncThrowingStream<DownloadedTransactionAttachments?, Error> {

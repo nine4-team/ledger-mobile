@@ -221,6 +221,8 @@ enum AccountWorkspaceRuntimeFiniteOperation: Equatable, Sendable {
     case readTransactionExport
     case readTransactionAttachments
     case loadTransactionAttachment
+    case readSpaceMedia
+    case loadSpaceMedia
     case readDownloadedTransactionReceipt
     case readDownloadedClientSummaryPhysicalReport
     case readAccountBusinessProfile
@@ -228,6 +230,7 @@ enum AccountWorkspaceRuntimeFiniteOperation: Equatable, Sendable {
 }
 
 enum AccountWorkspaceRuntimeStreamOperation: Equatable, Sendable {
+    case spaceMedia
     case invoicingCharges
     case projectBudget
     case expenses
@@ -1584,6 +1587,32 @@ actor AccountWorkspacePendingWorkRuntime {
         }
     }
 
+    func readDownloadedSpaceMedia(accountId: AccountID, spaceId: SpaceID, scope: SpaceCreationScope) async throws -> DownloadedSpaceMedia {
+        try await withFiniteLease(.readSpaceMedia) { resources in
+            guard accountId == resources.accountId else { throw LedgerOfflineClientRuntimeFailure.accountScopeMismatch }
+            let value = try await SpaceMediaLocalReader(database: resources.structuredDatabase,
+                principalId: resources.principalId,accountId: accountId,spaceId: spaceId,scope: scope).read()
+            guard !resources.accessFence.isRemoved else { throw LedgerOfflineClientRuntimeFailure.runtimeClosed }
+            return value
+        }
+    }
+
+    func loadDownloadedSpaceMedia(catalog: DownloadedSpaceMedia, attachment: DownloadedSpaceMedia.Attachment,
+                                 allowDownload: Bool) async throws -> Data? {
+        let download = allowDownload ? downloadImage : nil
+        return try await withFiniteLease(.loadSpaceMedia) { resources in
+            guard catalog.accountId == resources.accountId else { throw LedgerOfflineClientRuntimeFailure.accountScopeMismatch }
+            guard let cache = resources.attachmentStore as? any DownloadedImageCaching else {
+                throw DownloadedSpaceMedia.Failure.unavailable
+            }
+            return try await SpaceMediaLocalReader(database: resources.structuredDatabase,
+                principalId: resources.principalId,accountId: catalog.accountId,spaceId: catalog.spaceId,scope: catalog.scope)
+                .load(catalog: catalog,attachment: attachment,cache: cache,download: download,authorizeAccess: {
+                    guard !resources.accessFence.isRemoved else { throw LedgerOfflineClientRuntimeFailure.runtimeClosed }
+                })
+        }
+    }
+
     func readDownloadedTransactionAttachments(scope: TransactionScope, transactionId: TransactionID,
         section: TransactionAttachmentSection) async throws -> DownloadedTransactionAttachments {
         try await withFiniteLease(.readTransactionAttachments) { resources in
@@ -2024,6 +2053,33 @@ actor AccountWorkspacePendingWorkRuntime {
                 continuation.finish()
             } catch is CancellationError { continuation.finish(throwing: CancellationError()) }
             catch { await self.finishStream(continuation, error: error) }
+            await self.streamFinished(id: id)
+        }
+        streamTasks[id] = task
+    }
+
+    func startSpaceMediaWatch(id: UUID, accountId: AccountID, spaceId: SpaceID, scope: SpaceCreationScope,
+        continuation: AsyncThrowingStream<DownloadedSpaceMedia?, Error>.Continuation) {
+        guard !normalAccessLocked, case .open = state, let resources else {
+            continuation.finish(throwing: LedgerOfflineClientRuntimeFailure.runtimeClosed); return
+        }
+        guard !Task.isCancelled, cancelledBeforeStart.remove(id) == nil else {
+            continuation.finish(throwing: CancellationError()); return
+        }
+        guard accountId == resources.accountId else {
+            continuation.finish(throwing: LedgerOfflineClientRuntimeFailure.accountScopeMismatch); return
+        }
+        let task = Task.detached { [resources] in
+            do {
+                try await resources.streamOperationCheckpoint(.spaceMedia)
+                try Task.checkCancellation()
+                try await SpaceMediaLocalReader(database: resources.structuredDatabase,
+                    principalId: resources.principalId,accountId: accountId,spaceId: spaceId,scope: scope).watch { value in
+                        await self.forwardStreamValue(value,to: continuation)
+                    }
+                continuation.finish()
+            } catch is CancellationError { continuation.finish(throwing: CancellationError()) }
+            catch { await self.finishStream(continuation,error: error) }
             await self.streamFinished(id: id)
         }
         streamTasks[id] = task

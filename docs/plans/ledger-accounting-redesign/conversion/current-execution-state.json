@@ -1,6 +1,6 @@
 {
   "schemaVersion": 2,
-  "stateVersion": 1545,
+  "stateVersion": 1546,
   "userRequestedPause": {
     "date": "2026-09-15",
     "status": "resumed",
@@ -28,7 +28,7 @@
     "outcome": "Connect existing Space gallery, image/PDF pinning and photo printing to authorized downloaded media, preserving honest missing-byte and access-loss behavior.",
     "baseCommit": "596573186b47a3faa0469c16d81f2187aaa5dcf2",
     "nextActions": [
-      "Space catalog, read-only schema/RLS, exact scoped stream and native tables implemented. Continue native local reader/watch using existing stream ownership helper; then shared byte cache and existing UI/print bindings. No capture/delete/primary/markers.",
+      "Space catalog/schema/stream/native reader and runtime protocol wired;11focused tests pass. Continue existing UI/print bindings, runtime cancellation/race coverage and live replication. No capture/delete/primary/markers.",
       "Prior photo/adjustment batch remains integration-unverified: CI35359599965 failed stale physical-stream expectation; repair59657318 locally passes all four stream/MCP scripts. No running CI or duplicate dispatch. Prior batch base c5226c1 remains in evidence; new Space batch does not waive failures.",
       "Space migration20260918151339 applied LOCAL without history, as were prior local migrations; do not replay. Stream config has not been activated by local service restart; no hosted changes."
     ]
@@ -60,9 +60,9 @@
     "acceptanceCheckIds": ["SPACE-MEDIA-CATALOG","SPACE-MEDIA-UI","SPACE-MEDIA-BYTES","SPACE-MEDIA-SQL","SPACE-MEDIA-AUTH","SPACE-MEDIA-SYNC","SPACE-MEDIA-OFFLINE"],
     "meaning": "Read-only Space media; reuse existing gallery, PDF/image pinning, print helper and byte vault.",
     "verificationCommands": ["swift test --package-path LedgeriOS --no-parallel --filter DownloadedSpaceMediaTests","npm run conversion:state:check"],
-    "lastResult": "Core4tests PASS; SQL2466/74 PASS7s; strictlint/advisorsclean; pinned service parameter evaluator and16parser/environment checks PASS. Logs /tmp/ledger-space-media-*.log. Native reader/cache/UI/export/live replication remain; no CI or hosted changes.",
+    "lastResult": "Core4+reader7 tests PASS1.090s /tmp/ledger-space-media-native-final.log; runtime hooks compile. EarlierSQL2466/74 and16parser checks preserved. UI/export/live replication/runtime shutdown proof remain; no CI/hosted changes.",
     "activeProcesses": {},
     "integrationCI": {"run":35359599965,"attempt":1,"commit":"cd8be156fa695f92e2b461cfccd961717c2e95ac","status":"failure","meaning":"Strict lint and SQL/races passed; physical stream test rejected approved live_pricing projection. Native jobs skipped. Repaired exact-column expectation and added absent-acquisition null assertion. All four downstream stream/MCP scripts passed locally. No hosted changes; new-commit integration still required."},
-    "nextWorkflowDecision": "Continue Space media local reader/runtime: reuse withOwnedSyncStreamWatch, shared item_image_objects and vault, SpaceDetailView MEDIA/PhotoPrintHelper, and target ReferencedSpaceDetailView. TransactionAttachmentLocalReader shows revalidation pattern; ItemImageCatalogLocalReaderTests provides SQLite fixtures. Schema/stream already written/tested; no reread of completed SQL work. Need activate local rules once for live proof. Do not rebuild controls. Capture/delete/markers remain O023/O053-blocked; Sept18 async permissions/note questions unanswered."
+    "nextWorkflowDecision": "UI binding next: ReferencedSpaceDetailView currently has no media; inject runtime as DownloadedSpaceMediaReading. Reuse ThumbnailGridPresentation (ThumbnailGrid.swift), ImageGalleryPresentation, PinnedImagePresentation, DownloadedMediaPhotoView and AuthorizedPDFViewer (TransactionAttachmentsSection.swift). Extract existing PDF content loader into closure-bound shared content rather than duplicate. Original PhotoPrintHelper is LedgeriOS/Platform/ShareHelper.swift:65; not included in LedgerTargetProject.yml, so extract byte-to-PDF/print presentation from Firebase URL downloading before target reuse (no new print implementation). Add shared source in target config/regenerate project. SpaceMediaLocalReader/runtime done,11tests passed; no rerun for context. Next runtime shutdown/device/live replication proof and final review. O023/O053 mutations excluded."
   }
 }
