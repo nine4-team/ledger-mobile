@@ -32,6 +32,7 @@ targets:
       - path: LedgeriOS/Components/PDFThumbnailTile.swift
       - path: LedgeriOS/Components/PDFViewerSheet.swift
       - path: LedgeriOS/Platform/PDFDownloadHelper.swift
+      - path: LedgeriOS/Platform/PhotoPrintPresentation.swift
       - path: LedgeriOS/Components/PinnedImagePresentation.swift
       - path: LedgeriOS/Components/PinnedImageLayout.swift
       - path: LedgeriOS/Theme/Spacing.swift
@@ -156,6 +157,7 @@ targets:
       - macOS
     sources:
       - path: LedgerTargetSharedLogicTests
+      - path: LedgeriOS/Platform/PhotoPrintPresentation.swift
       - path: LedgeriOS/Components/ZoomableScrollView.swift
       - path: LedgeriOS/Logic/MediaGalleryPresentationCalculations.swift
       - path: LedgeriOS/Logic/PinnedImageGeometry.swift

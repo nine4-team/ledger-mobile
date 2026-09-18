@@ -68,6 +68,7 @@
 		4B7F25B22DB3FC2091DED43D /* ProjectSetupStagingExerciseView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E7A12BB16D6D3DAE965E907B /* ProjectSetupStagingExerciseView.swift */; };
 		4EF9A6BC38CF4A634667F3F0 /* ProjectSetupStagingRuntimeAdapter.swift in Sources */ = {isa = PBXBuildFile; fileRef = CABE8C82451B0B5EF6570D98 /* ProjectSetupStagingRuntimeAdapter.swift */; };
 		520AF30348A9AD6AD5E5DBCB /* ProjectBrowsingStagingRuntimeAdapter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5DED8B22E1D40817EFF8DB1F /* ProjectBrowsingStagingRuntimeAdapter.swift */; };
+		52F59CC28B7194165527DC7C /* PhotoPrintPresentation.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FBAAFFE0922802CB8299419 /* PhotoPrintPresentation.swift */; };
 		52FD242749DC0542F3C4421F /* BillingRowPresentation.swift in Sources */ = {isa = PBXBuildFile; fileRef = 65A98646CCB4A2BB976FC4F9 /* BillingRowPresentation.swift */; };
 		5519BDBD0A87FE3633356477 /* ProjectPickerList.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9B36273A29AE52FDAA6F37FD /* ProjectPickerList.swift */; };
 		5575BF25F4BDACAA5C26ADB3 /* PropertyManagementReportSystemDelivery.swift in Sources */ = {isa = PBXBuildFile; fileRef = A10B71B6C3684A1638A35F7E /* PropertyManagementReportSystemDelivery.swift */; };
@@ -85,6 +86,7 @@
 		6903F2F43339710A57A4BEB5 /* FindMatchHighlight.swift in Sources */ = {isa = PBXBuildFile; fileRef = BF1FF203D2A411D9B78E358A /* FindMatchHighlight.swift */; };
 		6A232BDE124DE5E10C03493F /* BudgetDisplayCalculations.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA8168F38170E9580A556D85 /* BudgetDisplayCalculations.swift */; };
 		6E2471991975A3C9F6CB2478 /* NativeListControlBar.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4DAFFC8D8628F02118410645 /* NativeListControlBar.swift */; };
+		6F5CD91B0E5B8381D95F0ED7 /* SpaceMediaSection.swift in Sources */ = {isa = PBXBuildFile; fileRef = F374CF9EE316C869185241D8 /* SpaceMediaSection.swift */; };
 		6FB5234F2D8903619A69AA65 /* UninvoicedReturnForm.swift in Sources */ = {isa = PBXBuildFile; fileRef = D4FB453A448C833B40412841 /* UninvoicedReturnForm.swift */; };
 		708C01681B4318A9750D41BE /* AttachmentUpload.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6955DA81E52206D25B305F04 /* AttachmentUpload.swift */; };
 		723814D51EE0A32C3E8979EE /* SpaceAssignmentDestinationStagingRuntimeAdapter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0CEEEB779EFED0B88F129D31 /* SpaceAssignmentDestinationStagingRuntimeAdapter.swift */; };
@@ -129,6 +131,7 @@
 		AFC80A7B67670D9A3F8D6136 /* ProjectTransactionExportButton.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6F3A99088887DC7B2360A3F0 /* ProjectTransactionExportButton.swift */; };
 		B02CA4AECAAC003D1191AAEF /* TransactionExportCalculations.swift in Sources */ = {isa = PBXBuildFile; fileRef = 31A543DC51CDEB1F754445FF /* TransactionExportCalculations.swift */; };
 		B0CCD67F2DEA77CDBBBC0E1A /* PDFViewerSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = A64B09960EA60BCF2E1CFB48 /* PDFViewerSheet.swift */; };
+		B0F0CE076891BCE6E8F8BF5D /* SpacePhotoPrintTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA418CF74A4BCB86D9217639 /* SpacePhotoPrintTests.swift */; };
 		B952A7E2D24685E1DF283CE0 /* Badge.swift in Sources */ = {isa = PBXBuildFile; fileRef = D7EDDD4D9FACA89057F966A4 /* Badge.swift */; };
 		BC40BD9E375CCB19E5E050AB /* AccountGateView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C1A21C94B1B3C8BF48FEF959 /* AccountGateView.swift */; };
 		BCE45132B3275CF7D77908D4 /* ActionMenuItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9587D1CFB615926D597E5B17 /* ActionMenuItem.swift */; };
@@ -167,6 +170,7 @@
 		EAB9C0A3BE7221D0CB961576 /* ClientBrowsingStagingExerciseView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9A2796808F9D7F35325D8BDD /* ClientBrowsingStagingExerciseView.swift */; };
 		F0625504CE2ADB1114BED509 /* ZoomableScrollView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 97C7442A8BE8D22FA0E20FA6 /* ZoomableScrollView.swift */; };
 		F2CB21E76A8E0FA10B5177A8 /* WorkspaceChecklistUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 62700BF64DE8954F3A5FF993 /* WorkspaceChecklistUITests.swift */; };
+		F3C1548D353A469E37DA7917 /* PhotoPrintPresentation.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FBAAFFE0922802CB8299419 /* PhotoPrintPresentation.swift */; };
 		F40D92B495876C162C072CF4 /* FormField.swift in Sources */ = {isa = PBXBuildFile; fileRef = B0FE311BB8B81C58BB4FE7F4 /* FormField.swift */; };
 		F5274A216EFEA9E87EDED6DE /* MediaCapturePresentation.swift in Sources */ = {isa = PBXBuildFile; fileRef = 39D577B8BBCE3AB118232585 /* MediaCapturePresentation.swift */; };
 		F6A138DF43D73431C691AE26 /* WayfairInvoiceParser.swift in Sources */ = {isa = PBXBuildFile; fileRef = C148FC2D30C041FA3DE4E140 /* WayfairInvoiceParser.swift */; };
@@ -210,6 +214,7 @@
 		1C9B504E0F9AEFB36F2BF019 /* CollapsibleSection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CollapsibleSection.swift; sourceTree = "<group>"; };
 		1CE98AA57CDBD26E8D8862E3 /* ProjectInvoicingWorkspaceView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProjectInvoicingWorkspaceView.swift; sourceTree = "<group>"; };
 		1E9C0777F7887354F619461B /* CardBadge.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CardBadge.swift; sourceTree = "<group>"; };
+		1FBAAFFE0922802CB8299419 /* PhotoPrintPresentation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PhotoPrintPresentation.swift; sourceTree = "<group>"; };
 		20A65C16A0420EDB7B3FD526 /* DownloadedItemImagesView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DownloadedItemImagesView.swift; sourceTree = "<group>"; };
 		21F16E0B23F86FF1C0A05D7D /* TargetCategoryManagementView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TargetCategoryManagementView.swift; sourceTree = "<group>"; };
 		229EA2E72160E66DDE7DC3CB /* BrandColors.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BrandColors.swift; sourceTree = "<group>"; };
@@ -294,6 +299,7 @@
 		A3279BEF04AC6003E0A10072 /* PdfTextExtractor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PdfTextExtractor.swift; sourceTree = "<group>"; };
 		A64B09960EA60BCF2E1CFB48 /* PDFViewerSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PDFViewerSheet.swift; sourceTree = "<group>"; };
 		A75D1CC7465B9B8E499FC504 /* SpaceCoreDetailsStagingExerciseView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SpaceCoreDetailsStagingExerciseView.swift; sourceTree = "<group>"; };
+		AA418CF74A4BCB86D9217639 /* SpacePhotoPrintTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SpacePhotoPrintTests.swift; sourceTree = "<group>"; };
 		AA8168F38170E9580A556D85 /* BudgetDisplayCalculations.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BudgetDisplayCalculations.swift; sourceTree = "<group>"; };
 		AA9B89D985379942DFE24015 /* LedgerTargetSharedLogicTests.xctest */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.cfbundle; path = LedgerTargetSharedLogicTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		AB1B033C277EAE8D15FC651A /* BudgetCategoryManagementView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BudgetCategoryManagementView.swift; sourceTree = "<group>"; };
@@ -343,6 +349,7 @@
 		F09DBF4A189D6E6DE0961B7C /* TargetTransactionAuditPanel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TargetTransactionAuditPanel.swift; sourceTree = "<group>"; };
 		F16FD9AD195F490ABD7D0147 /* ReportScratchStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReportScratchStore.swift; sourceTree = "<group>"; };
 		F34F461EEBDDDA1A4E913A90 /* AuthView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AuthView.swift; sourceTree = "<group>"; };
+		F374CF9EE316C869185241D8 /* SpaceMediaSection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SpaceMediaSection.swift; sourceTree = "<group>"; };
 		F375FB58D9D64D4DCC3174F4 /* ClientArchiveBrowserStagingRuntimeAdapter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClientArchiveBrowserStagingRuntimeAdapter.swift; sourceTree = "<group>"; };
 		F46CE1B43F64A4C3592E441C /* SpaceAssignmentDestinationStagingExerciseView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SpaceAssignmentDestinationStagingExerciseView.swift; sourceTree = "<group>"; };
 		F557CCB875A82CCD0AAEF629 /* AdaptiveContentWidth.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AdaptiveContentWidth.swift; sourceTree = "<group>"; };
@@ -383,6 +390,7 @@
 				5DED8C40DE0D20126291680F /* BudgetLabelReuseTests.swift */,
 				BCBB7A9F413E7E781492E6D9 /* ImageTextInteractionTests.swift */,
 				8C58468B3CB410C3584888F4 /* ReportPDFRenderSessionTests.swift */,
+				AA418CF74A4BCB86D9217639 /* SpacePhotoPrintTests.swift */,
 				ECCD603D80FB7214709D231E /* TransactionExportCSVTests.swift */,
 			);
 			path = LedgerTargetSharedLogicTests;
@@ -401,6 +409,7 @@
 			children = (
 				81BF9C60464E2A558163FC8E /* Clipboard.swift */,
 				B32342422D1B67AD102EBBA1 /* PDFDownloadHelper.swift */,
+				1FBAAFFE0922802CB8299419 /* PhotoPrintPresentation.swift */,
 				B8FC8ECFC405B9E57DE6A49A /* PlatformModifiers.swift */,
 			);
 			path = Platform;
@@ -496,6 +505,7 @@
 				3DB07AF64445462B62681311 /* SpaceCoreDetailsStagingRuntimeAdapter.swift */,
 				6FBF3F44F945B065B95AB4FA /* SpaceCreationStagingExerciseView.swift */,
 				5C76F188AA61BFC3A787EA23 /* SpaceCreationStagingRuntimeAdapter.swift */,
+				F374CF9EE316C869185241D8 /* SpaceMediaSection.swift */,
 				21F16E0B23F86FF1C0A05D7D /* TargetCategoryManagementView.swift */,
 				B1D67FE00E469BFCF0C78EBC /* TargetOnlineAccountEntryView.swift */,
 				F09DBF4A189D6E6DE0961B7C /* TargetTransactionAuditPanel.swift */,
@@ -905,6 +915,7 @@
 				B0CCD67F2DEA77CDBBBC0E1A /* PDFViewerSheet.swift in Sources */,
 				356BCEB9D62083D2DE910432 /* PdfTextExtractor.swift in Sources */,
 				8B6F7F82D9F36CAE69953CE4 /* PerformanceDiagnostics.swift in Sources */,
+				52F59CC28B7194165527DC7C /* PhotoPrintPresentation.swift in Sources */,
 				C13044D4ED7D4D9ACC97F283 /* PinnedImageGeometry.swift in Sources */,
 				AC39AB12214C5DE38867FD0F /* PinnedImageLayout.swift in Sources */,
 				41EE42749610B8CF6600BC5E /* PinnedImagePresentation.swift in Sources */,
@@ -944,6 +955,7 @@
 				E663263F2B0021037ACFB31E /* SpaceCoreDetailsStagingRuntimeAdapter.swift in Sources */,
 				1C0E3B3249CEF63B8F51B65E /* SpaceCreationStagingExerciseView.swift in Sources */,
 				38B4640C2E28DE47A0B956BD /* SpaceCreationStagingRuntimeAdapter.swift in Sources */,
+				6F5CD91B0E5B8381D95F0ED7 /* SpaceMediaSection.swift in Sources */,
 				A002B2043ECE6E778EBC10B8 /* SpacePickerList.swift in Sources */,
 				F7966378F2F09F20C5920071 /* Spacing.swift in Sources */,
 				7BD3218B9AACB12C9E1E9887 /* StatusColors.swift in Sources */,
@@ -982,11 +994,13 @@
 				1588F902CC0E53A4D3F57E96 /* ImageTextInteractionTests.swift in Sources */,
 				BFEC2FD764035639B3DB28C3 /* InvoiceReportData.swift in Sources */,
 				C63F19EE6168687CC34C7544 /* MediaGalleryPresentationCalculations.swift in Sources */,
+				F3C1548D353A469E37DA7917 /* PhotoPrintPresentation.swift in Sources */,
 				72681DE4AD4D64F86F0C2480 /* PinnedImageGeometry.swift in Sources */,
 				7EEC050E3E777A82542908AC /* ReportHTMLBuilder.swift in Sources */,
 				0B61FBC9BFAE05DF52FFC659 /* ReportPDFRenderSessionTests.swift in Sources */,
 				772755FB29D83FF532F39DA0 /* ReportPDFSharing.swift in Sources */,
 				40D20E8C0920687C1E9E261E /* ReportScratchStore.swift in Sources */,
+				B0F0CE076891BCE6E8F8BF5D /* SpacePhotoPrintTests.swift in Sources */,
 				AE546B1858641964DEE19316 /* TransactionExportCSVTests.swift in Sources */,
 				B02CA4AECAAC003D1191AAEF /* TransactionExportCalculations.swift in Sources */,
 				DAEA7A057CA38E4C02D98C65 /* ZoomableScrollView.swift in Sources */,

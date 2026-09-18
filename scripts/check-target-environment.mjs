@@ -618,6 +618,7 @@ if (
     "readInvoicingCharges", "watchInvoicingCharges",
     "readProjectBudget", "watchProjectBudget",
     "readPaidReturnReview", "watchPaidReturnReview", "returnPaidItems", "paidReturnStatus", "watchPaidReturn",
+    "watchDownloadedSpaceMedia", "readDownloadedSpaceMedia", "loadDownloadedSpaceMedia",
     "watchDownloadedTransactionAttachments", "readDownloadedTransactionAttachments",
     "loadDownloadedTransactionAttachment", "readTransactionExport",
     "readDownloadedTransactionReceipt", "watchTransactionReceipt", "watchTransactions",

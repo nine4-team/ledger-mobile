@@ -18,6 +18,7 @@ struct ReferencedSpaceDetailView: View {
     @State private var session: UUID?
     @State private var synchronizationTask: Task<Void, Never>?
     @State private var synchronizationOwner: UUID?
+    @State private var pinnedMedia: SpacePinnedMedia?
 
     init(accountId: AccountID, spaceId: SpaceID, scope: SpaceCreationScope,
          reader: any DownloadedItemPlacementReading, navigation: ItemSpaceNavigation) {
@@ -31,6 +32,14 @@ struct ReferencedSpaceDetailView: View {
     }
 
     var body: some View {
+        PinnedImageLayoutPresentation(pinIdentity: pinnedMedia?.id) {
+            if let pin = pinnedMedia, let mediaReader = reader as? any DownloadedSpaceMediaReading {
+                SpacePinnedMediaView(pin: pin,reader: mediaReader,onClose: { pinnedMedia = nil })
+            }
+        } content: { spaceContent }
+    }
+
+    private var spaceContent: some View {
         VStack(alignment: .leading, spacing: 12) {
             HStack {
                 Button("Back to Item") { dismiss() }
@@ -51,6 +60,10 @@ struct ReferencedSpaceDetailView: View {
                             .accessibilityIdentifier(row.lifecycle == .archived ? "target-item-space-archived" : "target-item-space-active")
                         Text(row.notes.value ?? "No notes")
                             .accessibilityIdentifier("target-referenced-space-notes")
+                        if let mediaReader = reader as? any DownloadedSpaceMediaReading {
+                            SpaceMediaSection(accountId: accountId,spaceId: spaceId,scope: scope,
+                                reader: mediaReader,onPin: { pinnedMedia = $0 })
+                        }
                         SpaceChecklistSection(toggle: toggle, expanded: $expanded) { checklistId, itemId in
                             guard let activeSession = session, synchronizationOwner == activeSession,
                                   details.row?.lifecycle == .active else { return }

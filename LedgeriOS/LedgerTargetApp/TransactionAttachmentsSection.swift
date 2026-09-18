@@ -447,19 +447,29 @@ private struct TransactionAttachmentPDFContent: View {
     let catalog: DownloadedTransactionAttachments
     let attachment: DownloadedTransactionAttachment
     let reader: any DownloadedTransactionAttachmentReading
+
+    var body: some View {
+        AuthorizedPDFContent(accessibilityIdentifier: "target-transaction-pinned-pdf") {
+            try await reader.loadDownloadedTransactionAttachment(catalog: catalog,attachment: attachment,allowDownload: true)
+        }
+    }
+}
+
+struct AuthorizedPDFContent: View {
+    let accessibilityIdentifier: String
+    let load: @Sendable () async throws -> Data?
     @State private var document: PDFDocument?
     @State private var loading = true
 
     var body: some View {
         PDFDocumentPresentation(document: document, isLoading: loading)
             .accessibilityElement(children: .contain)
-            .accessibilityIdentifier("target-transaction-pinned-pdf")
+            .accessibilityIdentifier(accessibilityIdentifier)
             .accessibilityValue(document.map { "\($0.pageCount) PDF pages" } ?? "PDF unavailable")
             .task {
                 document = nil; loading = true
                 do {
-                    let bytes = try await reader.loadDownloadedTransactionAttachment(catalog: catalog,
-                        attachment: attachment, allowDownload: true)
+                    let bytes = try await load()
                     try Task.checkCancellation()
                     document = bytes.flatMap { PDFDocument(data: $0) }
                 } catch { }
