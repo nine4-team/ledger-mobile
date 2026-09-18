@@ -1,0 +1,948 @@
+{
+  "schemaVersion": 1,
+  "generatedAt": "2026-09-18T20:54:33.149Z",
+  "accountId": "1dd4fd75-8eea-4f7a-98e7-bf45b987ae94",
+  "projectId": "5abd46c9-9886-4b3e-b2b1-19f6cf995a44",
+  "originalReturnIds": [
+    "0502CAFC-B46C-423B-81F6-EA42318F26A5",
+    "0CC43609-8792-4D94-8731-0FCAEDC23501",
+    "19DDB388-1579-47C4-988D-878420927DE7",
+    "3CE84050-3D16-4544-9D34-2553C0BBCCA1",
+    "3h7cyd9AxKp2nDmcLHXx",
+    "573FA365-069C-4ACA-828F-5E83523B8D3F",
+    "BC3D4934-3EFB-4A0E-9511-ECA18352D2BE",
+    "C2D293EC-B5AD-4785-A0C3-2642965C2F23",
+    "C47C4CF3-8454-42C1-92FA-CA391D9C03E2",
+    "DCAAE147-49AE-450E-B06F-DBF245259E9E",
+    "F4675814-803D-47E2-9BA8-47A673C9B414",
+    "iTGI4u24SoiOApf1UD7B"
+  ],
+  "originalSaleCandidateCount": 21,
+  "historicalCandidates": [
+    {
+      "evidence": "original-backup",
+      "originalEdgeId": "1CcEELr6B3Ttt3Q4DZEi",
+      "currentEdgeId": "1CcEELr6B3Ttt3Q4DZEi",
+      "currentPath": "accounts/1dd4fd75-8eea-4f7a-98e7-bf45b987ae94/lineageEdges/1CcEELr6B3Ttt3Q4DZEi",
+      "itemId": "tZDoyhyh3ObMvtvvlFdZ",
+      "destinationTransactionId": "u4EJMRngF3yYbr2fThPN",
+      "destinationProjectId": "pgwdhOFcslItEjDxeWgL",
+      "movementKind": "sold",
+      "current": {
+        "fromTransactionId": "CONSOLIDATED_5abd46c9-9886-4b3e-b2b1-19f6cf995a44_outbound_return",
+        "fromProjectId": null,
+        "toTransactionId": "u4EJMRngF3yYbr2fThPN",
+        "toProjectId": "pgwdhOFcslItEjDxeWgL"
+      }
+    },
+    {
+      "evidence": "original-backup",
+      "originalEdgeId": "4fL5SNZuPSloU7kTTA5v",
+      "currentEdgeId": "4fL5SNZuPSloU7kTTA5v",
+      "currentPath": "accounts/1dd4fd75-8eea-4f7a-98e7-bf45b987ae94/lineageEdges/4fL5SNZuPSloU7kTTA5v",
+      "itemId": "IbCg9GzmKzlUtJNn5rgu",
+      "destinationTransactionId": "4378F3E6-5916-4376-B3EF-62AAF8166CEB",
+      "destinationProjectId": "405GIhLoU2pLY4zqb71R",
+      "movementKind": "sold",
+      "current": {
+        "fromTransactionId": "CONSOLIDATED_5abd46c9-9886-4b3e-b2b1-19f6cf995a44_outbound_return",
+        "fromProjectId": null,
+        "toTransactionId": "4378F3E6-5916-4376-B3EF-62AAF8166CEB",
+        "toProjectId": "405GIhLoU2pLY4zqb71R"
+      }
+    },
+    {
+      "evidence": "original-backup",
+      "originalEdgeId": "6B0qk0fRth2T2LKup4zW",
+      "currentEdgeId": "6B0qk0fRth2T2LKup4zW",
+      "currentPath": "accounts/1dd4fd75-8eea-4f7a-98e7-bf45b987ae94/lineageEdges/6B0qk0fRth2T2LKup4zW",
+      "itemId": "P68M4FRFgrNLUnBWrlha",
+      "destinationTransactionId": "4378F3E6-5916-4376-B3EF-62AAF8166CEB",
+      "destinationProjectId": "405GIhLoU2pLY4zqb71R",
+      "movementKind": "sold",
+      "current": {
+        "fromTransactionId": "CONSOLIDATED_5abd46c9-9886-4b3e-b2b1-19f6cf995a44_outbound_return",
+        "fromProjectId": null,
+        "toTransactionId": "4378F3E6-5916-4376-B3EF-62AAF8166CEB",
+        "toProjectId": "405GIhLoU2pLY4zqb71R"
+      }
+    },
+    {
+      "evidence": "original-backup",
+      "originalEdgeId": "7UKudochn7W3PAzcZO8x",
+      "currentEdgeId": "7UKudochn7W3PAzcZO8x",
+      "currentPath": "accounts/1dd4fd75-8eea-4f7a-98e7-bf45b987ae94/lineageEdges/7UKudochn7W3PAzcZO8x",
+      "itemId": "BHbu7FNoKbVqnOoWSv6Z",
+      "destinationTransactionId": "4378F3E6-5916-4376-B3EF-62AAF8166CEB",
+      "destinationProjectId": "405GIhLoU2pLY4zqb71R",
+      "movementKind": "sold",
+      "current": {
+        "fromTransactionId": "CONSOLIDATED_5abd46c9-9886-4b3e-b2b1-19f6cf995a44_outbound_return",
+        "fromProjectId": null,
+        "toTransactionId": "4378F3E6-5916-4376-B3EF-62AAF8166CEB",
+        "toProjectId": "405GIhLoU2pLY4zqb71R"
+      }
+    },
+    {
+      "evidence": "original-backup",
+      "originalEdgeId": "GboCDfcH2c7N8uDIakCd",
+      "currentEdgeId": "GboCDfcH2c7N8uDIakCd",
+      "currentPath": "accounts/1dd4fd75-8eea-4f7a-98e7-bf45b987ae94/lineageEdges/GboCDfcH2c7N8uDIakCd",
+      "itemId": "6q7AT1780zGv8lZTQ6iy",
+      "destinationTransactionId": "4378F3E6-5916-4376-B3EF-62AAF8166CEB",
+      "destinationProjectId": "405GIhLoU2pLY4zqb71R",
+      "movementKind": "sold",
+      "current": {
+        "fromTransactionId": "CONSOLIDATED_5abd46c9-9886-4b3e-b2b1-19f6cf995a44_outbound_return",
+        "fromProjectId": null,
+        "toTransactionId": "4378F3E6-5916-4376-B3EF-62AAF8166CEB",
+        "toProjectId": "405GIhLoU2pLY4zqb71R"
+      }
+    },
+    {
+      "evidence": "original-backup",
+      "originalEdgeId": "GoFVIbapTxJPpZioZ8YT",
+      "currentEdgeId": "GoFVIbapTxJPpZioZ8YT",
+      "currentPath": "accounts/1dd4fd75-8eea-4f7a-98e7-bf45b987ae94/lineageEdges/GoFVIbapTxJPpZioZ8YT",
+      "itemId": "TbcPbKBaH3WdiufcbVCq",
+      "destinationTransactionId": "4378F3E6-5916-4376-B3EF-62AAF8166CEB",
+      "destinationProjectId": "405GIhLoU2pLY4zqb71R",
+      "movementKind": "sold",
+      "current": {
+        "fromTransactionId": "CONSOLIDATED_5abd46c9-9886-4b3e-b2b1-19f6cf995a44_outbound_return",
+        "fromProjectId": null,
+        "toTransactionId": "4378F3E6-5916-4376-B3EF-62AAF8166CEB",
+        "toProjectId": "405GIhLoU2pLY4zqb71R"
+      }
+    },
+    {
+      "evidence": "original-backup",
+      "originalEdgeId": "HqDtuGDWVTWC7oZ9IXPL",
+      "currentEdgeId": "HqDtuGDWVTWC7oZ9IXPL",
+      "currentPath": "accounts/1dd4fd75-8eea-4f7a-98e7-bf45b987ae94/lineageEdges/HqDtuGDWVTWC7oZ9IXPL",
+      "itemId": "XpRUlsrlWPdA3WIEgUHF",
+      "destinationTransactionId": "4378F3E6-5916-4376-B3EF-62AAF8166CEB",
+      "destinationProjectId": "405GIhLoU2pLY4zqb71R",
+      "movementKind": "sold",
+      "current": {
+        "fromTransactionId": "CONSOLIDATED_5abd46c9-9886-4b3e-b2b1-19f6cf995a44_outbound_return",
+        "fromProjectId": null,
+        "toTransactionId": "4378F3E6-5916-4376-B3EF-62AAF8166CEB",
+        "toProjectId": "405GIhLoU2pLY4zqb71R"
+      }
+    },
+    {
+      "evidence": "original-backup",
+      "originalEdgeId": "Qxl1GpCW6ZvdR36hVaRK",
+      "currentEdgeId": "Qxl1GpCW6ZvdR36hVaRK",
+      "currentPath": "accounts/1dd4fd75-8eea-4f7a-98e7-bf45b987ae94/lineageEdges/Qxl1GpCW6ZvdR36hVaRK",
+      "itemId": "ylLrzg9epn97ybKx3cGp",
+      "destinationTransactionId": "4378F3E6-5916-4376-B3EF-62AAF8166CEB",
+      "destinationProjectId": "405GIhLoU2pLY4zqb71R",
+      "movementKind": "sold",
+      "current": {
+        "fromTransactionId": "CONSOLIDATED_5abd46c9-9886-4b3e-b2b1-19f6cf995a44_outbound_return",
+        "fromProjectId": null,
+        "toTransactionId": "4378F3E6-5916-4376-B3EF-62AAF8166CEB",
+        "toProjectId": "405GIhLoU2pLY4zqb71R"
+      }
+    },
+    {
+      "evidence": "original-backup",
+      "originalEdgeId": "T8kyo8QdzVD6GaRKKddu",
+      "currentEdgeId": "T8kyo8QdzVD6GaRKKddu",
+      "currentPath": "accounts/1dd4fd75-8eea-4f7a-98e7-bf45b987ae94/lineageEdges/T8kyo8QdzVD6GaRKKddu",
+      "itemId": "EbBkBgoRj9bzjVqxCOKk",
+      "destinationTransactionId": "4378F3E6-5916-4376-B3EF-62AAF8166CEB",
+      "destinationProjectId": "405GIhLoU2pLY4zqb71R",
+      "movementKind": "sold",
+      "current": {
+        "fromTransactionId": "CONSOLIDATED_5abd46c9-9886-4b3e-b2b1-19f6cf995a44_outbound_return",
+        "fromProjectId": null,
+        "toTransactionId": "4378F3E6-5916-4376-B3EF-62AAF8166CEB",
+        "toProjectId": "405GIhLoU2pLY4zqb71R"
+      }
+    },
+    {
+      "evidence": "original-backup",
+      "originalEdgeId": "VnTi3DE9LIR7AtVSDq6n",
+      "currentEdgeId": "VnTi3DE9LIR7AtVSDq6n",
+      "currentPath": "accounts/1dd4fd75-8eea-4f7a-98e7-bf45b987ae94/lineageEdges/VnTi3DE9LIR7AtVSDq6n",
+      "itemId": "BbMIsjBbMi6YqF8i3pC0",
+      "destinationTransactionId": "u4EJMRngF3yYbr2fThPN",
+      "destinationProjectId": "pgwdhOFcslItEjDxeWgL",
+      "movementKind": "sold",
+      "current": {
+        "fromTransactionId": "CONSOLIDATED_5abd46c9-9886-4b3e-b2b1-19f6cf995a44_outbound_return",
+        "fromProjectId": null,
+        "toTransactionId": "u4EJMRngF3yYbr2fThPN",
+        "toProjectId": "pgwdhOFcslItEjDxeWgL"
+      }
+    },
+    {
+      "evidence": "original-backup",
+      "originalEdgeId": "Yp3YtjAO8HdeKla7VGRz",
+      "currentEdgeId": "Yp3YtjAO8HdeKla7VGRz",
+      "currentPath": "accounts/1dd4fd75-8eea-4f7a-98e7-bf45b987ae94/lineageEdges/Yp3YtjAO8HdeKla7VGRz",
+      "itemId": "RPQyC3lWDdVaBOBJKbce",
+      "destinationTransactionId": "4378F3E6-5916-4376-B3EF-62AAF8166CEB",
+      "destinationProjectId": "405GIhLoU2pLY4zqb71R",
+      "movementKind": "sold",
+      "current": {
+        "fromTransactionId": "CONSOLIDATED_5abd46c9-9886-4b3e-b2b1-19f6cf995a44_outbound_return",
+        "fromProjectId": null,
+        "toTransactionId": "4378F3E6-5916-4376-B3EF-62AAF8166CEB",
+        "toProjectId": "405GIhLoU2pLY4zqb71R"
+      }
+    },
+    {
+      "evidence": "original-backup",
+      "originalEdgeId": "aNk5vKpouB4zrYDXMf0V",
+      "currentEdgeId": "aNk5vKpouB4zrYDXMf0V",
+      "currentPath": "accounts/1dd4fd75-8eea-4f7a-98e7-bf45b987ae94/lineageEdges/aNk5vKpouB4zrYDXMf0V",
+      "itemId": "2ocWpYcYIMiybGhl6LUY",
+      "destinationTransactionId": "u4EJMRngF3yYbr2fThPN",
+      "destinationProjectId": "pgwdhOFcslItEjDxeWgL",
+      "movementKind": "sold",
+      "current": {
+        "fromTransactionId": "CONSOLIDATED_5abd46c9-9886-4b3e-b2b1-19f6cf995a44_outbound_return",
+        "fromProjectId": null,
+        "toTransactionId": "u4EJMRngF3yYbr2fThPN",
+        "toProjectId": "pgwdhOFcslItEjDxeWgL"
+      }
+    },
+    {
+      "evidence": "original-backup",
+      "originalEdgeId": "b0m6OgFKP4LuRI9qTNfY",
+      "currentEdgeId": "b0m6OgFKP4LuRI9qTNfY",
+      "currentPath": "accounts/1dd4fd75-8eea-4f7a-98e7-bf45b987ae94/lineageEdges/b0m6OgFKP4LuRI9qTNfY",
+      "itemId": "5a8FIPrdjyry0J2A4akX",
+      "destinationTransactionId": "4378F3E6-5916-4376-B3EF-62AAF8166CEB",
+      "destinationProjectId": "405GIhLoU2pLY4zqb71R",
+      "movementKind": "sold",
+      "current": {
+        "fromTransactionId": "CONSOLIDATED_5abd46c9-9886-4b3e-b2b1-19f6cf995a44_outbound_return",
+        "fromProjectId": null,
+        "toTransactionId": "4378F3E6-5916-4376-B3EF-62AAF8166CEB",
+        "toProjectId": "405GIhLoU2pLY4zqb71R"
+      }
+    },
+    {
+      "evidence": "original-backup",
+      "originalEdgeId": "c54UXsTIf8JtLDxgVhdQ",
+      "currentEdgeId": "c54UXsTIf8JtLDxgVhdQ",
+      "currentPath": "accounts/1dd4fd75-8eea-4f7a-98e7-bf45b987ae94/lineageEdges/c54UXsTIf8JtLDxgVhdQ",
+      "itemId": "S6Gl72mtJQmgxEgv8lFv",
+      "destinationTransactionId": "4378F3E6-5916-4376-B3EF-62AAF8166CEB",
+      "destinationProjectId": "405GIhLoU2pLY4zqb71R",
+      "movementKind": "sold",
+      "current": {
+        "fromTransactionId": "CONSOLIDATED_5abd46c9-9886-4b3e-b2b1-19f6cf995a44_outbound_return",
+        "fromProjectId": null,
+        "toTransactionId": "4378F3E6-5916-4376-B3EF-62AAF8166CEB",
+        "toProjectId": "405GIhLoU2pLY4zqb71R"
+      }
+    },
+    {
+      "evidence": "original-backup",
+      "originalEdgeId": "dBLhmPYS76mnYiavdNOB",
+      "currentEdgeId": "dBLhmPYS76mnYiavdNOB",
+      "currentPath": "accounts/1dd4fd75-8eea-4f7a-98e7-bf45b987ae94/lineageEdges/dBLhmPYS76mnYiavdNOB",
+      "itemId": "78EK5lkfOrINJBZ7Tmsq",
+      "destinationTransactionId": "4378F3E6-5916-4376-B3EF-62AAF8166CEB",
+      "destinationProjectId": "405GIhLoU2pLY4zqb71R",
+      "movementKind": "sold",
+      "current": {
+        "fromTransactionId": "CONSOLIDATED_5abd46c9-9886-4b3e-b2b1-19f6cf995a44_outbound_return",
+        "fromProjectId": null,
+        "toTransactionId": "4378F3E6-5916-4376-B3EF-62AAF8166CEB",
+        "toProjectId": "405GIhLoU2pLY4zqb71R"
+      }
+    },
+    {
+      "evidence": "original-backup",
+      "originalEdgeId": "dJO3Yv3v46w43joFKAqO",
+      "currentEdgeId": "dJO3Yv3v46w43joFKAqO",
+      "currentPath": "accounts/1dd4fd75-8eea-4f7a-98e7-bf45b987ae94/lineageEdges/dJO3Yv3v46w43joFKAqO",
+      "itemId": "oaEbF43EeSRaFpCrtDuG",
+      "destinationTransactionId": "8B189B02-FC5C-4103-B428-73579A503D03",
+      "destinationProjectId": "1LLWjydzaK6uD44TjM4u",
+      "movementKind": "sold",
+      "current": {
+        "fromTransactionId": "CONSOLIDATED_5abd46c9-9886-4b3e-b2b1-19f6cf995a44_outbound_return",
+        "fromProjectId": null,
+        "toTransactionId": "8B189B02-FC5C-4103-B428-73579A503D03",
+        "toProjectId": "1LLWjydzaK6uD44TjM4u"
+      }
+    },
+    {
+      "evidence": "original-backup",
+      "originalEdgeId": "gn7s4gXKUHswDkzHTcxM",
+      "currentEdgeId": "gn7s4gXKUHswDkzHTcxM",
+      "currentPath": "accounts/1dd4fd75-8eea-4f7a-98e7-bf45b987ae94/lineageEdges/gn7s4gXKUHswDkzHTcxM",
+      "itemId": "MiNVXqyZrfWP5cvyWnSH",
+      "destinationTransactionId": "8B189B02-FC5C-4103-B428-73579A503D03",
+      "destinationProjectId": "1LLWjydzaK6uD44TjM4u",
+      "movementKind": "sold",
+      "current": {
+        "fromTransactionId": "CONSOLIDATED_5abd46c9-9886-4b3e-b2b1-19f6cf995a44_outbound_return",
+        "fromProjectId": null,
+        "toTransactionId": "8B189B02-FC5C-4103-B428-73579A503D03",
+        "toProjectId": "1LLWjydzaK6uD44TjM4u"
+      }
+    },
+    {
+      "evidence": "original-backup",
+      "originalEdgeId": "iWnpEERcUrNZEcrpvfZI",
+      "currentEdgeId": "iWnpEERcUrNZEcrpvfZI",
+      "currentPath": "accounts/1dd4fd75-8eea-4f7a-98e7-bf45b987ae94/lineageEdges/iWnpEERcUrNZEcrpvfZI",
+      "itemId": "HtYSq79la2MqL67zShg4",
+      "destinationTransactionId": "4378F3E6-5916-4376-B3EF-62AAF8166CEB",
+      "destinationProjectId": "405GIhLoU2pLY4zqb71R",
+      "movementKind": "sold",
+      "current": {
+        "fromTransactionId": "CONSOLIDATED_5abd46c9-9886-4b3e-b2b1-19f6cf995a44_outbound_return",
+        "fromProjectId": null,
+        "toTransactionId": "4378F3E6-5916-4376-B3EF-62AAF8166CEB",
+        "toProjectId": "405GIhLoU2pLY4zqb71R"
+      }
+    },
+    {
+      "evidence": "original-backup",
+      "originalEdgeId": "kkjWIa2Wtqep5sK1pjUe",
+      "currentEdgeId": "kkjWIa2Wtqep5sK1pjUe",
+      "currentPath": "accounts/1dd4fd75-8eea-4f7a-98e7-bf45b987ae94/lineageEdges/kkjWIa2Wtqep5sK1pjUe",
+      "itemId": "xmGn7VAzHvucye3DFCW8",
+      "destinationTransactionId": "4378F3E6-5916-4376-B3EF-62AAF8166CEB",
+      "destinationProjectId": "405GIhLoU2pLY4zqb71R",
+      "movementKind": "sold",
+      "current": {
+        "fromTransactionId": "CONSOLIDATED_5abd46c9-9886-4b3e-b2b1-19f6cf995a44_outbound_return",
+        "fromProjectId": null,
+        "toTransactionId": "4378F3E6-5916-4376-B3EF-62AAF8166CEB",
+        "toProjectId": "405GIhLoU2pLY4zqb71R"
+      }
+    },
+    {
+      "evidence": "original-backup",
+      "originalEdgeId": "usHAj5DzVyQGQ7ISRlEA",
+      "currentEdgeId": "usHAj5DzVyQGQ7ISRlEA",
+      "currentPath": "accounts/1dd4fd75-8eea-4f7a-98e7-bf45b987ae94/lineageEdges/usHAj5DzVyQGQ7ISRlEA",
+      "itemId": "pM4B5gDm5XedEZNn0ZpR",
+      "destinationTransactionId": "4378F3E6-5916-4376-B3EF-62AAF8166CEB",
+      "destinationProjectId": "405GIhLoU2pLY4zqb71R",
+      "movementKind": "sold",
+      "current": {
+        "fromTransactionId": "CONSOLIDATED_5abd46c9-9886-4b3e-b2b1-19f6cf995a44_outbound_return",
+        "fromProjectId": null,
+        "toTransactionId": "4378F3E6-5916-4376-B3EF-62AAF8166CEB",
+        "toProjectId": "405GIhLoU2pLY4zqb71R"
+      }
+    },
+    {
+      "evidence": "original-backup",
+      "originalEdgeId": "zYgzBSWVMq6nrznk0kQg",
+      "currentEdgeId": "zYgzBSWVMq6nrznk0kQg",
+      "currentPath": "accounts/1dd4fd75-8eea-4f7a-98e7-bf45b987ae94/lineageEdges/zYgzBSWVMq6nrznk0kQg",
+      "itemId": "fYYtXHuKIMSzirzVRkfM",
+      "destinationTransactionId": "4378F3E6-5916-4376-B3EF-62AAF8166CEB",
+      "destinationProjectId": "405GIhLoU2pLY4zqb71R",
+      "movementKind": "sold",
+      "current": {
+        "fromTransactionId": "CONSOLIDATED_5abd46c9-9886-4b3e-b2b1-19f6cf995a44_outbound_return",
+        "fromProjectId": null,
+        "toTransactionId": "4378F3E6-5916-4376-B3EF-62AAF8166CEB",
+        "toProjectId": "405GIhLoU2pLY4zqb71R"
+      }
+    }
+  ],
+  "currentInvalidSaleEdgeCount": 22,
+  "operations": [
+    {
+      "kind": "clear-return-sale-source",
+      "edgeId": "1CcEELr6B3Ttt3Q4DZEi",
+      "path": "accounts/1dd4fd75-8eea-4f7a-98e7-bf45b987ae94/lineageEdges/1CcEELr6B3Ttt3Q4DZEi",
+      "evidence": "original-backup",
+      "itemId": "tZDoyhyh3ObMvtvvlFdZ",
+      "before": {
+        "fromTransactionId": "CONSOLIDATED_5abd46c9-9886-4b3e-b2b1-19f6cf995a44_outbound_return",
+        "fromProjectId": null,
+        "toTransactionId": "u4EJMRngF3yYbr2fThPN",
+        "toProjectId": "pgwdhOFcslItEjDxeWgL",
+        "movementKind": "sold"
+      },
+      "after": {
+        "fromTransactionId": null,
+        "fromProjectId": null,
+        "toTransactionId": "u4EJMRngF3yYbr2fThPN",
+        "toProjectId": "pgwdhOFcslItEjDxeWgL",
+        "movementKind": "sold"
+      }
+    },
+    {
+      "kind": "clear-return-sale-source",
+      "edgeId": "4fL5SNZuPSloU7kTTA5v",
+      "path": "accounts/1dd4fd75-8eea-4f7a-98e7-bf45b987ae94/lineageEdges/4fL5SNZuPSloU7kTTA5v",
+      "evidence": "original-backup",
+      "itemId": "IbCg9GzmKzlUtJNn5rgu",
+      "before": {
+        "fromTransactionId": "CONSOLIDATED_5abd46c9-9886-4b3e-b2b1-19f6cf995a44_outbound_return",
+        "fromProjectId": null,
+        "toTransactionId": "4378F3E6-5916-4376-B3EF-62AAF8166CEB",
+        "toProjectId": "405GIhLoU2pLY4zqb71R",
+        "movementKind": "sold"
+      },
+      "after": {
+        "fromTransactionId": null,
+        "fromProjectId": null,
+        "toTransactionId": "4378F3E6-5916-4376-B3EF-62AAF8166CEB",
+        "toProjectId": "405GIhLoU2pLY4zqb71R",
+        "movementKind": "sold"
+      }
+    },
+    {
+      "kind": "clear-return-sale-source",
+      "edgeId": "6B0qk0fRth2T2LKup4zW",
+      "path": "accounts/1dd4fd75-8eea-4f7a-98e7-bf45b987ae94/lineageEdges/6B0qk0fRth2T2LKup4zW",
+      "evidence": "original-backup",
+      "itemId": "P68M4FRFgrNLUnBWrlha",
+      "before": {
+        "fromTransactionId": "CONSOLIDATED_5abd46c9-9886-4b3e-b2b1-19f6cf995a44_outbound_return",
+        "fromProjectId": null,
+        "toTransactionId": "4378F3E6-5916-4376-B3EF-62AAF8166CEB",
+        "toProjectId": "405GIhLoU2pLY4zqb71R",
+        "movementKind": "sold"
+      },
+      "after": {
+        "fromTransactionId": null,
+        "fromProjectId": null,
+        "toTransactionId": "4378F3E6-5916-4376-B3EF-62AAF8166CEB",
+        "toProjectId": "405GIhLoU2pLY4zqb71R",
+        "movementKind": "sold"
+      }
+    },
+    {
+      "kind": "clear-return-sale-source",
+      "edgeId": "7UKudochn7W3PAzcZO8x",
+      "path": "accounts/1dd4fd75-8eea-4f7a-98e7-bf45b987ae94/lineageEdges/7UKudochn7W3PAzcZO8x",
+      "evidence": "original-backup",
+      "itemId": "BHbu7FNoKbVqnOoWSv6Z",
+      "before": {
+        "fromTransactionId": "CONSOLIDATED_5abd46c9-9886-4b3e-b2b1-19f6cf995a44_outbound_return",
+        "fromProjectId": null,
+        "toTransactionId": "4378F3E6-5916-4376-B3EF-62AAF8166CEB",
+        "toProjectId": "405GIhLoU2pLY4zqb71R",
+        "movementKind": "sold"
+      },
+      "after": {
+        "fromTransactionId": null,
+        "fromProjectId": null,
+        "toTransactionId": "4378F3E6-5916-4376-B3EF-62AAF8166CEB",
+        "toProjectId": "405GIhLoU2pLY4zqb71R",
+        "movementKind": "sold"
+      }
+    },
+    {
+      "kind": "clear-return-sale-source",
+      "edgeId": "GboCDfcH2c7N8uDIakCd",
+      "path": "accounts/1dd4fd75-8eea-4f7a-98e7-bf45b987ae94/lineageEdges/GboCDfcH2c7N8uDIakCd",
+      "evidence": "original-backup",
+      "itemId": "6q7AT1780zGv8lZTQ6iy",
+      "before": {
+        "fromTransactionId": "CONSOLIDATED_5abd46c9-9886-4b3e-b2b1-19f6cf995a44_outbound_return",
+        "fromProjectId": null,
+        "toTransactionId": "4378F3E6-5916-4376-B3EF-62AAF8166CEB",
+        "toProjectId": "405GIhLoU2pLY4zqb71R",
+        "movementKind": "sold"
+      },
+      "after": {
+        "fromTransactionId": null,
+        "fromProjectId": null,
+        "toTransactionId": "4378F3E6-5916-4376-B3EF-62AAF8166CEB",
+        "toProjectId": "405GIhLoU2pLY4zqb71R",
+        "movementKind": "sold"
+      }
+    },
+    {
+      "kind": "clear-return-sale-source",
+      "edgeId": "GoFVIbapTxJPpZioZ8YT",
+      "path": "accounts/1dd4fd75-8eea-4f7a-98e7-bf45b987ae94/lineageEdges/GoFVIbapTxJPpZioZ8YT",
+      "evidence": "original-backup",
+      "itemId": "TbcPbKBaH3WdiufcbVCq",
+      "before": {
+        "fromTransactionId": "CONSOLIDATED_5abd46c9-9886-4b3e-b2b1-19f6cf995a44_outbound_return",
+        "fromProjectId": null,
+        "toTransactionId": "4378F3E6-5916-4376-B3EF-62AAF8166CEB",
+        "toProjectId": "405GIhLoU2pLY4zqb71R",
+        "movementKind": "sold"
+      },
+      "after": {
+        "fromTransactionId": null,
+        "fromProjectId": null,
+        "toTransactionId": "4378F3E6-5916-4376-B3EF-62AAF8166CEB",
+        "toProjectId": "405GIhLoU2pLY4zqb71R",
+        "movementKind": "sold"
+      }
+    },
+    {
+      "kind": "clear-return-sale-source",
+      "edgeId": "HqDtuGDWVTWC7oZ9IXPL",
+      "path": "accounts/1dd4fd75-8eea-4f7a-98e7-bf45b987ae94/lineageEdges/HqDtuGDWVTWC7oZ9IXPL",
+      "evidence": "original-backup",
+      "itemId": "XpRUlsrlWPdA3WIEgUHF",
+      "before": {
+        "fromTransactionId": "CONSOLIDATED_5abd46c9-9886-4b3e-b2b1-19f6cf995a44_outbound_return",
+        "fromProjectId": null,
+        "toTransactionId": "4378F3E6-5916-4376-B3EF-62AAF8166CEB",
+        "toProjectId": "405GIhLoU2pLY4zqb71R",
+        "movementKind": "sold"
+      },
+      "after": {
+        "fromTransactionId": null,
+        "fromProjectId": null,
+        "toTransactionId": "4378F3E6-5916-4376-B3EF-62AAF8166CEB",
+        "toProjectId": "405GIhLoU2pLY4zqb71R",
+        "movementKind": "sold"
+      }
+    },
+    {
+      "kind": "clear-return-sale-source",
+      "edgeId": "Qxl1GpCW6ZvdR36hVaRK",
+      "path": "accounts/1dd4fd75-8eea-4f7a-98e7-bf45b987ae94/lineageEdges/Qxl1GpCW6ZvdR36hVaRK",
+      "evidence": "original-backup",
+      "itemId": "ylLrzg9epn97ybKx3cGp",
+      "before": {
+        "fromTransactionId": "CONSOLIDATED_5abd46c9-9886-4b3e-b2b1-19f6cf995a44_outbound_return",
+        "fromProjectId": null,
+        "toTransactionId": "4378F3E6-5916-4376-B3EF-62AAF8166CEB",
+        "toProjectId": "405GIhLoU2pLY4zqb71R",
+        "movementKind": "sold"
+      },
+      "after": {
+        "fromTransactionId": null,
+        "fromProjectId": null,
+        "toTransactionId": "4378F3E6-5916-4376-B3EF-62AAF8166CEB",
+        "toProjectId": "405GIhLoU2pLY4zqb71R",
+        "movementKind": "sold"
+      }
+    },
+    {
+      "kind": "clear-return-sale-source",
+      "edgeId": "T8kyo8QdzVD6GaRKKddu",
+      "path": "accounts/1dd4fd75-8eea-4f7a-98e7-bf45b987ae94/lineageEdges/T8kyo8QdzVD6GaRKKddu",
+      "evidence": "original-backup",
+      "itemId": "EbBkBgoRj9bzjVqxCOKk",
+      "before": {
+        "fromTransactionId": "CONSOLIDATED_5abd46c9-9886-4b3e-b2b1-19f6cf995a44_outbound_return",
+        "fromProjectId": null,
+        "toTransactionId": "4378F3E6-5916-4376-B3EF-62AAF8166CEB",
+        "toProjectId": "405GIhLoU2pLY4zqb71R",
+        "movementKind": "sold"
+      },
+      "after": {
+        "fromTransactionId": null,
+        "fromProjectId": null,
+        "toTransactionId": "4378F3E6-5916-4376-B3EF-62AAF8166CEB",
+        "toProjectId": "405GIhLoU2pLY4zqb71R",
+        "movementKind": "sold"
+      }
+    },
+    {
+      "kind": "clear-return-sale-source",
+      "edgeId": "VnTi3DE9LIR7AtVSDq6n",
+      "path": "accounts/1dd4fd75-8eea-4f7a-98e7-bf45b987ae94/lineageEdges/VnTi3DE9LIR7AtVSDq6n",
+      "evidence": "original-backup",
+      "itemId": "BbMIsjBbMi6YqF8i3pC0",
+      "before": {
+        "fromTransactionId": "CONSOLIDATED_5abd46c9-9886-4b3e-b2b1-19f6cf995a44_outbound_return",
+        "fromProjectId": null,
+        "toTransactionId": "u4EJMRngF3yYbr2fThPN",
+        "toProjectId": "pgwdhOFcslItEjDxeWgL",
+        "movementKind": "sold"
+      },
+      "after": {
+        "fromTransactionId": null,
+        "fromProjectId": null,
+        "toTransactionId": "u4EJMRngF3yYbr2fThPN",
+        "toProjectId": "pgwdhOFcslItEjDxeWgL",
+        "movementKind": "sold"
+      }
+    },
+    {
+      "kind": "clear-return-sale-source",
+      "edgeId": "Yp3YtjAO8HdeKla7VGRz",
+      "path": "accounts/1dd4fd75-8eea-4f7a-98e7-bf45b987ae94/lineageEdges/Yp3YtjAO8HdeKla7VGRz",
+      "evidence": "original-backup",
+      "itemId": "RPQyC3lWDdVaBOBJKbce",
+      "before": {
+        "fromTransactionId": "CONSOLIDATED_5abd46c9-9886-4b3e-b2b1-19f6cf995a44_outbound_return",
+        "fromProjectId": null,
+        "toTransactionId": "4378F3E6-5916-4376-B3EF-62AAF8166CEB",
+        "toProjectId": "405GIhLoU2pLY4zqb71R",
+        "movementKind": "sold"
+      },
+      "after": {
+        "fromTransactionId": null,
+        "fromProjectId": null,
+        "toTransactionId": "4378F3E6-5916-4376-B3EF-62AAF8166CEB",
+        "toProjectId": "405GIhLoU2pLY4zqb71R",
+        "movementKind": "sold"
+      }
+    },
+    {
+      "kind": "clear-return-sale-source",
+      "edgeId": "aNk5vKpouB4zrYDXMf0V",
+      "path": "accounts/1dd4fd75-8eea-4f7a-98e7-bf45b987ae94/lineageEdges/aNk5vKpouB4zrYDXMf0V",
+      "evidence": "original-backup",
+      "itemId": "2ocWpYcYIMiybGhl6LUY",
+      "before": {
+        "fromTransactionId": "CONSOLIDATED_5abd46c9-9886-4b3e-b2b1-19f6cf995a44_outbound_return",
+        "fromProjectId": null,
+        "toTransactionId": "u4EJMRngF3yYbr2fThPN",
+        "toProjectId": "pgwdhOFcslItEjDxeWgL",
+        "movementKind": "sold"
+      },
+      "after": {
+        "fromTransactionId": null,
+        "fromProjectId": null,
+        "toTransactionId": "u4EJMRngF3yYbr2fThPN",
+        "toProjectId": "pgwdhOFcslItEjDxeWgL",
+        "movementKind": "sold"
+      }
+    },
+    {
+      "kind": "clear-return-sale-source",
+      "edgeId": "b0m6OgFKP4LuRI9qTNfY",
+      "path": "accounts/1dd4fd75-8eea-4f7a-98e7-bf45b987ae94/lineageEdges/b0m6OgFKP4LuRI9qTNfY",
+      "evidence": "original-backup",
+      "itemId": "5a8FIPrdjyry0J2A4akX",
+      "before": {
+        "fromTransactionId": "CONSOLIDATED_5abd46c9-9886-4b3e-b2b1-19f6cf995a44_outbound_return",
+        "fromProjectId": null,
+        "toTransactionId": "4378F3E6-5916-4376-B3EF-62AAF8166CEB",
+        "toProjectId": "405GIhLoU2pLY4zqb71R",
+        "movementKind": "sold"
+      },
+      "after": {
+        "fromTransactionId": null,
+        "fromProjectId": null,
+        "toTransactionId": "4378F3E6-5916-4376-B3EF-62AAF8166CEB",
+        "toProjectId": "405GIhLoU2pLY4zqb71R",
+        "movementKind": "sold"
+      }
+    },
+    {
+      "kind": "clear-return-sale-source",
+      "edgeId": "b2zeto3LmlA7A1IBXuMm",
+      "path": "accounts/1dd4fd75-8eea-4f7a-98e7-bf45b987ae94/lineageEdges/b2zeto3LmlA7A1IBXuMm",
+      "evidence": "live-post-consolidation",
+      "itemId": "cW5PaCT7DF7NrY8aEXvf",
+      "before": {
+        "fromTransactionId": "CONSOLIDATED_5abd46c9-9886-4b3e-b2b1-19f6cf995a44_outbound_return",
+        "fromProjectId": null,
+        "toTransactionId": "BB168242-54DC-4414-9425-B5D884C2422B",
+        "toProjectId": "5abd46c9-9886-4b3e-b2b1-19f6cf995a44",
+        "movementKind": "sold"
+      },
+      "after": {
+        "fromTransactionId": null,
+        "fromProjectId": null,
+        "toTransactionId": "BB168242-54DC-4414-9425-B5D884C2422B",
+        "toProjectId": "5abd46c9-9886-4b3e-b2b1-19f6cf995a44",
+        "movementKind": "sold"
+      }
+    },
+    {
+      "kind": "clear-return-sale-source",
+      "edgeId": "c54UXsTIf8JtLDxgVhdQ",
+      "path": "accounts/1dd4fd75-8eea-4f7a-98e7-bf45b987ae94/lineageEdges/c54UXsTIf8JtLDxgVhdQ",
+      "evidence": "original-backup",
+      "itemId": "S6Gl72mtJQmgxEgv8lFv",
+      "before": {
+        "fromTransactionId": "CONSOLIDATED_5abd46c9-9886-4b3e-b2b1-19f6cf995a44_outbound_return",
+        "fromProjectId": null,
+        "toTransactionId": "4378F3E6-5916-4376-B3EF-62AAF8166CEB",
+        "toProjectId": "405GIhLoU2pLY4zqb71R",
+        "movementKind": "sold"
+      },
+      "after": {
+        "fromTransactionId": null,
+        "fromProjectId": null,
+        "toTransactionId": "4378F3E6-5916-4376-B3EF-62AAF8166CEB",
+        "toProjectId": "405GIhLoU2pLY4zqb71R",
+        "movementKind": "sold"
+      }
+    },
+    {
+      "kind": "clear-return-sale-source",
+      "edgeId": "dBLhmPYS76mnYiavdNOB",
+      "path": "accounts/1dd4fd75-8eea-4f7a-98e7-bf45b987ae94/lineageEdges/dBLhmPYS76mnYiavdNOB",
+      "evidence": "original-backup",
+      "itemId": "78EK5lkfOrINJBZ7Tmsq",
+      "before": {
+        "fromTransactionId": "CONSOLIDATED_5abd46c9-9886-4b3e-b2b1-19f6cf995a44_outbound_return",
+        "fromProjectId": null,
+        "toTransactionId": "4378F3E6-5916-4376-B3EF-62AAF8166CEB",
+        "toProjectId": "405GIhLoU2pLY4zqb71R",
+        "movementKind": "sold"
+      },
+      "after": {
+        "fromTransactionId": null,
+        "fromProjectId": null,
+        "toTransactionId": "4378F3E6-5916-4376-B3EF-62AAF8166CEB",
+        "toProjectId": "405GIhLoU2pLY4zqb71R",
+        "movementKind": "sold"
+      }
+    },
+    {
+      "kind": "clear-return-sale-source",
+      "edgeId": "dJO3Yv3v46w43joFKAqO",
+      "path": "accounts/1dd4fd75-8eea-4f7a-98e7-bf45b987ae94/lineageEdges/dJO3Yv3v46w43joFKAqO",
+      "evidence": "original-backup",
+      "itemId": "oaEbF43EeSRaFpCrtDuG",
+      "before": {
+        "fromTransactionId": "CONSOLIDATED_5abd46c9-9886-4b3e-b2b1-19f6cf995a44_outbound_return",
+        "fromProjectId": null,
+        "toTransactionId": "8B189B02-FC5C-4103-B428-73579A503D03",
+        "toProjectId": "1LLWjydzaK6uD44TjM4u",
+        "movementKind": "sold"
+      },
+      "after": {
+        "fromTransactionId": null,
+        "fromProjectId": null,
+        "toTransactionId": "8B189B02-FC5C-4103-B428-73579A503D03",
+        "toProjectId": "1LLWjydzaK6uD44TjM4u",
+        "movementKind": "sold"
+      }
+    },
+    {
+      "kind": "clear-return-sale-source",
+      "edgeId": "gn7s4gXKUHswDkzHTcxM",
+      "path": "accounts/1dd4fd75-8eea-4f7a-98e7-bf45b987ae94/lineageEdges/gn7s4gXKUHswDkzHTcxM",
+      "evidence": "original-backup",
+      "itemId": "MiNVXqyZrfWP5cvyWnSH",
+      "before": {
+        "fromTransactionId": "CONSOLIDATED_5abd46c9-9886-4b3e-b2b1-19f6cf995a44_outbound_return",
+        "fromProjectId": null,
+        "toTransactionId": "8B189B02-FC5C-4103-B428-73579A503D03",
+        "toProjectId": "1LLWjydzaK6uD44TjM4u",
+        "movementKind": "sold"
+      },
+      "after": {
+        "fromTransactionId": null,
+        "fromProjectId": null,
+        "toTransactionId": "8B189B02-FC5C-4103-B428-73579A503D03",
+        "toProjectId": "1LLWjydzaK6uD44TjM4u",
+        "movementKind": "sold"
+      }
+    },
+    {
+      "kind": "clear-return-sale-source",
+      "edgeId": "iWnpEERcUrNZEcrpvfZI",
+      "path": "accounts/1dd4fd75-8eea-4f7a-98e7-bf45b987ae94/lineageEdges/iWnpEERcUrNZEcrpvfZI",
+      "evidence": "original-backup",
+      "itemId": "HtYSq79la2MqL67zShg4",
+      "before": {
+        "fromTransactionId": "CONSOLIDATED_5abd46c9-9886-4b3e-b2b1-19f6cf995a44_outbound_return",
+        "fromProjectId": null,
+        "toTransactionId": "4378F3E6-5916-4376-B3EF-62AAF8166CEB",
+        "toProjectId": "405GIhLoU2pLY4zqb71R",
+        "movementKind": "sold"
+      },
+      "after": {
+        "fromTransactionId": null,
+        "fromProjectId": null,
+        "toTransactionId": "4378F3E6-5916-4376-B3EF-62AAF8166CEB",
+        "toProjectId": "405GIhLoU2pLY4zqb71R",
+        "movementKind": "sold"
+      }
+    },
+    {
+      "kind": "clear-return-sale-source",
+      "edgeId": "kkjWIa2Wtqep5sK1pjUe",
+      "path": "accounts/1dd4fd75-8eea-4f7a-98e7-bf45b987ae94/lineageEdges/kkjWIa2Wtqep5sK1pjUe",
+      "evidence": "original-backup",
+      "itemId": "xmGn7VAzHvucye3DFCW8",
+      "before": {
+        "fromTransactionId": "CONSOLIDATED_5abd46c9-9886-4b3e-b2b1-19f6cf995a44_outbound_return",
+        "fromProjectId": null,
+        "toTransactionId": "4378F3E6-5916-4376-B3EF-62AAF8166CEB",
+        "toProjectId": "405GIhLoU2pLY4zqb71R",
+        "movementKind": "sold"
+      },
+      "after": {
+        "fromTransactionId": null,
+        "fromProjectId": null,
+        "toTransactionId": "4378F3E6-5916-4376-B3EF-62AAF8166CEB",
+        "toProjectId": "405GIhLoU2pLY4zqb71R",
+        "movementKind": "sold"
+      }
+    },
+    {
+      "kind": "clear-return-sale-source",
+      "edgeId": "usHAj5DzVyQGQ7ISRlEA",
+      "path": "accounts/1dd4fd75-8eea-4f7a-98e7-bf45b987ae94/lineageEdges/usHAj5DzVyQGQ7ISRlEA",
+      "evidence": "original-backup",
+      "itemId": "pM4B5gDm5XedEZNn0ZpR",
+      "before": {
+        "fromTransactionId": "CONSOLIDATED_5abd46c9-9886-4b3e-b2b1-19f6cf995a44_outbound_return",
+        "fromProjectId": null,
+        "toTransactionId": "4378F3E6-5916-4376-B3EF-62AAF8166CEB",
+        "toProjectId": "405GIhLoU2pLY4zqb71R",
+        "movementKind": "sold"
+      },
+      "after": {
+        "fromTransactionId": null,
+        "fromProjectId": null,
+        "toTransactionId": "4378F3E6-5916-4376-B3EF-62AAF8166CEB",
+        "toProjectId": "405GIhLoU2pLY4zqb71R",
+        "movementKind": "sold"
+      }
+    },
+    {
+      "kind": "clear-return-sale-source",
+      "edgeId": "zYgzBSWVMq6nrznk0kQg",
+      "path": "accounts/1dd4fd75-8eea-4f7a-98e7-bf45b987ae94/lineageEdges/zYgzBSWVMq6nrznk0kQg",
+      "evidence": "original-backup",
+      "itemId": "fYYtXHuKIMSzirzVRkfM",
+      "before": {
+        "fromTransactionId": "CONSOLIDATED_5abd46c9-9886-4b3e-b2b1-19f6cf995a44_outbound_return",
+        "fromProjectId": null,
+        "toTransactionId": "4378F3E6-5916-4376-B3EF-62AAF8166CEB",
+        "toProjectId": "405GIhLoU2pLY4zqb71R",
+        "movementKind": "sold"
+      },
+      "after": {
+        "fromTransactionId": null,
+        "fromProjectId": null,
+        "toTransactionId": "4378F3E6-5916-4376-B3EF-62AAF8166CEB",
+        "toProjectId": "405GIhLoU2pLY4zqb71R",
+        "movementKind": "sold"
+      }
+    }
+  ],
+  "returnMembership": {
+    "transactionId": "CONSOLIDATED_5abd46c9-9886-4b3e-b2b1-19f6cf995a44_outbound_return",
+    "before": null,
+    "after": [
+      "2FGLFCkbo9K2NECg7LtO",
+      "2S0RiSx6Ftrb0U2mxjY8",
+      "2ocWpYcYIMiybGhl6LUY",
+      "5a8FIPrdjyry0J2A4akX",
+      "6q7AT1780zGv8lZTQ6iy",
+      "78EK5lkfOrINJBZ7Tmsq",
+      "7S8B6RAFs2h56vImNwOj",
+      "9i5jkxK7adR06IE3uisC",
+      "A1xWpDsjHcZn0nLgaruM",
+      "ACmQDi4rhW0N498lahas",
+      "AlCTCfpoTXAnONTydHyF",
+      "AynuAx4MEAWS2J8JWCxt",
+      "BHbu7FNoKbVqnOoWSv6Z",
+      "BbMIsjBbMi6YqF8i3pC0",
+      "EbBkBgoRj9bzjVqxCOKk",
+      "GG3H2aW4VXUiQNyMF1VD",
+      "GqQqaGayiPQ9yRBH0xWz",
+      "HLHCVxyXxuyl6gaZL0gn",
+      "HtYSq79la2MqL67zShg4",
+      "I-1770255923994-kc8f",
+      "I-1770256001418-wuka",
+      "IbCg9GzmKzlUtJNn5rgu",
+      "KbJWxkE1F5wEfUvMF9GB",
+      "LUrnXm1Eu8LF33j9WUwm",
+      "MQEZ9nvBGD9H1e9gjMZl",
+      "MiNVXqyZrfWP5cvyWnSH",
+      "P1eZe3xPNczVZv6jQtBy",
+      "P68M4FRFgrNLUnBWrlha",
+      "RPQyC3lWDdVaBOBJKbce",
+      "S6Gl72mtJQmgxEgv8lFv",
+      "SGCfTJnGThRhh0RncJg6",
+      "TbcPbKBaH3WdiufcbVCq",
+      "WNyiaDsuYAqEfJOzDjBA",
+      "XpRUlsrlWPdA3WIEgUHF",
+      "ZjLP02TujsdFuSqXHbiR",
+      "cW5PaCT7DF7NrY8aEXvf",
+      "ciidJwqIzx5kSTk2eBFg",
+      "db61xR84diAtaWsKqvqI",
+      "ejPafQ78FQXqz9WaJmeO",
+      "f0s4tePVT5rhXTXcBMtb",
+      "f3o6tHe3aGBiKFwrR8qR",
+      "fYYtXHuKIMSzirzVRkfM",
+      "gP3KWCJl4k8hFudsl4zz",
+      "hnrep3isyeUKygTeVeeJ",
+      "jD7Q8RymBF9h7KHBqtTG",
+      "l01mM50PkVMpTPF70hi6",
+      "n2OJBbcpgZBU5v11xDIt",
+      "oaEbF43EeSRaFpCrtDuG",
+      "pM4B5gDm5XedEZNn0ZpR",
+      "qog8So6Ofa2YScnBJakc",
+      "sImkh6tewMuFvF0du8Em",
+      "skC4PRtksuESF8Gnlhc3",
+      "tZDoyhyh3ObMvtvvlFdZ",
+      "xmGn7VAzHvucye3DFCW8",
+      "ylLrzg9epn97ybKx3cGp"
+    ],
+    "snapshotAvailable": false
+  },
+  "returnAudit": {
+    "transactionId": "CONSOLIDATED_5abd46c9-9886-4b3e-b2b1-19f6cf995a44_outbound_return",
+    "before": {
+      "returnedItemsSumCents": 0,
+      "variancePercent": 18.49,
+      "itemsSumCents": 180555,
+      "returnedItemsCount": 0,
+      "varianceCents": 28175,
+      "discountCents": 0,
+      "resolvedSubtotalCents": 152380,
+      "linkedItemsSumCents": 129302,
+      "soldItemsSumCents": 51253,
+      "soldItemsCount": 22
+    },
+    "after": {
+      "returnedItemsSumCents": 51253,
+      "variancePercent": 18.49,
+      "itemsSumCents": 180555,
+      "returnedItemsCount": 22,
+      "varianceCents": 28175,
+      "discountCents": 0,
+      "resolvedSubtotalCents": 152380,
+      "linkedItemsSumCents": 129302,
+      "soldItemsSumCents": 0,
+      "soldItemsCount": 0,
+      "returnSnapshotMissingCount": 22
+    },
+    "affectedItemIds": [
+      "tZDoyhyh3ObMvtvvlFdZ",
+      "IbCg9GzmKzlUtJNn5rgu",
+      "P68M4FRFgrNLUnBWrlha",
+      "BHbu7FNoKbVqnOoWSv6Z",
+      "6q7AT1780zGv8lZTQ6iy",
+      "TbcPbKBaH3WdiufcbVCq",
+      "XpRUlsrlWPdA3WIEgUHF",
+      "ylLrzg9epn97ybKx3cGp",
+      "EbBkBgoRj9bzjVqxCOKk",
+      "BbMIsjBbMi6YqF8i3pC0",
+      "RPQyC3lWDdVaBOBJKbce",
+      "2ocWpYcYIMiybGhl6LUY",
+      "5a8FIPrdjyry0J2A4akX",
+      "cW5PaCT7DF7NrY8aEXvf",
+      "S6Gl72mtJQmgxEgv8lFv",
+      "78EK5lkfOrINJBZ7Tmsq",
+      "oaEbF43EeSRaFpCrtDuG",
+      "MiNVXqyZrfWP5cvyWnSH",
+      "HtYSq79la2MqL67zShg4",
+      "xmGn7VAzHvucye3DFCW8",
+      "pM4B5gDm5XedEZNn0ZpR",
+      "fYYtXHuKIMSzirzVRkfM"
+    ],
+    "affectedProjectPriceCents": 51253,
+    "missingAffectedItems": []
+  },
+  "blockers": [],
+  "notes": [
+    "This manifest never deletes transactions or rewrites association edges.",
+    "No legacy per-item Return snapshot is synthesized because the original backup contains aggregate Return totals only.",
+    "Post-consolidation candidates are listed separately by evidence and require explicit review before apply."
+  ],
+  "reviewed": true,
+  "reviewedAt": "2026-09-18T20:54:33.149Z"
+}

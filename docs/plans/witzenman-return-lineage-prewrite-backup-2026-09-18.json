@@ -1,0 +1,618 @@
+{
+  "schemaVersion": 1,
+  "createdAt": "2026-09-18T20:54:58.825Z",
+  "kind": "witzenman-return-lineage-repair-prewrite",
+  "accountId": "1dd4fd75-8eea-4f7a-98e7-bf45b987ae94",
+  "projectId": "5abd46c9-9886-4b3e-b2b1-19f6cf995a44",
+  "manifestSha256": "158991a7ee40214b87dea137bccfcad37769bfde491bfaad299f603ea587c55e",
+  "transactions": [
+    {
+      "path": "accounts/1dd4fd75-8eea-4f7a-98e7-bf45b987ae94/transactions/CONSOLIDATED_5abd46c9-9886-4b3e-b2b1-19f6cf995a44_outbound_return",
+      "id": "CONSOLIDATED_5abd46c9-9886-4b3e-b2b1-19f6cf995a44_outbound_return",
+      "data": {
+        "type": "Return",
+        "source": "1584 Design Inventory",
+        "projectId": "5abd46c9-9886-4b3e-b2b1-19f6cf995a44",
+        "budgetCategoryId": "da556858-1df8-40be-b10c-b15710d7cc9a",
+        "amountCents": 152831,
+        "subtotalCents": 152380,
+        "transactionDate": "2026-08-28",
+        "notes": "Consolidated by witzenman-inventory-consolidation-v1. Project: Witzenman’s 2nd Home (5abd46c9-9886-4b3e-b2b1-19f6cf995a44). Source transactions: 0502CAFC-B46C-423B-81F6-EA42318F26A5, 0CC43609-8792-4D94-8731-0FCAEDC23501, 19DDB388-1579-47C4-988D-878420927DE7, 23Np1ymhDHBJOGT7fDbv, 2A192522-B355-4D26-97DE-9A42B16EEB35, 3CE84050-3D16-4544-9D34-2553C0BBCCA1, 3h7cyd9AxKp2nDmcLHXx, 573FA365-069C-4ACA-828F-5E83523B8D3F, B4ywYZhBkZpuXrlmg9OG, BC3D4934-3EFB-4A0E-9511-ECA18352D2BE, C2D293EC-B5AD-4785-A0C3-2642965C2F23, C47C4CF3-8454-42C1-92FA-CA391D9C03E2, CCdEKLG27cPPXQRZHZ0p, DCAAE147-49AE-450E-B06F-DBF245259E9E, F4675814-803D-47E2-9BA8-47A673C9B414, ITM2dygC0Fak2md3Wx1y, JYDqUeSeXhFLDS5taQBP, LZv8N1LLOCwU1kbppaQr, RIw3K52CJYwdJvD0cZl8, SALE_5abd46c9-9886-4b3e-b2b1-19f6cf995a44_business_to_project_da556858-1df8-40be-b10c-b15710d7cc9a, UyYcSCcpYUm8GJ0PuIKj, ZuOVKFZCxOY8FZtrHiy1, aCbaauRWMpLGxCAFmfns, b1gD6JmDBTjKMoTuq7fU, hRn9ydGbFYKwpwXYPlev, iTGI4u24SoiOApf1UD7B, os433BpkCtwT7NbdvSRS, q5oHtvUglubmxRRGHLpr. Original transactions will be deleted only after the local backup is verified and all references are reassigned.\n\nStaged before original transaction deletion; this record is not active until final verification.",
+        "consolidationVersion": "witzenman-inventory-consolidation-v1",
+        "consolidationKey": "witzenman-inventory-consolidation-v1:5abd46c9-9886-4b3e-b2b1-19f6cf995a44",
+        "consolidationDirection": "outbound",
+        "consolidatedFromTransactionIds": [
+          "0502CAFC-B46C-423B-81F6-EA42318F26A5",
+          "0CC43609-8792-4D94-8731-0FCAEDC23501",
+          "19DDB388-1579-47C4-988D-878420927DE7",
+          "3CE84050-3D16-4544-9D34-2553C0BBCCA1",
+          "3h7cyd9AxKp2nDmcLHXx",
+          "573FA365-069C-4ACA-828F-5E83523B8D3F",
+          "BC3D4934-3EFB-4A0E-9511-ECA18352D2BE",
+          "C2D293EC-B5AD-4785-A0C3-2642965C2F23",
+          "C47C4CF3-8454-42C1-92FA-CA391D9C03E2",
+          "DCAAE147-49AE-450E-B06F-DBF245259E9E",
+          "F4675814-803D-47E2-9BA8-47A673C9B414",
+          "iTGI4u24SoiOApf1UD7B"
+        ],
+        "createdAt": {
+          "__type": "timestamp",
+          "value": "2026-09-18T19:43:56.264Z"
+        },
+        "isComplete": false,
+        "itemIds": [
+          "2FGLFCkbo9K2NECg7LtO",
+          "2S0RiSx6Ftrb0U2mxjY8",
+          "7S8B6RAFs2h56vImNwOj",
+          "9i5jkxK7adR06IE3uisC",
+          "A1xWpDsjHcZn0nLgaruM",
+          "ACmQDi4rhW0N498lahas",
+          "AlCTCfpoTXAnONTydHyF",
+          "AynuAx4MEAWS2J8JWCxt",
+          "GG3H2aW4VXUiQNyMF1VD",
+          "GqQqaGayiPQ9yRBH0xWz",
+          "HLHCVxyXxuyl6gaZL0gn",
+          "I-1770255923994-kc8f",
+          "I-1770256001418-wuka",
+          "KbJWxkE1F5wEfUvMF9GB",
+          "LUrnXm1Eu8LF33j9WUwm",
+          "MQEZ9nvBGD9H1e9gjMZl",
+          "P1eZe3xPNczVZv6jQtBy",
+          "SGCfTJnGThRhh0RncJg6",
+          "WNyiaDsuYAqEfJOzDjBA",
+          "ZjLP02TujsdFuSqXHbiR",
+          "ciidJwqIzx5kSTk2eBFg",
+          "db61xR84diAtaWsKqvqI",
+          "ejPafQ78FQXqz9WaJmeO",
+          "f0s4tePVT5rhXTXcBMtb",
+          "f3o6tHe3aGBiKFwrR8qR",
+          "gP3KWCJl4k8hFudsl4zz",
+          "hnrep3isyeUKygTeVeeJ",
+          "jD7Q8RymBF9h7KHBqtTG",
+          "l01mM50PkVMpTPF70hi6",
+          "n2OJBbcpgZBU5v11xDIt",
+          "qog8So6Ofa2YScnBJakc",
+          "sImkh6tewMuFvF0du8Em",
+          "skC4PRtksuESF8Gnlhc3"
+        ],
+        "audit": {
+          "returnedItemsSumCents": 0,
+          "variancePercent": 18.49,
+          "itemsSumCents": 180555,
+          "returnedItemsCount": 0,
+          "varianceCents": 28175,
+          "discountCents": 0,
+          "resolvedSubtotalCents": 152380,
+          "linkedItemsSumCents": 129302,
+          "soldItemsSumCents": 51253,
+          "soldItemsCount": 22
+        },
+        "updatedAt": {
+          "__type": "timestamp",
+          "value": "2026-09-18T20:08:04.424Z"
+        }
+      }
+    }
+  ],
+  "lineageEdges": [
+    {
+      "path": "accounts/1dd4fd75-8eea-4f7a-98e7-bf45b987ae94/lineageEdges/1CcEELr6B3Ttt3Q4DZEi",
+      "id": "1CcEELr6B3Ttt3Q4DZEi",
+      "data": {
+        "itemId": "tZDoyhyh3ObMvtvvlFdZ",
+        "toTransactionId": "u4EJMRngF3yYbr2fThPN",
+        "fromProjectId": null,
+        "toProjectId": "pgwdhOFcslItEjDxeWgL",
+        "movementKind": "sold",
+        "source": "mcp",
+        "createdAt": {
+          "__type": "timestamp",
+          "value": "2026-08-20T17:09:35.446Z"
+        },
+        "fromTransactionId": "CONSOLIDATED_5abd46c9-9886-4b3e-b2b1-19f6cf995a44_outbound_return",
+        "consolidatedBy": "witzenman-inventory-consolidation-v1",
+        "consolidatedFromTransactionId": "iTGI4u24SoiOApf1UD7B",
+        "updatedAt": {
+          "__type": "timestamp",
+          "value": "2026-09-18T19:43:57.290Z"
+        }
+      }
+    },
+    {
+      "path": "accounts/1dd4fd75-8eea-4f7a-98e7-bf45b987ae94/lineageEdges/4fL5SNZuPSloU7kTTA5v",
+      "id": "4fL5SNZuPSloU7kTTA5v",
+      "data": {
+        "accountId": "1dd4fd75-8eea-4f7a-98e7-bf45b987ae94",
+        "toTransactionId": "4378F3E6-5916-4376-B3EF-62AAF8166CEB",
+        "movementKind": "sold",
+        "source": "app",
+        "toProjectId": "405GIhLoU2pLY4zqb71R",
+        "createdBy": "4ef35958-597c-4aea-b99e-1ef62352a72d",
+        "itemId": "IbCg9GzmKzlUtJNn5rgu",
+        "createdAt": {
+          "__type": "timestamp",
+          "value": "2026-08-28T20:00:47.975Z"
+        },
+        "fromTransactionId": "CONSOLIDATED_5abd46c9-9886-4b3e-b2b1-19f6cf995a44_outbound_return",
+        "consolidatedBy": "witzenman-inventory-consolidation-v1",
+        "consolidatedFromTransactionId": "BC3D4934-3EFB-4A0E-9511-ECA18352D2BE",
+        "updatedAt": {
+          "__type": "timestamp",
+          "value": "2026-09-18T19:43:57.290Z"
+        }
+      }
+    },
+    {
+      "path": "accounts/1dd4fd75-8eea-4f7a-98e7-bf45b987ae94/lineageEdges/6B0qk0fRth2T2LKup4zW",
+      "id": "6B0qk0fRth2T2LKup4zW",
+      "data": {
+        "accountId": "1dd4fd75-8eea-4f7a-98e7-bf45b987ae94",
+        "movementKind": "sold",
+        "toTransactionId": "4378F3E6-5916-4376-B3EF-62AAF8166CEB",
+        "source": "app",
+        "itemId": "P68M4FRFgrNLUnBWrlha",
+        "toProjectId": "405GIhLoU2pLY4zqb71R",
+        "createdBy": "4ef35958-597c-4aea-b99e-1ef62352a72d",
+        "createdAt": {
+          "__type": "timestamp",
+          "value": "2026-08-28T20:00:47.975Z"
+        },
+        "fromTransactionId": "CONSOLIDATED_5abd46c9-9886-4b3e-b2b1-19f6cf995a44_outbound_return",
+        "consolidatedBy": "witzenman-inventory-consolidation-v1",
+        "consolidatedFromTransactionId": "BC3D4934-3EFB-4A0E-9511-ECA18352D2BE",
+        "updatedAt": {
+          "__type": "timestamp",
+          "value": "2026-09-18T19:43:57.290Z"
+        }
+      }
+    },
+    {
+      "path": "accounts/1dd4fd75-8eea-4f7a-98e7-bf45b987ae94/lineageEdges/7UKudochn7W3PAzcZO8x",
+      "id": "7UKudochn7W3PAzcZO8x",
+      "data": {
+        "movementKind": "sold",
+        "toTransactionId": "4378F3E6-5916-4376-B3EF-62AAF8166CEB",
+        "createdBy": "4ef35958-597c-4aea-b99e-1ef62352a72d",
+        "toProjectId": "405GIhLoU2pLY4zqb71R",
+        "itemId": "BHbu7FNoKbVqnOoWSv6Z",
+        "accountId": "1dd4fd75-8eea-4f7a-98e7-bf45b987ae94",
+        "source": "app",
+        "createdAt": {
+          "__type": "timestamp",
+          "value": "2026-08-28T20:00:47.975Z"
+        },
+        "fromTransactionId": "CONSOLIDATED_5abd46c9-9886-4b3e-b2b1-19f6cf995a44_outbound_return",
+        "consolidatedBy": "witzenman-inventory-consolidation-v1",
+        "consolidatedFromTransactionId": "BC3D4934-3EFB-4A0E-9511-ECA18352D2BE",
+        "updatedAt": {
+          "__type": "timestamp",
+          "value": "2026-09-18T19:43:57.290Z"
+        }
+      }
+    },
+    {
+      "path": "accounts/1dd4fd75-8eea-4f7a-98e7-bf45b987ae94/lineageEdges/GboCDfcH2c7N8uDIakCd",
+      "id": "GboCDfcH2c7N8uDIakCd",
+      "data": {
+        "itemId": "6q7AT1780zGv8lZTQ6iy",
+        "accountId": "1dd4fd75-8eea-4f7a-98e7-bf45b987ae94",
+        "toTransactionId": "4378F3E6-5916-4376-B3EF-62AAF8166CEB",
+        "source": "app",
+        "movementKind": "sold",
+        "toProjectId": "405GIhLoU2pLY4zqb71R",
+        "createdBy": "4ef35958-597c-4aea-b99e-1ef62352a72d",
+        "createdAt": {
+          "__type": "timestamp",
+          "value": "2026-08-28T20:00:47.975Z"
+        },
+        "fromTransactionId": "CONSOLIDATED_5abd46c9-9886-4b3e-b2b1-19f6cf995a44_outbound_return",
+        "consolidatedBy": "witzenman-inventory-consolidation-v1",
+        "consolidatedFromTransactionId": "BC3D4934-3EFB-4A0E-9511-ECA18352D2BE",
+        "updatedAt": {
+          "__type": "timestamp",
+          "value": "2026-09-18T19:43:57.290Z"
+        }
+      }
+    },
+    {
+      "path": "accounts/1dd4fd75-8eea-4f7a-98e7-bf45b987ae94/lineageEdges/GoFVIbapTxJPpZioZ8YT",
+      "id": "GoFVIbapTxJPpZioZ8YT",
+      "data": {
+        "source": "app",
+        "toProjectId": "405GIhLoU2pLY4zqb71R",
+        "itemId": "TbcPbKBaH3WdiufcbVCq",
+        "createdBy": "4ef35958-597c-4aea-b99e-1ef62352a72d",
+        "toTransactionId": "4378F3E6-5916-4376-B3EF-62AAF8166CEB",
+        "accountId": "1dd4fd75-8eea-4f7a-98e7-bf45b987ae94",
+        "movementKind": "sold",
+        "createdAt": {
+          "__type": "timestamp",
+          "value": "2026-08-28T20:00:47.975Z"
+        },
+        "fromTransactionId": "CONSOLIDATED_5abd46c9-9886-4b3e-b2b1-19f6cf995a44_outbound_return",
+        "consolidatedBy": "witzenman-inventory-consolidation-v1",
+        "consolidatedFromTransactionId": "BC3D4934-3EFB-4A0E-9511-ECA18352D2BE",
+        "updatedAt": {
+          "__type": "timestamp",
+          "value": "2026-09-18T19:43:57.290Z"
+        }
+      }
+    },
+    {
+      "path": "accounts/1dd4fd75-8eea-4f7a-98e7-bf45b987ae94/lineageEdges/HqDtuGDWVTWC7oZ9IXPL",
+      "id": "HqDtuGDWVTWC7oZ9IXPL",
+      "data": {
+        "createdBy": "4ef35958-597c-4aea-b99e-1ef62352a72d",
+        "movementKind": "sold",
+        "source": "app",
+        "accountId": "1dd4fd75-8eea-4f7a-98e7-bf45b987ae94",
+        "itemId": "XpRUlsrlWPdA3WIEgUHF",
+        "toTransactionId": "4378F3E6-5916-4376-B3EF-62AAF8166CEB",
+        "toProjectId": "405GIhLoU2pLY4zqb71R",
+        "createdAt": {
+          "__type": "timestamp",
+          "value": "2026-08-28T20:00:47.975Z"
+        },
+        "fromTransactionId": "CONSOLIDATED_5abd46c9-9886-4b3e-b2b1-19f6cf995a44_outbound_return",
+        "consolidatedBy": "witzenman-inventory-consolidation-v1",
+        "consolidatedFromTransactionId": "BC3D4934-3EFB-4A0E-9511-ECA18352D2BE",
+        "updatedAt": {
+          "__type": "timestamp",
+          "value": "2026-09-18T19:43:57.290Z"
+        }
+      }
+    },
+    {
+      "path": "accounts/1dd4fd75-8eea-4f7a-98e7-bf45b987ae94/lineageEdges/Qxl1GpCW6ZvdR36hVaRK",
+      "id": "Qxl1GpCW6ZvdR36hVaRK",
+      "data": {
+        "movementKind": "sold",
+        "createdBy": "4ef35958-597c-4aea-b99e-1ef62352a72d",
+        "itemId": "ylLrzg9epn97ybKx3cGp",
+        "accountId": "1dd4fd75-8eea-4f7a-98e7-bf45b987ae94",
+        "toProjectId": "405GIhLoU2pLY4zqb71R",
+        "toTransactionId": "4378F3E6-5916-4376-B3EF-62AAF8166CEB",
+        "source": "app",
+        "createdAt": {
+          "__type": "timestamp",
+          "value": "2026-08-28T20:00:47.975Z"
+        },
+        "fromTransactionId": "CONSOLIDATED_5abd46c9-9886-4b3e-b2b1-19f6cf995a44_outbound_return",
+        "consolidatedBy": "witzenman-inventory-consolidation-v1",
+        "consolidatedFromTransactionId": "BC3D4934-3EFB-4A0E-9511-ECA18352D2BE",
+        "updatedAt": {
+          "__type": "timestamp",
+          "value": "2026-09-18T19:43:57.290Z"
+        }
+      }
+    },
+    {
+      "path": "accounts/1dd4fd75-8eea-4f7a-98e7-bf45b987ae94/lineageEdges/T8kyo8QdzVD6GaRKKddu",
+      "id": "T8kyo8QdzVD6GaRKKddu",
+      "data": {
+        "itemId": "EbBkBgoRj9bzjVqxCOKk",
+        "toTransactionId": "4378F3E6-5916-4376-B3EF-62AAF8166CEB",
+        "movementKind": "sold",
+        "source": "app",
+        "accountId": "1dd4fd75-8eea-4f7a-98e7-bf45b987ae94",
+        "createdBy": "4ef35958-597c-4aea-b99e-1ef62352a72d",
+        "toProjectId": "405GIhLoU2pLY4zqb71R",
+        "createdAt": {
+          "__type": "timestamp",
+          "value": "2026-08-28T20:00:47.975Z"
+        },
+        "fromTransactionId": "CONSOLIDATED_5abd46c9-9886-4b3e-b2b1-19f6cf995a44_outbound_return",
+        "consolidatedBy": "witzenman-inventory-consolidation-v1",
+        "consolidatedFromTransactionId": "BC3D4934-3EFB-4A0E-9511-ECA18352D2BE",
+        "updatedAt": {
+          "__type": "timestamp",
+          "value": "2026-09-18T19:43:57.290Z"
+        }
+      }
+    },
+    {
+      "path": "accounts/1dd4fd75-8eea-4f7a-98e7-bf45b987ae94/lineageEdges/VnTi3DE9LIR7AtVSDq6n",
+      "id": "VnTi3DE9LIR7AtVSDq6n",
+      "data": {
+        "itemId": "BbMIsjBbMi6YqF8i3pC0",
+        "toTransactionId": "u4EJMRngF3yYbr2fThPN",
+        "fromProjectId": null,
+        "toProjectId": "pgwdhOFcslItEjDxeWgL",
+        "movementKind": "sold",
+        "source": "mcp",
+        "createdAt": {
+          "__type": "timestamp",
+          "value": "2026-08-20T17:09:35.446Z"
+        },
+        "fromTransactionId": "CONSOLIDATED_5abd46c9-9886-4b3e-b2b1-19f6cf995a44_outbound_return",
+        "consolidatedBy": "witzenman-inventory-consolidation-v1",
+        "consolidatedFromTransactionId": "iTGI4u24SoiOApf1UD7B",
+        "updatedAt": {
+          "__type": "timestamp",
+          "value": "2026-09-18T19:43:57.290Z"
+        }
+      }
+    },
+    {
+      "path": "accounts/1dd4fd75-8eea-4f7a-98e7-bf45b987ae94/lineageEdges/Yp3YtjAO8HdeKla7VGRz",
+      "id": "Yp3YtjAO8HdeKla7VGRz",
+      "data": {
+        "toProjectId": "405GIhLoU2pLY4zqb71R",
+        "itemId": "RPQyC3lWDdVaBOBJKbce",
+        "source": "app",
+        "accountId": "1dd4fd75-8eea-4f7a-98e7-bf45b987ae94",
+        "toTransactionId": "4378F3E6-5916-4376-B3EF-62AAF8166CEB",
+        "createdBy": "4ef35958-597c-4aea-b99e-1ef62352a72d",
+        "movementKind": "sold",
+        "createdAt": {
+          "__type": "timestamp",
+          "value": "2026-08-28T20:00:47.975Z"
+        },
+        "fromTransactionId": "CONSOLIDATED_5abd46c9-9886-4b3e-b2b1-19f6cf995a44_outbound_return",
+        "consolidatedBy": "witzenman-inventory-consolidation-v1",
+        "consolidatedFromTransactionId": "BC3D4934-3EFB-4A0E-9511-ECA18352D2BE",
+        "updatedAt": {
+          "__type": "timestamp",
+          "value": "2026-09-18T19:43:57.290Z"
+        }
+      }
+    },
+    {
+      "path": "accounts/1dd4fd75-8eea-4f7a-98e7-bf45b987ae94/lineageEdges/aNk5vKpouB4zrYDXMf0V",
+      "id": "aNk5vKpouB4zrYDXMf0V",
+      "data": {
+        "itemId": "2ocWpYcYIMiybGhl6LUY",
+        "toTransactionId": "u4EJMRngF3yYbr2fThPN",
+        "fromProjectId": null,
+        "toProjectId": "pgwdhOFcslItEjDxeWgL",
+        "movementKind": "sold",
+        "source": "mcp",
+        "createdAt": {
+          "__type": "timestamp",
+          "value": "2026-08-20T17:09:35.446Z"
+        },
+        "fromTransactionId": "CONSOLIDATED_5abd46c9-9886-4b3e-b2b1-19f6cf995a44_outbound_return",
+        "consolidatedBy": "witzenman-inventory-consolidation-v1",
+        "consolidatedFromTransactionId": "iTGI4u24SoiOApf1UD7B",
+        "updatedAt": {
+          "__type": "timestamp",
+          "value": "2026-09-18T19:43:57.290Z"
+        }
+      }
+    },
+    {
+      "path": "accounts/1dd4fd75-8eea-4f7a-98e7-bf45b987ae94/lineageEdges/b0m6OgFKP4LuRI9qTNfY",
+      "id": "b0m6OgFKP4LuRI9qTNfY",
+      "data": {
+        "toTransactionId": "4378F3E6-5916-4376-B3EF-62AAF8166CEB",
+        "movementKind": "sold",
+        "createdBy": "4ef35958-597c-4aea-b99e-1ef62352a72d",
+        "toProjectId": "405GIhLoU2pLY4zqb71R",
+        "accountId": "1dd4fd75-8eea-4f7a-98e7-bf45b987ae94",
+        "source": "app",
+        "itemId": "5a8FIPrdjyry0J2A4akX",
+        "createdAt": {
+          "__type": "timestamp",
+          "value": "2026-08-28T20:00:47.975Z"
+        },
+        "fromTransactionId": "CONSOLIDATED_5abd46c9-9886-4b3e-b2b1-19f6cf995a44_outbound_return",
+        "consolidatedBy": "witzenman-inventory-consolidation-v1",
+        "consolidatedFromTransactionId": "BC3D4934-3EFB-4A0E-9511-ECA18352D2BE",
+        "updatedAt": {
+          "__type": "timestamp",
+          "value": "2026-09-18T19:43:57.290Z"
+        }
+      }
+    },
+    {
+      "path": "accounts/1dd4fd75-8eea-4f7a-98e7-bf45b987ae94/lineageEdges/b2zeto3LmlA7A1IBXuMm",
+      "id": "b2zeto3LmlA7A1IBXuMm",
+      "data": {
+        "accountId": "1dd4fd75-8eea-4f7a-98e7-bf45b987ae94",
+        "createdBy": "4ef35958-597c-4aea-b99e-1ef62352a72d",
+        "fromTransactionId": "CONSOLIDATED_5abd46c9-9886-4b3e-b2b1-19f6cf995a44_outbound_return",
+        "itemId": "cW5PaCT7DF7NrY8aEXvf",
+        "movementKind": "sold",
+        "source": "app",
+        "toProjectId": "5abd46c9-9886-4b3e-b2b1-19f6cf995a44",
+        "toTransactionId": "BB168242-54DC-4414-9425-B5D884C2422B",
+        "createdAt": {
+          "__type": "timestamp",
+          "value": "2026-09-18T20:08:00.677Z"
+        }
+      }
+    },
+    {
+      "path": "accounts/1dd4fd75-8eea-4f7a-98e7-bf45b987ae94/lineageEdges/c54UXsTIf8JtLDxgVhdQ",
+      "id": "c54UXsTIf8JtLDxgVhdQ",
+      "data": {
+        "createdBy": "4ef35958-597c-4aea-b99e-1ef62352a72d",
+        "toProjectId": "405GIhLoU2pLY4zqb71R",
+        "toTransactionId": "4378F3E6-5916-4376-B3EF-62AAF8166CEB",
+        "movementKind": "sold",
+        "source": "app",
+        "itemId": "S6Gl72mtJQmgxEgv8lFv",
+        "accountId": "1dd4fd75-8eea-4f7a-98e7-bf45b987ae94",
+        "createdAt": {
+          "__type": "timestamp",
+          "value": "2026-08-28T20:00:47.975Z"
+        },
+        "fromTransactionId": "CONSOLIDATED_5abd46c9-9886-4b3e-b2b1-19f6cf995a44_outbound_return",
+        "consolidatedBy": "witzenman-inventory-consolidation-v1",
+        "consolidatedFromTransactionId": "BC3D4934-3EFB-4A0E-9511-ECA18352D2BE",
+        "updatedAt": {
+          "__type": "timestamp",
+          "value": "2026-09-18T19:43:57.290Z"
+        }
+      }
+    },
+    {
+      "path": "accounts/1dd4fd75-8eea-4f7a-98e7-bf45b987ae94/lineageEdges/dBLhmPYS76mnYiavdNOB",
+      "id": "dBLhmPYS76mnYiavdNOB",
+      "data": {
+        "itemId": "78EK5lkfOrINJBZ7Tmsq",
+        "toTransactionId": "4378F3E6-5916-4376-B3EF-62AAF8166CEB",
+        "movementKind": "sold",
+        "createdBy": "4ef35958-597c-4aea-b99e-1ef62352a72d",
+        "source": "app",
+        "accountId": "1dd4fd75-8eea-4f7a-98e7-bf45b987ae94",
+        "toProjectId": "405GIhLoU2pLY4zqb71R",
+        "createdAt": {
+          "__type": "timestamp",
+          "value": "2026-08-28T20:00:47.975Z"
+        },
+        "fromTransactionId": "CONSOLIDATED_5abd46c9-9886-4b3e-b2b1-19f6cf995a44_outbound_return",
+        "consolidatedBy": "witzenman-inventory-consolidation-v1",
+        "consolidatedFromTransactionId": "BC3D4934-3EFB-4A0E-9511-ECA18352D2BE",
+        "updatedAt": {
+          "__type": "timestamp",
+          "value": "2026-09-18T19:43:57.290Z"
+        }
+      }
+    },
+    {
+      "path": "accounts/1dd4fd75-8eea-4f7a-98e7-bf45b987ae94/lineageEdges/dJO3Yv3v46w43joFKAqO",
+      "id": "dJO3Yv3v46w43joFKAqO",
+      "data": {
+        "accountId": "1dd4fd75-8eea-4f7a-98e7-bf45b987ae94",
+        "createdBy": "4ef35958-597c-4aea-b99e-1ef62352a72d",
+        "itemId": "oaEbF43EeSRaFpCrtDuG",
+        "movementKind": "sold",
+        "source": "app",
+        "toProjectId": "1LLWjydzaK6uD44TjM4u",
+        "toTransactionId": "8B189B02-FC5C-4103-B428-73579A503D03",
+        "createdAt": {
+          "__type": "timestamp",
+          "value": "2026-09-15T01:42:03.892Z"
+        },
+        "fromTransactionId": "CONSOLIDATED_5abd46c9-9886-4b3e-b2b1-19f6cf995a44_outbound_return",
+        "consolidatedBy": "witzenman-inventory-consolidation-v1",
+        "consolidatedFromTransactionId": "3h7cyd9AxKp2nDmcLHXx",
+        "updatedAt": {
+          "__type": "timestamp",
+          "value": "2026-09-18T19:43:57.290Z"
+        }
+      }
+    },
+    {
+      "path": "accounts/1dd4fd75-8eea-4f7a-98e7-bf45b987ae94/lineageEdges/gn7s4gXKUHswDkzHTcxM",
+      "id": "gn7s4gXKUHswDkzHTcxM",
+      "data": {
+        "accountId": "1dd4fd75-8eea-4f7a-98e7-bf45b987ae94",
+        "createdBy": "4ef35958-597c-4aea-b99e-1ef62352a72d",
+        "itemId": "MiNVXqyZrfWP5cvyWnSH",
+        "movementKind": "sold",
+        "source": "app",
+        "toProjectId": "1LLWjydzaK6uD44TjM4u",
+        "toTransactionId": "8B189B02-FC5C-4103-B428-73579A503D03",
+        "createdAt": {
+          "__type": "timestamp",
+          "value": "2026-09-15T01:42:03.892Z"
+        },
+        "fromTransactionId": "CONSOLIDATED_5abd46c9-9886-4b3e-b2b1-19f6cf995a44_outbound_return",
+        "consolidatedBy": "witzenman-inventory-consolidation-v1",
+        "consolidatedFromTransactionId": "3h7cyd9AxKp2nDmcLHXx",
+        "updatedAt": {
+          "__type": "timestamp",
+          "value": "2026-09-18T19:43:57.290Z"
+        }
+      }
+    },
+    {
+      "path": "accounts/1dd4fd75-8eea-4f7a-98e7-bf45b987ae94/lineageEdges/iWnpEERcUrNZEcrpvfZI",
+      "id": "iWnpEERcUrNZEcrpvfZI",
+      "data": {
+        "toProjectId": "405GIhLoU2pLY4zqb71R",
+        "accountId": "1dd4fd75-8eea-4f7a-98e7-bf45b987ae94",
+        "movementKind": "sold",
+        "source": "app",
+        "createdBy": "4ef35958-597c-4aea-b99e-1ef62352a72d",
+        "toTransactionId": "4378F3E6-5916-4376-B3EF-62AAF8166CEB",
+        "itemId": "HtYSq79la2MqL67zShg4",
+        "createdAt": {
+          "__type": "timestamp",
+          "value": "2026-08-28T20:00:47.975Z"
+        },
+        "fromTransactionId": "CONSOLIDATED_5abd46c9-9886-4b3e-b2b1-19f6cf995a44_outbound_return",
+        "consolidatedBy": "witzenman-inventory-consolidation-v1",
+        "consolidatedFromTransactionId": "BC3D4934-3EFB-4A0E-9511-ECA18352D2BE",
+        "updatedAt": {
+          "__type": "timestamp",
+          "value": "2026-09-18T19:43:57.290Z"
+        }
+      }
+    },
+    {
+      "path": "accounts/1dd4fd75-8eea-4f7a-98e7-bf45b987ae94/lineageEdges/kkjWIa2Wtqep5sK1pjUe",
+      "id": "kkjWIa2Wtqep5sK1pjUe",
+      "data": {
+        "createdBy": "4ef35958-597c-4aea-b99e-1ef62352a72d",
+        "accountId": "1dd4fd75-8eea-4f7a-98e7-bf45b987ae94",
+        "toTransactionId": "4378F3E6-5916-4376-B3EF-62AAF8166CEB",
+        "toProjectId": "405GIhLoU2pLY4zqb71R",
+        "source": "app",
+        "movementKind": "sold",
+        "itemId": "xmGn7VAzHvucye3DFCW8",
+        "createdAt": {
+          "__type": "timestamp",
+          "value": "2026-08-28T20:00:47.975Z"
+        },
+        "fromTransactionId": "CONSOLIDATED_5abd46c9-9886-4b3e-b2b1-19f6cf995a44_outbound_return",
+        "consolidatedBy": "witzenman-inventory-consolidation-v1",
+        "consolidatedFromTransactionId": "BC3D4934-3EFB-4A0E-9511-ECA18352D2BE",
+        "updatedAt": {
+          "__type": "timestamp",
+          "value": "2026-09-18T19:43:57.290Z"
+        }
+      }
+    },
+    {
+      "path": "accounts/1dd4fd75-8eea-4f7a-98e7-bf45b987ae94/lineageEdges/usHAj5DzVyQGQ7ISRlEA",
+      "id": "usHAj5DzVyQGQ7ISRlEA",
+      "data": {
+        "source": "app",
+        "accountId": "1dd4fd75-8eea-4f7a-98e7-bf45b987ae94",
+        "toTransactionId": "4378F3E6-5916-4376-B3EF-62AAF8166CEB",
+        "itemId": "pM4B5gDm5XedEZNn0ZpR",
+        "toProjectId": "405GIhLoU2pLY4zqb71R",
+        "movementKind": "sold",
+        "createdBy": "4ef35958-597c-4aea-b99e-1ef62352a72d",
+        "createdAt": {
+          "__type": "timestamp",
+          "value": "2026-08-28T20:00:47.975Z"
+        },
+        "fromTransactionId": "CONSOLIDATED_5abd46c9-9886-4b3e-b2b1-19f6cf995a44_outbound_return",
+        "consolidatedBy": "witzenman-inventory-consolidation-v1",
+        "consolidatedFromTransactionId": "BC3D4934-3EFB-4A0E-9511-ECA18352D2BE",
+        "updatedAt": {
+          "__type": "timestamp",
+          "value": "2026-09-18T19:43:57.290Z"
+        }
+      }
+    },
+    {
+      "path": "accounts/1dd4fd75-8eea-4f7a-98e7-bf45b987ae94/lineageEdges/zYgzBSWVMq6nrznk0kQg",
+      "id": "zYgzBSWVMq6nrznk0kQg",
+      "data": {
+        "createdBy": "4ef35958-597c-4aea-b99e-1ef62352a72d",
+        "movementKind": "sold",
+        "toTransactionId": "4378F3E6-5916-4376-B3EF-62AAF8166CEB",
+        "source": "app",
+        "toProjectId": "405GIhLoU2pLY4zqb71R",
+        "accountId": "1dd4fd75-8eea-4f7a-98e7-bf45b987ae94",
+        "itemId": "fYYtXHuKIMSzirzVRkfM",
+        "createdAt": {
+          "__type": "timestamp",
+          "value": "2026-08-28T20:00:47.975Z"
+        },
+        "fromTransactionId": "CONSOLIDATED_5abd46c9-9886-4b3e-b2b1-19f6cf995a44_outbound_return",
+        "consolidatedBy": "witzenman-inventory-consolidation-v1",
+        "consolidatedFromTransactionId": "BC3D4934-3EFB-4A0E-9511-ECA18352D2BE",
+        "updatedAt": {
+          "__type": "timestamp",
+          "value": "2026-09-18T19:43:57.290Z"
+        }
+      }
+    }
+  ]
+}
